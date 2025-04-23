@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Buddy - Session Manager</title>
+    <style>
+        body {
+            width: 400px;
+            min-height: 500px;
+            margin: 0;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            color: #333;
+        }
+        .session-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .session-item {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .session-item:hover {
+            transform: translateY(-2px);
+        }
+        .session-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .session-info {
+            font-size: 12px;
+            color: #666;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1976D2;
+        }
+        .btn-secondary {
+            background: #E0E0E0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #BDBDBD;
+        }
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px 16px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        /* New styles for warning badges */
+        .warning-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #FFC107;
+            color: #333;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            margin-left: 8px;
+            cursor: help;
+        }
+        .warning-tooltip {
+            position: absolute;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 300px;
+            z-index: 1000;
+            display: none;
+        }
+        .warning-tooltip.visible {
+            display: block;
+        }
+        .warning-tooltip-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #FF9800;
+        }
+        .warning-tooltip-content {
+            font-size: 12px;
+            color: #666;
+        }
+        .warning-tooltip-close {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #999;
+        }
+        /* Styles for warning dialog */
+        .warning-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            display: none;
+        }
+        .warning-dialog.visible {
+            display: block;
+        }
+        .warning-dialog-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .warning-dialog-title {
+            font-weight: 600;
+            color: #FF9800;
+            margin: 0;
+        }
+        .warning-dialog-close {
+            margin-left: auto;
+            cursor: pointer;
+            font-size: 18px;
+            color: #999;
+        }
+        .warning-dialog-content {
+            margin-bottom: 16px;
+        }
+        .warning-item {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .warning-item:last-child {
+            border-bottom: none;
+        }
+        .warning-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        .overlay.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Session Manager</h1>
+        <button class="btn btn-primary" id="newSession">New Session</button>
+    </div>
+    
+    <div class="session-list" id="sessionList">
+        <!-- Sessions will be populated here -->
+    </div>
+
+    <div class="status-bar">
+        <span id="status">Ready</span>
+        <button class="btn btn-secondary" id="settings">Settings</button>
+    </div>
+
+    <!-- Warning dialog -->
+    <div class="overlay" id="overlay"></div>
+    <div class="warning-dialog" id="warningDialog">
+        <div class="warning-dialog-header">
+            <h3 class="warning-dialog-title">Cookie Validation Warnings</h3>
+            <span class="warning-dialog-close" id="closeWarningDialog">&times;</span>
+        </div>
+        <div class="warning-dialog-content" id="warningDialogContent">
+            <!-- Warning content will be populated here -->
+        </div>
+        <div class="warning-dialog-actions">
+            <button class="btn btn-secondary" id="cancelImport">Cancel</button>
+            <button class="btn btn-primary" id="proceedImport">Proceed Anyway</button>
+        </div>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+</body>
+</html>

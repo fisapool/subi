@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="origin-trial"
+      content="Aj20q/63jCcAUs+J5vAjc8O+30sJAT8eMo6+MK9mDd6uhF3ol4vAGx4RMmKrE/F5UdjSuM0oeS24ma8YUX1lCQIAAABneyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vZWRhY2Nvbm1hYWtqaW1tZmduYmxvY2JsYmNkY3Bia28iLCJmZWF0dXJlIjoiV2ViU1FMIiwiZXhwaXJ5IjoxNzE2OTQwNzk5fQ=="
+    />
+    <link
+      rel="icon"
+      href="/favicon.ico"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <meta
+      name="theme-color"
+      content="#000000"
+    />
+    <title>Session Buddy Dashboard</title>
+    <link rel="stylesheet" href="styles.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <script src="./redirect.js"></script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="app">
+        <header class="dashboard-header">
+            <h1>Session Buddy Dashboard</h1>
+        </header>
+        <main class="dashboard-content">
+            <div id="session-list">
+                <!-- Session list will be populated here -->
+            </div>
+            <div id="session-details">
+                <!-- Session details will be shown here -->
+            </div>
+        </main>
+    </div>
+    <script src="main.bundle.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize session management
+            chrome.runtime.sendMessage({ type: 'GET_SESSIONS' }, (response) => {
+                if (response && response.sessions) {
+                    updateSessionList(response.sessions);
+                }
+            });
+
+            // Listen for session updates
+            chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+                if (request.type === 'SESSIONS_UPDATED') {
+                    updateSessionList(request.sessions);
+                }
+            });
+        });
+
+        function updateSessionList(sessions) {
+            const sessionList = document.getElementById('session-list');
+            if (!sessionList) return;
+
+            sessionList.innerHTML = sessions.map(session => `
+                <div class="session-item" data-session-id="${session.id}">
+                    <h3>${session.name}</h3>
+                    <p>${session.tabs.length} tabs</p>
+                    <button onclick="restoreSession('${session.id}')">Restore</button>
+                </div>
+            `).join('');
+        }
+
+        function restoreSession(sessionId) {
+            chrome.runtime.sendMessage({ 
+                type: 'RESTORE_SESSION', 
+                sessionId: sessionId 
+            });
+        }
+    </script>
+  </body>
+</html>
