@@ -29,6 +29,49 @@ const SPECIAL_COOKIE_PREFIXES = [
   '__Secure-'
 ];
 
+// Cache configuration
+const CACHE_CONFIG = {
+  MAX_SIZE: 1000,
+  TTL: 5 * 60 * 1000, // 5 minutes
+  BATCH_SIZE: 50
+};
+
+// Cache implementation
+class Cache {
+  constructor(maxSize = CACHE_CONFIG.MAX_SIZE, ttl = CACHE_CONFIG.TTL) {
+    this.cache = new Map();
+    this.maxSize = maxSize;
+    this.ttl = ttl;
+  }
+
+  set(key, value) {
+    if (this.cache.size >= this.maxSize) {
+      const oldestKey = this.cache.keys().next().value;
+      this.cache.delete(oldestKey);
+    }
+    this.cache.set(key, {
+      value,
+      timestamp: Date.now()
+    });
+  }
+
+  get(key) {
+    const item = this.cache.get(key);
+    if (!item) return null;
+    
+    if (Date.now() - item.timestamp > this.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return item.value;
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+}
+
 // Error handling class
 class ErrorHandler {
   constructor() {
@@ -494,11 +537,79 @@ class CookieValidator {
 
 export class CookieManager {
   constructor() {
-    this.errorHandler = new ErrorHandler();
     this.validator = new CookieValidator();
+    this.errorHandler = new ErrorHandler();
     this.errorManager = new ErrorManager();
-    this.encryptionKey = null;
-    this.SPECIAL_COOKIE_PREFIXES = ['__Host-', '__Secure-'];
+    this.cache = new Cache();
+    this.pendingOperations = new Map();
+    this.worker = null;
+    this.initializeWorker();
+  }
+
+  initializeWorker() {
+    if (typeof Worker !== 'undefined') {
+      this.worker = new Worker('cookie-worker.js');
+      this.worker.onmessage = (e) => {
+        const { id, result } = e.data;
+        const resolve = this.pendingOperations.get(id);
+        if (resolve) {
+          resolve(result);
+          this.pendingOperations.delete(id);
+        }
+      };
+    }
+  }
+
+  async batchProcess(operations) {
+    const batches = [];
+    for (let i = 0; i < operations.length; i += CACHE_CONFIG.BATCH_SIZE) {
+      batches.push(operations.slice(i, i + CACHE_CONFIG.BATCH_SIZE));
+    }
+
+    const results = [];
+    for (const batch of batches) {
+      const batchResults = await Promise.all(
+        batch.map(op => this.executeOperation(op))
+      );
+      results.push(...batchResults);
+    }
+
+    return results;
+  }
+
+  async executeOperation(operation) {
+    const cacheKey = this.getCacheKey(operation);
+    const cachedResult = this.cache.get(cacheKey);
+    if (cachedResult) return cachedResult;
+
+    if (this.worker && operation.type === 'heavy') {
+      return new Promise((resolve) => {
+        const id = Date.now().toString();
+        this.pendingOperations.set(id, resolve);
+        this.worker.postMessage({ id, operation });
+      });
+    }
+
+    const result = await this.processOperation(operation);
+    this.cache.set(cacheKey, result);
+    return result;
+  }
+
+  getCacheKey(operation) {
+    return `${operation.type}-${operation.domain}-${JSON.stringify(operation.data)}`;
+  }
+
+  async processOperation(operation) {
+    switch (operation.type) {
+      case 'get':
+        return this.getCookies(operation.domain);
+      case 'set':
+        return this.setCookies(operation.data, operation.domain);
+      case 'remove':
+        return this.removeCookies(operation.domain);
+      default:
+        throw new Error(`Unknown operation type: ${operation.type}`);
+    }
   }
 
   async initialize() {
@@ -848,158 +959,34 @@ export class CookieManager {
   }
 
   async setCookies(cookies, domain, ignoreWarnings = false) {
-    try {
-      const results = {
-        success: [],
-        failures: [],
-        warnings: [],
-        summary: {
-          total: cookies.length,
-          success: 0,
-          failed: 0,
-          warnings: 0
-        }
-      };
+    const operations = cookies.map(cookie => ({
+      type: 'set',
+      domain,
+      data: cookie
+    }));
 
-      for (const cookie of cookies) {
-        try {
-          // Validate cookie before setting
-          const validation = this.validator.validateCookie(cookie);
-          if (!validation.isValid) {
-            const errorReport = {
-              cookie: {
-                name: cookie.name,
-                domain: cookie.domain || domain,
-                path: cookie.path || '/',
-                secure: cookie.secure || false,
-                httpOnly: cookie.httpOnly || false,
-                sameSite: cookie.sameSite || 'no_restriction'
-              },
-              validationErrors: validation.errors,
-              validationWarnings: validation.warnings,
-              timestamp: new Date().toISOString()
-            };
-            
-            results.failures.push(errorReport);
-            results.summary.failed++;
-            
-            // Notify UI of validation failure
-            this.notifyValidationFailure(errorReport, ignoreWarnings);
-            continue;
-          }
-
-          // Add any warnings from validation - only if not ignoring warnings
-          if (validation.warnings.length > 0 && !ignoreWarnings) {
-            results.warnings.push({
-              cookie: cookie.name,
-              warnings: validation.warnings
-            });
-            results.summary.warnings++;
-          }
-
-          // Process cookie based on type
-          if (cookie.name.startsWith('__Host-') || cookie.name.startsWith('__Secure-')) {
-            await this.processHostCookie(cookie);
-          } else {
-            await this.processRegularCookie(cookie);
-          }
-
-          results.success.push({
-            name: cookie.name,
-            domain: cookie.domain || domain,
-            path: cookie.path || '/'
-          });
-          results.summary.success++;
-        } catch (error) {
-          const errorContext = {
-            operation: 'setCookies',
-            cookieName: cookie.name,
-            domain: domain,
-            validationErrors: validation?.errors,
-            validationWarnings: validation?.warnings
-          };
-
-          const errorReport = {
-            cookie: {
-              name: cookie.name,
-              domain: cookie.domain || domain
-            },
-            error: error.message || 'Unknown error',
-            timestamp: new Date().toISOString()
-          };
-          
-          results.failures.push(errorReport);
-          results.summary.failed++;
-          
-          // Notify UI of validation failure
-          this.notifyValidationFailure(errorReport, ignoreWarnings);
-          
-          await this.errorHandler.handleError(error, errorContext, 'setCookies');
-        }
-      }
-
-      // Log summary of set cookies results
-      console.log('Set cookies summary:', JSON.stringify(results.summary, null, 2));
-      
-      return results;
-    } catch (error) {
-      await this.errorHandler.handleError(error, { operation: 'setCookies', domain }, 'setCookies');
-      throw error;
-    }
+    return this.batchProcess(operations);
   }
 
   async getCookies(domain) {
-    try {
-      const cookies = await chrome.cookies.getAll({ domain });
-      if (!cookies || cookies.length === 0) {
-        this.errorManager.addWarning({
-          message: `No cookies found for domain: ${domain}`,
-          code: 'NO_COOKIES_FOUND'
-        });
-      }
-      return cookies;
-    } catch (error) {
-      await this.errorHandler.handleError(error, { operation: 'getCookies', domain }, 'getCookies');
-      throw error;
-    }
+    const cacheKey = `cookies-${domain}`;
+    const cachedCookies = this.cache.get(cacheKey);
+    if (cachedCookies) return cachedCookies;
+
+    const cookies = await chrome.cookies.getAll({ domain });
+    this.cache.set(cacheKey, cookies);
+    return cookies;
   }
 
   async removeCookies(domain) {
-    try {
-      const cookies = await this.getCookies(domain);
-      const results = {
-        removed: 0,
-        failed: 0,
-        errors: []
-      };
+    const cookies = await this.getCookies(domain);
+    const operations = cookies.map(cookie => ({
+      type: 'remove',
+      domain,
+      data: cookie
+    }));
 
-      for (const cookie of cookies) {
-        try {
-          const url = this.getCookieUrl(cookie);
-          await chrome.cookies.remove({
-            url: url,
-            name: cookie.name
-          });
-          results.removed++;
-        } catch (error) {
-          results.failed++;
-          results.errors.push({
-            name: cookie.name,
-            error: error.message
-          });
-          await this.errorHandler.handleError(error, {
-            operation: 'removeCookies',
-            cookieName: cookie.name,
-            domain: domain
-          }, 'removeCookies');
-        }
-      }
-
-      return results;
-    } catch (error) {
-      await this.errorHandler.handleError(error, { operation: 'removeCookies', domain }, 'removeCookies');
-      throw error;
-    }
+    return this.batchProcess(operations);
   }
 
   async validateSession() {

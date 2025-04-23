@@ -235,5 +235,10 @@
     </div>
 
     <script type="module" src="popup.js"></script>
+    <script type="module">
+        import { SessionManager } from './popup.js';
+        console.log('Creating SessionManager instance...');
+        new SessionManager();
+    </script>
 </body>
 </html>

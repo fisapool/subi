@@ -1,7 +1,8 @@
 import { CookieManager } from './CookieManager.js';
 
-class SessionManager {
+export class SessionManager {
     constructor() {
+        console.log('SessionManager constructor called');
         this.cookieManager = new CookieManager();
         this.initializeUI();
         this.loadSessions();
@@ -13,8 +14,16 @@ class SessionManager {
     }
 
     initializeUI() {
+        console.log('Initializing UI...');
         // Initialize buttons
-        document.getElementById('newSession').addEventListener('click', () => this.createNewSession());
+        const newSessionBtn = document.getElementById('newSession');
+        console.log('New Session button:', newSessionBtn);
+        if (newSessionBtn) {
+            newSessionBtn.addEventListener('click', () => {
+                console.log('New Session button clicked');
+                this.createNewSession();
+            });
+        }
         document.getElementById('settings').addEventListener('click', () => this.openSettings());
         document.getElementById('closeWarningDialog').addEventListener('click', () => this.hideWarningDialog());
         document.getElementById('cancelImport').addEventListener('click', () => this.hideWarningDialog());
@@ -356,7 +365,8 @@ class SessionManager {
     }
 
     openSettings() {
-        chrome.runtime.openOptionsPage();
+        const dashboardUrl = chrome.runtime.getURL("session-buddy.html");
+        chrome.tabs.create({ url: dashboardUrl });
     }
 }
 

@@ -187,5 +187,21 @@
             "example": "minutes"
          }
       }
-   }
+   },
+  "extensionName": {
+    "message": "Session Buddy",
+    "description": "The name of the extension"
+  },
+  "extensionDescription": {
+    "message": "Keep Tabs and Manage Sessions",
+    "description": "Description of the extension"
+  },
+  "saveSession": {
+    "message": "Save tabs",
+    "description": "Command to save the current session"
+  },
+  "clearSelection": {
+    "message": "Clear selection",
+    "description": "Command to clear the current selection"
+  }
 }
