@@ -162,7 +162,7 @@ export const useSessionStore = defineStore('session', {
         for (const tab of session.tabs) {
           if (tab.url) {
             await new Promise<void>((resolve, reject) => {
-              chrome.tabs.create({ url: tab.url }, (newTab) => {
+              chrome.tabs.create({ url: tab.url }, () => {
                 if (chrome.runtime.lastError) {
                   reject(chrome.runtime.lastError);
                 } else {

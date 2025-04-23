@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (newSessionBtn) {
         newSessionBtn.addEventListener('click', function() {
             // Open the popup to create a new session
-            chrome.runtime.sendMessage({ type: 'OPEN_POPUP' }, (response) => {
+            chrome.runtime.sendMessage({ type: 'OPEN_POPUP' }, () => {
                 if (chrome.runtime.lastError) {
                     console.error('Error sending message:', chrome.runtime.lastError);
                     return;

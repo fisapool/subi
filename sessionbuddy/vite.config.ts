@@ -4,6 +4,8 @@ import { fileURLToPath, URL } from 'node:url'
 import { crx } from '@crxjs/vite-plugin'
 import manifest from './manifest.config'
 import { resolve } from 'path'
+import tailwindcss from 'tailwindcss'
+import autoprefixer from 'autoprefixer'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,6 +13,11 @@ export default defineConfig({
     vue(),
     crx({ manifest })
   ],
+  css: {
+    postcss: {
+      plugins: [tailwindcss, autoprefixer]
+    }
+  },
   server: {
     watch: {
       ignored: [
@@ -33,6 +40,8 @@ export default defineConfig({
     sourcemap: process.env.NODE_ENV === 'development',
     // Optimize chunk size for extension
     chunkSizeWarningLimit: 1000,
+    // Ensure CSS is extracted to separate files
+    cssCodeSplit: true,
     rollupOptions: {
       input: {
         popup: resolve(__dirname, 'src/popup.html'),
@@ -45,14 +54,13 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
-          const name = assetInfo.name || ''
-          if (name.endsWith('.css')) {
-            return 'assets/[name].[ext]'  // Keep CSS filenames consistent
+          if (!assetInfo.name) return 'assets/[name]-[hash][extname]'
+          const info = assetInfo.name.split('.')
+          const ext = info[info.length - 1]
+          if (/html/i.test(ext)) {
+            return `[name].${ext}`
           }
-          if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.ico')) {
-            return 'assets/[name].[ext]'
-          }
-          return 'assets/[name]-[hash].[ext]'
+          return 'assets/[name]-[hash][extname]'
         }
       }
     }

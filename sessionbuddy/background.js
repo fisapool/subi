@@ -158,27 +158,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Function to restore a session
 async function restoreSession(sessionId) {
   try {
-    // Get the session data
     const data = await chrome.storage.local.get('sessions');
-    const decryptedSessions = await decryptSessionData(data.sessions || { data: [] });
-    const sessions = decryptedSessions.data || [];
+
+    if (!data.sessions) {
+      console.error('No sessions found in storage');
+      return;
+    }
+
+    const decryptedSessions = await decryptSessionData(data.sessions);
+
+    if (!decryptedSessions || !Array.isArray(decryptedSessions.data)) {
+      console.error('Invalid session data format');
+      return;
+    }
+
+    const sessions = decryptedSessions.data;
     const session = sessions.find(s => s.id === parseInt(sessionId, 10));
-    
+
     if (!session) {
       console.error('Session not found:', sessionId);
       return;
     }
-    
-    // Create new tabs for each URL in the session
-    for (const tabData of session.data) {
+
+    for (const tabData of session.data || []) {
       if (tabData.url) {
         await chrome.tabs.create({ url: tabData.url });
       }
     }
-    
-    // Import cookies for each domain with secure attributes
-    for (const tabData of session.data) {
-      if (tabData.cookies && tabData.cookies.cookies) {
+
+    for (const tabData of session.data || []) {
+      if (tabData.cookies?.cookies) {
         const hostname = new URL(tabData.url).hostname;
         await importCookies(tabData.cookies.cookies, hostname);
       }
