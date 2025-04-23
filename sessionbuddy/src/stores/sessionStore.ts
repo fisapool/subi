@@ -1,9 +1,25 @@
 import { defineStore } from 'pinia';
 
+// Define a simplified cookie interface
+interface SimplifiedCookie {
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  secure: boolean;
+  httpOnly: boolean;
+  sameSite: 'strict' | 'lax' | 'none' | 'unspecified';
+  expirationDate?: number;
+  storeId?: string;
+  hostOnly?: boolean;
+  session?: boolean;
+}
+
 interface Tab {
   id: number;
   title: string;
   url: string;
+  cookies: SimplifiedCookie[];
 }
 
 interface Session {
@@ -117,15 +133,55 @@ export const useSessionStore = defineStore('session', {
 
       try {
         const tabs = await new Promise<Tab[]>((resolve, reject) => {
-          chrome.tabs.query({}, (tabs) => {
+          chrome.tabs.query({}, async (tabs) => {
             if (chrome.runtime.lastError) {
               reject(chrome.runtime.lastError);
             } else {
-              resolve(tabs.map(tab => ({
-                id: tab.id || 0,
-                title: tab.title || '',
-                url: tab.url || ''
-              })));
+              const tabsWithCookies = await Promise.all(tabs.map(async tab => {
+                if (!tab.url) return null;
+                try {
+                  const url = new URL(tab.url);
+                  // Get cookies for the domain
+                  const cookies = await chrome.cookies.getAll({ domain: url.hostname });
+                  
+                  // Filter out unnecessary fields and ensure proper format
+                  const simplifiedCookies: SimplifiedCookie[] = cookies.map(cookie => ({
+                    name: cookie.name,
+                    value: cookie.value,
+                    domain: cookie.domain,
+                    path: cookie.path,
+                    secure: cookie.secure,
+                    httpOnly: cookie.httpOnly,
+                    sameSite: cookie.sameSite as 'strict' | 'lax' | 'none' | 'unspecified',
+                    expirationDate: cookie.expirationDate,
+                    storeId: cookie.storeId,
+                    hostOnly: cookie.hostOnly,
+                    session: cookie.session
+                  }));
+                  
+                  const tabData: Tab = {
+                    id: tab.id || 0,
+                    title: tab.title || '',
+                    url: tab.url || '',
+                    cookies: simplifiedCookies
+                  };
+                  
+                  return tabData;
+                } catch (error) {
+                  console.error(`Error getting cookies for ${tab.url}:`, error);
+                  const tabData: Tab = {
+                    id: tab.id || 0,
+                    title: tab.title || '',
+                    url: tab.url || '',
+                    cookies: []
+                  };
+                  return tabData;
+                }
+              }));
+              
+              // Filter out null values and ensure type safety
+              const validTabs = tabsWithCookies.filter((tab): tab is Tab => tab !== null);
+              resolve(validTabs);
             }
           });
         });
@@ -159,19 +215,44 @@ export const useSessionStore = defineStore('session', {
       }
 
       try {
+        // First restore all cookies
         for (const tab of session.tabs) {
-          if (tab.url) {
-            await new Promise<void>((resolve, reject) => {
-              chrome.tabs.create({ url: tab.url }, () => {
-                if (chrome.runtime.lastError) {
-                  reject(chrome.runtime.lastError);
-                } else {
-                  resolve();
-                }
-              });
-            });
+          if (tab.cookies && tab.cookies.length > 0) {
+            for (const cookie of tab.cookies) {
+              try {
+                // Construct URL based on cookie's secure flag
+                const protocol = cookie.secure ? 'https' : 'http';
+                const url = `${protocol}://${cookie.domain}${cookie.path}`;
+                
+                // Handle 'unspecified' sameSite value
+                const sameSite = cookie.sameSite === 'unspecified' ? 'lax' : cookie.sameSite;
+                
+                // Set cookie with original attributes
+                await chrome.cookies.set({
+                  url,
+                  name: cookie.name,
+                  value: cookie.value,
+                  domain: cookie.domain,
+                  path: cookie.path,
+                  secure: cookie.secure,
+                  httpOnly: cookie.httpOnly,
+                  sameSite: sameSite,
+                  expirationDate: cookie.expirationDate
+                });
+              } catch (error) {
+                console.error(`Failed to restore cookie for ${tab.url}:`, error);
+              }
+            }
           }
         }
+
+        // Then open tabs
+        for (const tab of session.tabs) {
+          if (tab.url) {
+            await chrome.tabs.create({ url: tab.url });
+          }
+        }
+
         this.currentSessionId = sessionId;
         await this.saveToStorage();
       } catch (error) {
