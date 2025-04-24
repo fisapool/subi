@@ -1,36 +1,47 @@
 // Site Logo Finder
 document.addEventListener('DOMContentLoaded', async () => {
-  // Create UI elements for the logo
-  const headerContainer = document.querySelector('.header');
-  const logoContainer = document.createElement('div');
-  logoContainer.className = 'site-logo-container';
-  logoContainer.style.cssText = 'height: 48px; width: 48px; margin-right: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px;';
-  
-  const logoImage = document.createElement('img');
-  logoImage.id = 'siteLogo';
-  logoImage.alt = 'Site Logo';
-  logoImage.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain;';
-  
-  // Add loading state
-  logoImage.src = 'img/logo-placeholder.png';
-  logoContainer.appendChild(logoImage);
-  
-  // Insert logo container before the title container
-  if (headerContainer.firstChild) {
-    headerContainer.insertBefore(logoContainer, headerContainer.firstChild);
-  } else {
-    headerContainer.appendChild(logoContainer);
-  }
-  
-  // Update the header flex layout
-  headerContainer.style.display = 'flex';
-  headerContainer.style.alignItems = 'center';
-  
   try {
+    // Create UI elements for the logo
+    const headerContainer = document.querySelector('.header');
+    if (!headerContainer) {
+      console.warn('Header container not found');
+      return;
+    }
+
+    const logoContainer = document.createElement('div');
+    logoContainer.className = 'site-logo-container';
+    logoContainer.style.cssText = 'height: 48px; width: 48px; margin-right: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px;';
+    
+    const logoImage = document.createElement('img');
+    logoImage.id = 'siteLogo';
+    logoImage.alt = 'Site Logo';
+    logoImage.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain;';
+    
+    // Add loading state
+    logoImage.src = 'img/logo-placeholder.png';
+    logoContainer.appendChild(logoImage);
+    
+    // Insert logo container before the title container
+    if (headerContainer.firstChild) {
+      headerContainer.insertBefore(logoContainer, headerContainer.firstChild);
+    } else {
+      headerContainer.appendChild(logoContainer);
+    }
+    
+    // Update the header flex layout
+    headerContainer.style.display = 'flex';
+    headerContainer.style.alignItems = 'center';
+    
     // Get the current active tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab || !tab.url) {
       throw new Error('No active tab found');
+    }
+
+    // Check if URL is a chrome:// URL
+    if (tab.url.startsWith('chrome://')) {
+      setFallbackLogo(logoImage);
+      return;
     }
     
     // Find the logo
@@ -49,13 +60,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch (error) {
     console.error('Error finding site logo:', error);
-    setFallbackLogo(logoImage);
+    const logoImage = document.getElementById('siteLogo');
+    if (logoImage) {
+      setFallbackLogo(logoImage);
+    }
   }
 });
 
 // Function to find a website's logo
 async function findSiteLogo(tab) {
   try {
+    // Check if URL is a chrome:// URL
+    if (tab.url.startsWith('chrome://')) {
+      return null;
+    }
+
     // Execute script in the active tab to find the logo using Manifest V3 API
     const [{ result }] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
@@ -106,14 +125,25 @@ async function findSiteLogo(tab) {
   } catch (error) {
     console.error('Error executing script to find logo:', error);
     // Try fallback method using default favicon path
-    return `${new URL(tab.url).origin}/favicon.ico`;
+    try {
+      const url = new URL(tab.url);
+      return `${url.origin}/favicon.ico`;
+    } catch (e) {
+      console.error('Error creating favicon URL:', e);
+      return null;
+    }
   }
 }
 
 // Function to set a fallback logo
 function setFallbackLogo(logoImage, tab) {
+  if (!logoImage) {
+    console.warn('Logo image element not found');
+    return;
+  }
+
   // If we have a tab, generate a colored initial logo based on domain
-  if (tab && tab.url) {
+  if (tab && tab.url && !tab.url.startsWith('chrome://')) {
     try {
       const domain = new URL(tab.url).hostname.replace('www.', '');
       const initial = domain.charAt(0).toUpperCase();
@@ -146,7 +176,7 @@ function setFallbackLogo(logoImage, tab) {
       logoImage.src = 'img/logo-placeholder.png';
     }
   } else {
-    // If no tab, use extension's default logo
+    // If no tab or chrome:// URL, use extension's default logo
     logoImage.src = 'img/logo-48.png';
   }
 }
