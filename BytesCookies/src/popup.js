@@ -24,6 +24,7 @@ window.cookieUtils = {
     }
     let imported = 0;
     let failed = 0;
+    let failedCookies = [];
 
     const url = new URL(tab.url);
     const setCookiePromises = cookies.map(cookie => {
@@ -42,6 +43,11 @@ window.cookieUtils = {
         chrome.cookies.set(cookieDetails, (result) => {
           if (chrome.runtime.lastError || !result) {
             failed++;
+            failedCookies.push({
+              name: cookie.name,
+              domain: domain,
+              reason: chrome.runtime.lastError ? chrome.runtime.lastError.message : 'Unknown error'
+            });
           } else {
             imported++;
           }
@@ -51,7 +57,49 @@ window.cookieUtils = {
     });
 
     await Promise.all(setCookiePromises);
-    return { imported, failed };
+    return { imported, failed, failedCookies };
+  },
+  
+  // Validate cookie data structure
+  validateCookieData: function(data) {
+    if (!data) {
+      throw new Error('No data provided');
+    }
+    
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid file format: Expected an array of cookie entries');
+    }
+    
+    if (data.length === 0) {
+      throw new Error('No cookie entries found in the file');
+    }
+    
+    const validationErrors = [];
+    
+    data.forEach((entry, index) => {
+      if (!entry.url) {
+        validationErrors.push(`Entry ${index + 1}: Missing URL`);
+      }
+      
+      if (!Array.isArray(entry.cookies)) {
+        validationErrors.push(`Entry ${index + 1}: Missing or invalid cookies array`);
+      } else {
+        entry.cookies.forEach((cookie, cookieIndex) => {
+          if (!cookie.name) {
+            validationErrors.push(`Entry ${index + 1}, Cookie ${cookieIndex + 1}: Missing cookie name`);
+          }
+          if (!cookie.value) {
+            validationErrors.push(`Entry ${index + 1}, Cookie ${cookieIndex + 1}: Missing cookie value`);
+          }
+        });
+      }
+    });
+    
+    if (validationErrors.length > 0) {
+      throw new Error('Validation errors: ' + validationErrors.join(', '));
+    }
+    
+    return true;
   }
 };
 document.addEventListener('DOMContentLoaded', () => {
@@ -86,9 +134,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   toggleFocusMode.addEventListener('change', () => {
-    chrome.storage.local.set({ focusModeEnabled: toggleFocusMode.checked });
-    updateConfigButtonVisibility();
-    showStatus(`Focus Mode ${toggleFocusMode.checked ? 'enabled' : 'disabled'}`);
+    // Check if we have the tabs permission before enabling focus mode
+    if (toggleFocusMode.checked) {
+      chrome.permissions.contains({ permissions: ['tabs'] }, (hasPermission) => {
+        if (hasPermission) {
+          chrome.storage.local.set({ focusModeEnabled: true });
+          updateConfigButtonVisibility();
+          showStatus('Focus Mode enabled');
+        } else {
+          // If we don't have permission, uncheck the toggle and show a message
+          toggleFocusMode.checked = false;
+          showStatus('Focus Mode requires additional permissions. Please grant them in the Security & Permissions tab.', true);
+        }
+      });
+    } else {
+      chrome.storage.local.set({ focusModeEnabled: false });
+      updateConfigButtonVisibility();
+      showStatus('Focus Mode disabled');
+    }
   });
 
   configFocusMode.addEventListener('click', () => {
@@ -97,11 +160,21 @@ document.addEventListener('DOMContentLoaded', () => {
       // Send a message to options page to switch to productivity tab
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs.length > 0) {
-          chrome.tabs.sendMessage(tabs[0].id, { action: 'switchToProductivityTab' }, () => {
-            if (chrome.runtime.lastError) {
-              // Suppress the error
-              console.warn('Message sending failed:', chrome.runtime.lastError.message);
-            }
+          // First check if we can inject the content script
+          chrome.scripting.executeScript({
+            target: { tabId: tabs[0].id },
+            files: ['src/content.js']
+          }).then(() => {
+            // Now send the message
+            chrome.tabs.sendMessage(tabs[0].id, { action: 'switchToProductivityTab' }, (response) => {
+              if (chrome.runtime.lastError) {
+                console.warn('Message sending failed:', chrome.runtime.lastError.message);
+              } else if (response && response.success) {
+                console.log('Successfully switched to productivity tab');
+              }
+            });
+          }).catch((err) => {
+            console.warn('Failed to inject content script:', err);
           });
         }
       });
@@ -129,16 +202,46 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.local.set({ protectCookies: protectSessionCheckbox.checked });
   });
 
-  cookieDuration.addEventListener('change', () => {
-    let duration = parseInt(cookieDuration.value, 10);
+  // Helper function to validate and format duration
+  function validateDuration(duration) {
+    duration = parseInt(duration, 10);
     if (isNaN(duration) || duration < 1) {
-      duration = 1;
-      cookieDuration.value = duration;
-    } else if (duration > 720) {
-      duration = 720;
-      cookieDuration.value = duration;
+      return 1;
     }
-    chrome.storage.local.set({ sessionCookieDuration: duration });
+    if (duration > 1440) { // 24 hours in minutes
+      return 1440;
+    }
+    return duration;
+  }
+
+  // Helper function to format duration for display
+  function formatDuration(minutes) {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      if (remainingMinutes === 0) {
+        return `${hours} hour${hours > 1 ? 's' : ''}`;
+      }
+      return `${hours} hour${hours > 1 ? 's' : ''} ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
+    }
+    return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+  }
+
+  cookieDuration.addEventListener('change', () => {
+    const duration = validateDuration(cookieDuration.value);
+    cookieDuration.value = duration;
+    chrome.storage.local.set({ sessionCookieDuration: duration }, () => {
+      showStatus(`Session duration set to ${formatDuration(duration)}`);
+    });
+  });
+
+  // Add input validation on blur
+  cookieDuration.addEventListener('blur', () => {
+    const duration = validateDuration(cookieDuration.value);
+    if (duration !== parseInt(cookieDuration.value, 10)) {
+      cookieDuration.value = duration;
+      showStatus(`Session duration adjusted to ${formatDuration(duration)}`);
+    }
   });
 
   // Helper to show status message
@@ -152,86 +255,239 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 5000);
     }
   }
-// Auto-fill domain input with active tab's domain
-chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-  if (tabs.length > 0 && tabs[0].url) {
+
+  // Enhanced error display system
+  function showError(error, userMessage = null) {
+    const errorDisplay = document.getElementById('errorDisplay');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorStack = document.getElementById('errorStack');
+    const showDetailsBtn = document.getElementById('showErrorDetails');
+    const dismissBtn = document.getElementById('dismissError');
+
+    // Set the user-friendly message
+    errorMessage.textContent = userMessage || error.message || 'An unexpected error occurred';
+
+    // Set the technical details
+    if (error.failedCookies) {
+      // If we have failed cookies, display them in a formatted list
+      let failedCookiesHtml = '<ul class="failed-cookies-list">';
+      error.failedCookies.forEach(cookie => {
+        failedCookiesHtml += `<li><strong>${cookie.name}</strong> (${cookie.domain}): ${cookie.reason}</li>`;
+      });
+      failedCookiesHtml += '</ul>';
+      errorStack.innerHTML = failedCookiesHtml;
+    } else {
+      // Otherwise show the error stack or string representation
+      errorStack.textContent = error.stack || error.toString();
+    }
+
+    // Show the error display
+    errorDisplay.style.display = 'block';
+
+    // Toggle details visibility
+    showDetailsBtn.onclick = () => {
+      const details = document.getElementById('errorDetails');
+      const isHidden = details.style.display === 'none';
+      details.style.display = isHidden ? 'block' : 'none';
+      showDetailsBtn.textContent = isHidden ? 'Hide Details' : 'Show Details';
+    };
+
+    // Dismiss error
+    dismissBtn.onclick = () => {
+      errorDisplay.style.display = 'none';
+    };
+
+    // Log to console for debugging
+    console.error('Error details:', error);
+  }
+
+  // Enhanced error handling for cookie operations
+  async function handleCookieOperation(operation, action) {
     try {
-      const url = new URL(tabs[0].url);
-      domainInput.value = url.hostname;
-    } catch (e) {
-      console.warn('Failed to parse active tab URL for domain auto-fill:', e);
+      // Use the withLock utility to prevent concurrent operations
+      return await window.utils.withLock(`cookie_operation_${action}`, async () => {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tabs.length === 0) {
+          throw new Error('No active tab found. Please make sure you have a valid tab open.');
+        }
+        const tab = tabs[0];
+        
+        if (!tab.url) {
+          throw new Error('Cannot perform operation: Tab URL is not available.');
+        }
+
+        return await operation(tab);
+      });
+    } catch (error) {
+      let userMessage = 'An error occurred while performing the operation.';
+      
+      if (error.message.includes('No active tab')) {
+        userMessage = 'Please open a valid webpage before performing this action.';
+      } else if (error.message.includes('Tab URL')) {
+        userMessage = 'Cannot perform this action on the current page. Please try a different webpage.';
+      } else if (error.message.includes('Invalid file format')) {
+        userMessage = 'The imported file is not in the correct format. Please use a valid cookie export file.';
+      } else if (error.message.includes('No cookies found')) {
+        userMessage = 'No cookies were found to perform this action.';
+      } else if (error.message.includes('is already in progress')) {
+        userMessage = 'This operation is already in progress. Please wait for it to complete.';
+      }
+
+      showError(error, userMessage);
+      throw error;
     }
   }
-});
 
-// Delete Session Cookies for Current Site button handler
+  // Loading and feedback state management
+  function showLoading() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+      loadingOverlay.style.display = 'flex';
+    }
+  }
+
+  function hideLoading() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+      loadingOverlay.style.display = 'none';
+    }
+  }
+
+  function showDomainFeedback(message, type = 'info') {
+    const domainFeedback = document.getElementById('domainFeedback');
+    if (domainFeedback) {
+      domainFeedback.textContent = message;
+      domainFeedback.className = `domain-feedback ${type}`;
+      domainFeedback.style.display = 'block';
+      
+      setTimeout(() => {
+        domainFeedback.style.display = 'none';
+      }, 3000);
+    }
+  }
+
+  // Domain processing functionality
+  const processButton = document.getElementById('processButton');
+  if (processButton) {
+    // Use debounce to prevent rapid clicks
+    const debouncedProcess = window.utils.debounce(async () => {
+      const domainInput = document.getElementById('domainInput');
+      const domain = domainInput.value.trim();
+      
+      if (!domain) {
+        showDomainFeedback('Please enter a domain', 'error');
+        return;
+      }
+      
+      try {
+        // Use withUIUpdate to safely update UI during operation
+        await window.utils.withUIUpdate(
+          processButton,
+          { disabled: true, text: 'Processing...' },
+          async () => {
+            showLoading();
+            // Process domain logic here
+            await processDomain(domain);
+            showDomainFeedback('Domain processed successfully', 'success');
+          }
+        );
+      } catch (error) {
+        showDomainFeedback(error.message, 'error');
+      } finally {
+        hideLoading();
+      }
+    }, 300); // 300ms debounce
+    
+    processButton.addEventListener('click', debouncedProcess);
+  }
+
+  async function processDomain(domain) {
+    // Use withLock to prevent concurrent processing
+    return await window.utils.withLock(`process_domain_${domain}`, async () => {
+      // Add your domain processing logic here
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulated processing
+    });
+  }
+
+  // Update the cookie operation handlers to use the new error handling
   toggleCookieDeletion.addEventListener('change', async () => {
     try {
-      toggleCookieDeletion.disabled = true;
+      // Use withUIUpdate to safely update UI during operation
+      await window.utils.withUIUpdate(
+        toggleCookieDeletion,
+        { disabled: true, text: 'Deleting...' },
+        async () => {
+          await handleCookieOperation(async (tab) => {
+            const url = new URL(tab.url);
+            const cookies = await window.cookieUtils.exportCookies(tab);
+            
+            if (cookies.length === 0) {
+              throw new Error('No cookies found to delete.');
+            }
 
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tabs.length === 0) {
-        throw new Error('No active tab found');
-      }
-      const tab = tabs[0];
-      const url = new URL(tab.url);
-      const cookies = await window.cookieUtils.exportCookies(tab);
+            const deletePromises = cookies.map(cookie => {
+              return new Promise((resolve) => {
+                chrome.cookies.remove({
+                  url: url.protocol + '//' + cookie.domain.replace(/^\./, ''),
+                  name: cookie.name,
+                  storeId: cookie.storeId
+                }, () => resolve());
+              });
+            });
 
-      const deletePromises = cookies.map(cookie => {
-        return new Promise((resolve) => {
-          chrome.cookies.remove({
-            url: url.protocol + '//' + cookie.domain.replace(/^\./, ''),
-            name: cookie.name,
-            storeId: cookie.storeId
-          }, () => resolve());
-        });
-      });
-
-      await Promise.all(deletePromises);
-
-      showStatus('Session cookies deleted successfully!');
-      chrome.tabs.reload(tab.id);
+            await Promise.all(deletePromises);
+            showStatus(`Successfully deleted ${cookies.length} cookies!`);
+            chrome.tabs.reload(tab.id);
+          }, 'delete');
+        }
+      );
     } catch (error) {
-      console.error('Error deleting session cookies:', error);
-      showStatus('Failed to delete session cookies.', true);
-    } finally {
-      toggleCookieDeletion.disabled = false;
+      // Error is already handled by handleCookieOperation
     }
   });
 
   // Save Session Cookies button handler
   saveSessionCookiesButton.addEventListener('click', async () => {
     try {
-      saveSessionCookiesButton.disabled = true;
-      saveSessionCookiesButton.textContent = 'Saving...';
+      // Use withUIUpdate to safely update UI during operation
+      await window.utils.withUIUpdate(
+        saveSessionCookiesButton,
+        { disabled: true, text: 'Saving...' },
+        async () => {
+          showLoading();
 
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tabs.length === 0) {
-        throw new Error('No active tab found');
-      }
-      const tab = tabs[0];
-      const cookies = await window.cookieUtils.exportCookies(tab);
+          const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+          if (tabs.length === 0) {
+            throw new Error('No active tab found');
+          }
+          const tab = tabs[0];
+          const cookies = await window.cookieUtils.exportCookies(tab);
 
-      const sessionCookieData = JSON.stringify([{ url: tab.url, cookies }], null, 2);
-      const blob = new Blob([sessionCookieData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'session_cookies.json';
-      a.click();
-      URL.revokeObjectURL(url);
+          if (cookies.length === 0) {
+            throw new Error('No cookies found to save');
+          }
 
-      showStatus('Session cookies saved successfully!');
+          const sessionCookieData = JSON.stringify([{ url: tab.url, cookies }], null, 2);
+          const blob = new Blob([sessionCookieData], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'session_cookies.json';
+          a.click();
+          URL.revokeObjectURL(url);
+
+          showStatus(`Successfully saved ${cookies.length} cookies!`);
+        }
+      );
     } catch (error) {
       console.error('Error saving session cookies:', error);
-      showStatus('Failed to save session cookies.', true);
+      showError(error, 'Failed to save session cookies. Please try again.');
     } finally {
-      saveSessionCookiesButton.disabled = false;
-      saveSessionCookiesButton.textContent = 'Save Cookies for Current Session';
+      hideLoading();
     }
   });
 
-  // Restore Session Cookies button handler
+  // Update import handler with better error handling
   restoreSessionCookiesButton.addEventListener('click', () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -244,59 +500,92 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           throw new Error('No file selected');
         }
 
-        restoreSessionCookiesButton.disabled = true;
-        restoreSessionCookiesButton.textContent = 'Importing...';
+        // Use withUIUpdate to safely update UI during operation
+        await window.utils.withUIUpdate(
+          restoreSessionCookiesButton,
+          { disabled: true, text: 'Importing...' },
+          async () => {
+            showLoading();
 
-        const reader = new FileReader();
-        reader.onload = async () => {
-          try {
-            const sessionCookieDataJson = reader.result;
-            const sessionCookies = JSON.parse(sessionCookieDataJson);
-
-            let totalImported = 0;
-            let totalFailed = 0;
-
-            for (const entry of sessionCookies) {
-              const { url, cookies } = entry;
-              const dummyTab = { url };
-              const result = await window.cookieUtils.importCookies(cookies, dummyTab);
-              totalImported += result.imported;
-              totalFailed += result.failed;
-            }
-
-            if (totalImported > 0) {
-              showStatus(`Successfully imported ${totalImported} cookies`);
-              if (totalFailed > 0) {
-                showStatus(`${totalFailed} cookies failed to import`, true);
-              }
-              // Reload active tab after importing cookies
-              chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                if (tabs.length > 0) {
-                  chrome.tabs.reload(tabs[0].id);
+            const reader = new FileReader();
+            reader.onload = async () => {
+              try {
+                const sessionCookieDataJson = reader.result;
+                let sessionCookies;
+                
+                try {
+                  sessionCookies = JSON.parse(sessionCookieDataJson);
+                } catch (e) {
+                  throw new Error('Invalid file format: The file is not a valid JSON file.');
                 }
-              });
-            } else {
-              throw new Error('No cookies were imported. Make sure you\'re using the correct session file.');
-            }
-          } catch (error) {
-            console.error('Error importing session cookies:', error);
-            showStatus('Failed to import session cookies.', true);
-          } finally {
-            restoreSessionCookiesButton.disabled = false;
-            restoreSessionCookiesButton.textContent = 'Import Session Cookies';
+                
+                // Validate the cookie data structure
+                window.cookieUtils.validateCookieData(sessionCookies);
+
+                let totalImported = 0;
+                let totalFailed = 0;
+                let failedCookies = [];
+
+                for (const entry of sessionCookies) {
+                  const { url, cookies } = entry;
+                  const dummyTab = { url };
+                  const result = await window.cookieUtils.importCookies(cookies, dummyTab);
+                  totalImported += result.imported;
+                  totalFailed += result.failed;
+                  
+                  if (result.failedCookies && result.failedCookies.length > 0) {
+                    failedCookies = failedCookies.concat(result.failedCookies);
+                  }
+                }
+
+                if (totalImported > 0) {
+                  showStatus(`Successfully imported ${totalImported} cookies`);
+                  
+                  if (totalFailed > 0) {
+                    // Show detailed error information
+                    const errorDetails = document.getElementById('errorDetails');
+                    const errorStack = document.getElementById('errorStack');
+                    
+                    let failedCookiesHtml = '<ul class="failed-cookies-list">';
+                    failedCookies.forEach(cookie => {
+                      failedCookiesHtml += `<li><strong>${cookie.name}</strong> (${cookie.domain}): ${cookie.reason}</li>`;
+                    });
+                    failedCookiesHtml += '</ul>';
+                    
+                    errorStack.innerHTML = failedCookiesHtml;
+                    
+                    const error = new Error(`${totalFailed} cookies failed to import`);
+                    error.failedCookies = failedCookies;
+                    showError(error, `${totalFailed} cookies failed to import. Click 'Show Details' to see which ones failed.`);
+                  }
+                  
+                  // Reload active tab after importing cookies
+                  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                    if (tabs.length > 0) {
+                      chrome.tabs.reload(tabs[0].id);
+                    }
+                  });
+                } else {
+                  throw new Error('No cookies were imported. Make sure you\'re using the correct session file.');
+                }
+              } catch (error) {
+                showError(error);
+              } finally {
+                hideLoading();
+              }
+            };
+            
+            reader.onerror = () => {
+              showError(new Error('Failed to read the file.'), 'Unable to read the selected file. Please try again.');
+              hideLoading();
+            };
+            
+            reader.readAsText(file);
           }
-        };
-        reader.onerror = () => {
-          showStatus('Failed to read the file.', true);
-          restoreSessionCookiesButton.disabled = false;
-          restoreSessionCookiesButton.textContent = 'Import Session Cookies';
-        };
-        reader.readAsText(file);
+        );
       } catch (error) {
-        console.error('Import session cookies error:', error);
-        showStatus('Failed to import session cookies.', true);
-        restoreSessionCookiesButton.disabled = false;
-        restoreSessionCookiesButton.textContent = 'Import Session Cookies';
+        showError(error);
+        hideLoading();
       }
     });
 
