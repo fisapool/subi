@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BytesCookies Options</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 20px;
+      background-color: #f9fafb;
+      color: #2d3748;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    #navigation {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    #navigation button {
+      padding: 8px 16px;
+      font-size: 14px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      background-color: white;
+      color: #2d3748;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #navigation button.active {
+      background-color: #4caf50;
+      color: white;
+      border-color: #4caf50;
+    }
+    #navigation button:hover:not(.active) {
+      background-color: #e2e8f0;
+    }
+    .content-section {
+      display: none;
+      background: white;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      padding: 16px;
+    }
+    .content-section.active {
+      display: block;
+    }
+    #activity-content .settings-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    #sessions-list {
+      list-style: none;
+      padding: 0;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      background: white;
+    }
+    #sessions-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    #sessions-list li:last-child {
+      border-bottom: none;
+    }
+    .session-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .session-info img {
+      width: 16px;
+      height: 16px;
+    }
+    .session-info .domain {
+      font-weight: 600;
+    }
+    .session-details span {
+      margin-left: 12px;
+      font-size: 12px;
+      color: #718096;
+    }
+    #empty-log-message {
+      color: #718096;
+      font-style: italic;
+      padding: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>BytesCookies Options</h1>
+
+  <div id="navigation">
+    <button id="cookie-settings-tab">Cookie Settings</button>
+    <button id="productivity-tab">Productivity</button>
+    <button id="scripts-tab">Custom Scripts</button>
+    <button id="activity-tab" class="active">Session Activity</button>
+  </div>
+
+  <div id="cookie-settings-content" class="content-section">
+    <h2>Cookie Settings</h2>
+    <div class="settings-section">
+      <label for="protected-cookies-input">Protected Cookies (domains or cookie names, comma separated):</label>
+      <textarea id="protected-cookies-input" rows="4" style="width: 100%;"></textarea>
+    </div>
+    <div class="settings-section">
+      <label for="default-session-duration">Default Session Cookie Duration (minutes):</label>
+      <input type="number" id="default-session-duration" min="1" max="1440" />
+    </div>
+    <button id="save-cookie-settings">Save Cookie Settings</button>
+    <p id="cookie-settings-feedback" style="color: green; display: none;">Settings saved.</p>
+  </div>
+
+  <div id="productivity-content" class="content-section">
+    <h2>Productivity Features</h2>
+    <div class="settings-section">
+      <label for="focus-mode-websites">Focus Mode Auto-Activation (comma separated domains):</label>
+      <textarea id="focus-mode-websites" rows="3" style="width: 100%;"></textarea>
+    </div>
+    <div class="settings-section">
+      <label for="focus-mode-actions">Focus Mode Actions:</label>
+      <select id="focus-mode-actions" multiple size="3" style="width: 100%;">
+        <option value="pinTabs">Pin Tabs</option>
+        <option value="muteTabs">Mute Tabs</option>
+        <option value="closeTabs">Close Tabs</option>
+      </select>
+    </div>
+    <div class="settings-section">
+      <label for="meeting-mode-muted-sites">Meeting Mode Muted Sites (comma separated domains):</label>
+      <textarea id="meeting-mode-muted-sites" rows="3" style="width: 100%;"></textarea>
+    </div>
+    <button id="save-productivity-settings">Save Productivity Settings</button>
+    <p id="productivity-settings-feedback" style="color: green; display: none;">Settings saved.</p>
+  </div>
+
+  <div id="scripts-content" class="content-section">
+    <h2>Custom Scripts</h2>
+    <p>Custom Scripts feature is coming soon.</p>
+  </div>
+
+  <div id="activity-content" class="content-section active">
+    <h2>Session Activity</h2>
+    <div class="settings-section">
+      <label for="enable-activity-log">Enable Session Logging:</label>
+      <input type="checkbox" id="enable-activity-log" />
+      <button id="clear-activity-log">Clear Log</button>
+    </div>
+    <div id="session-log">
+      <ul id="sessions-list"></ul>
+      <p id="empty-log-message" style="display: none;">No session activity logged yet.</p>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

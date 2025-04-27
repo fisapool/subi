@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "FISABytes Cookie Manager",
+  "version": "2.0",
+  "description": "A powerful Chrome extension for managing browser cookies and sessions with enhanced security features.",
+  "permissions": [
+    "cookies",
+    "tabs",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html"
+}

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="img/logo-16.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cookie Manager</title>
+    <style>
+      body {
+        width: 400px;
+        padding: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      }
+      /* Additional styles */
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      input, button {
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+      }
+      button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #4CAF50;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Loading overlay -->
+      <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+      </div>
+      <div class="container">
+        <div class="header">
+          <div class="title-container">
+            <h1>FISABytes</h1>
+            <p class="slogan">Version 2.0</p>
+          </div>
+        </div>
+        <div class="content">
+          <div class="input-group">
+            <label for="domain">Domain:</label>
+            <input type="text" id="domain" placeholder="Enter domain (e.g., example.com)">
+          </div>
+          <div class="button-group">
+            <button id="saveSessionCookiesButton" class="action-button">
+              <span class="button-text">Save Cookies for Current Session</span>
+            </button>
+            <button id="restoreSessionCookiesButton" class="action-button">
+              <span class="button-text">Import Cookies for Session</span>
+            </button>
+          </div>
+          <div class="input-group">
+            <label>
+              <input type="checkbox" id="protectSessionCheckbox" />
+              Protect Cookies for This Session
+            </label>
+          </div>
+          <div class="input-group">
+            <label for="cookieDuration">Session Cookie Duration (hours):</label>
+            <input type="number" id="cookieDuration" min="1" max="168" placeholder="Enter duration in hours" />
+          </div>
+          <!-- Productivity Section -->
+          <div class="productivity-section">
+            <h2>Productivity Features</h2>
+            <div class="feature-toggle">
+              <input type="checkbox" id="toggleFocusMode" />
+              <label for="toggleFocusMode" class="feature-label">Session-Based Focus Modes</label>
+              <button id="configFocusMode" class="config-button">Configure</button>
+            </div>
+            <div class="feature-description">
+              Create distraction-free environments by pinning relevant tabs and optionally blocking notifications for specific sessions.
+            </div>
+            <div class="feature-toggle">
+              <input type="checkbox" id="toggleCookieDeletion" />
+              <label for="toggleCookieDeletion" class="feature-label">One-Click Session Cookie Deletion</label>
+            </div>
+            <div class="feature-description">
+              Quickly delete all cookies for a website's current session.
+            </div>
+            <!-- Placeholder for other toggles (disabled for MVP) -->
+            <div class="feature-toggle">
+              <input type="checkbox" id="togglePlaceholder1" disabled />
+              <label for="togglePlaceholder1" class="feature-label">Session-Aware Task Prioritization (Coming Soon)</label>
+              <button class="config-button" disabled>Configure</button>
+            </div>
+            <div class="feature-description">
+              Subtly highlight tasks related to your currently active website sessions.
+            </div>
+            <div class="feature-toggle">
+              <input type="checkbox" id="togglePlaceholder2" disabled />
+              <label for="togglePlaceholder2" class="feature-label">Session Snippets (Coming Soon)</label>
+              <button class="config-button" disabled>Configure</button>
+            </div>
+            <div class="feature-description">
+              Save and restore granular states within browsing sessions (URLs, cookies, form data).
+            </div>
+          </div>
+          <div id="options-navigation" style="margin-top: 20px;">
+            <button id="openOptionsPage" style="width: 100%; padding: 10px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer;">
+              BytesCookies Options
+            </button>
+          </div>
+          <!-- Status message -->
+          <div id="statusMessage" class="status-message" style="display: none;"></div>
+          <!-- Error display -->
+          <div id="errorDisplay" class="error-section">
+            <div id="errorList" class="error-list"></div>
+            <button id="dismissError" class="error-dismiss">Dismiss</button>
+          </div>
+          <!-- Quick Start Tips -->
+          <div class="tips-section">
+            <h3>Quick Start:</h3>
+            <ul class="tips-list" style="counter-reset: step">
+              <li>Click "Import Cookies" and select your .json cookie file</li>
+              <li>Wait for import confirmation</li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer">
+          <a href="https://shopee.com.my/fisa_trading" target="_blank" rel="noopener noreferrer" class="fisa-link">
+            <span>Visit our Shopee store</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <script src="src/popup.js"></script>
+  </body>
+</html>
