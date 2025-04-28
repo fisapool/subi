@@ -1,3 +1,7 @@
+import authManager from './auth.js';
+import syncManager from './sync.js';
+import premiumManager from './premium.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const navigationButtons = {
     cookieSettings: document.getElementById('cookie-settings-tab'),
@@ -578,4 +582,856 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   }
+
+  // DOM Elements
+  const focusModeEnabled = document.getElementById('focusModeEnabled');
+  const meetingModeEnabled = document.getElementById('meetingModeEnabled');
+
+  // Domain list containers
+  const focusPinTabs = document.getElementById('focusPinTabs');
+  const focusMuteTabs = document.getElementById('focusMuteTabs');
+  const focusBlockNotifications = document.getElementById('focusBlockNotifications');
+  const meetingMuteDomains = document.getElementById('meetingMuteDomains');
+
+  // Initialize settings from storage
+  chrome.storage.local.get([
+    'focusModeEnabled',
+    'meetingModeEnabled',
+    'focusPinTabs',
+    'focusMuteTabs',
+    'focusBlockNotifications',
+    'meetingMuteDomains'
+  ], (result) => {
+    // Set checkbox states
+    focusModeEnabled.checked = result.focusModeEnabled || false;
+    meetingModeEnabled.checked = result.meetingModeEnabled || false;
+
+    // Initialize domain lists
+    initializeDomainList(focusPinTabs, result.focusPinTabs || []);
+    initializeDomainList(focusMuteTabs, result.focusMuteTabs || []);
+    initializeDomainList(focusBlockNotifications, result.focusBlockNotifications || []);
+    initializeDomainList(meetingMuteDomains, result.meetingMuteDomains || []);
+  });
+
+  // Initialize a domain list with existing domains
+  function initializeDomainList(container, domains) {
+    const list = container.querySelector('.domain-list-items');
+    domains.forEach(domain => {
+      addDomainToList(list, domain);
+    });
+  }
+
+  // Add a domain to a list
+  function addDomainToList(list, domain) {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span>${domain}</span>
+      <button class="remove-domain">Remove</button>
+    `;
+    
+    li.querySelector('.remove-domain').addEventListener('click', () => {
+      li.remove();
+      saveDomainList(list);
+    });
+    
+    list.appendChild(li);
+  }
+
+  // Save domain list to storage
+  function saveDomainList(list) {
+    const domains = Array.from(list.children).map(li => li.querySelector('span').textContent);
+    const containerId = list.closest('.domain-list').id;
+    
+    chrome.storage.local.set({ [containerId]: domains });
+  }
+
+  // Add domain input handlers
+  document.querySelectorAll('.domain-input').forEach(input => {
+    const addButton = input.querySelector('.add-domain');
+    const textInput = input.querySelector('input');
+    
+    addButton.addEventListener('click', () => {
+      const domain = textInput.value.trim();
+      if (domain) {
+        const list = input.nextElementSibling;
+        addDomainToList(list, domain);
+        textInput.value = '';
+      }
+    });
+    
+    textInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        addButton.click();
+      }
+    });
+  });
+
+  // Mode toggle handlers
+  focusModeEnabled.addEventListener('change', () => {
+    chrome.storage.local.set({ focusModeEnabled: focusModeEnabled.checked });
+    chrome.runtime.sendMessage({
+      action: 'updateMode',
+      mode: 'focus',
+      state: focusModeEnabled.checked
+    });
+  });
+
+  meetingModeEnabled.addEventListener('change', () => {
+    chrome.storage.local.set({ meetingModeEnabled: meetingModeEnabled.checked });
+    chrome.runtime.sendMessage({
+      action: 'updateMode',
+      mode: 'meeting',
+      state: meetingModeEnabled.checked
+    });
+  });
+
+  // Activity Log Elements
+  const activitySearch = document.getElementById('activity-search');
+  const dateFrom = document.getElementById('date-from');
+  const dateTo = document.getElementById('date-to');
+  const durationFilter = document.getElementById('duration-filter');
+  const exportLogsButton = document.getElementById('export-logs');
+  const activityChart = document.getElementById('activity-chart');
+
+  // Analytics Elements
+  const totalSessions = document.getElementById('total-sessions');
+  const totalTime = document.getElementById('total-time');
+  const mostActiveDomain = document.getElementById('most-active-domain');
+  const avgSession = document.getElementById('avg-session');
+
+  let chart = null;
+
+  // Initialize Chart.js
+  function initializeChart() {
+    const ctx = activityChart.getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Session Duration (minutes)',
+          data: [],
+          borderColor: '#4caf50',
+          tension: 0.1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+
+  // Filter and search functionality
+  function filterLogs(logs) {
+    const searchTerm = activitySearch.value.toLowerCase();
+    const fromDate = dateFrom.value ? new Date(dateFrom.value).getTime() : 0;
+    const toDate = dateTo.value ? new Date(dateTo.value).getTime() : Infinity;
+    const duration = durationFilter.value;
+
+    return logs.filter(log => {
+      // Search filter
+      if (searchTerm && !log.domain.toLowerCase().includes(searchTerm)) {
+        return false;
+      }
+
+      // Date range filter
+      const logDate = log.startTime;
+      if (logDate < fromDate || logDate > toDate) {
+        return false;
+      }
+
+      // Duration filter
+      if (duration !== 'all') {
+        const durationMs = log.duration;
+        switch (duration) {
+          case 'short':
+            if (durationMs >= 5 * 60 * 1000) return false;
+            break;
+          case 'medium':
+            if (durationMs < 5 * 60 * 1000 || durationMs > 30 * 60 * 1000) return false;
+            break;
+          case 'long':
+            if (durationMs <= 30 * 60 * 1000) return false;
+            break;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  // Update analytics
+  function updateAnalytics(logs) {
+    const filteredLogs = filterLogs(logs);
+    
+    // Total sessions
+    totalSessions.textContent = filteredLogs.length;
+    
+    // Total time
+    const totalDuration = filteredLogs.reduce((sum, log) => sum + log.duration, 0);
+    const hours = Math.floor(totalDuration / (60 * 60 * 1000));
+    const minutes = Math.floor((totalDuration % (60 * 60 * 1000)) / (60 * 1000));
+    totalTime.textContent = `${hours}h ${minutes}m`;
+    
+    // Most active domain
+    const domainCounts = {};
+    filteredLogs.forEach(log => {
+      domainCounts[log.domain] = (domainCounts[log.domain] || 0) + 1;
+    });
+    const mostActive = Object.entries(domainCounts)
+      .sort(([,a], [,b]) => b - a)[0];
+    mostActiveDomain.textContent = mostActive ? mostActive[0] : '-';
+    
+    // Average session
+    const avgDuration = filteredLogs.length ? totalDuration / filteredLogs.length : 0;
+    const avgMinutes = Math.round(avgDuration / (60 * 1000));
+    avgSession.textContent = `${avgMinutes}m`;
+    
+    // Update chart
+    updateChart(filteredLogs);
+  }
+
+  // Update chart data
+  function updateChart(logs) {
+    const sortedLogs = [...logs].sort((a, b) => a.startTime - b.startTime);
+    
+    chart.data.labels = sortedLogs.map(log => {
+      const date = new Date(log.startTime);
+      return date.toLocaleDateString();
+    });
+    
+    chart.data.datasets[0].data = sortedLogs.map(log => 
+      Math.round(log.duration / (60 * 1000))
+    );
+    
+    chart.update();
+  }
+
+  // Export logs
+  function exportLogs(logs) {
+    const filteredLogs = filterLogs(logs);
+    const csv = [
+      ['Domain', 'Start Time', 'End Time', 'Duration (minutes)'],
+      ...filteredLogs.map(log => [
+        log.domain,
+        new Date(log.startTime).toLocaleString(),
+        new Date(log.endTime).toLocaleString(),
+        Math.round(log.duration / (60 * 1000))
+      ])
+    ].map(row => row.join(',')).join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `activity-log-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Event listeners
+  if (activitySearch) {
+    activitySearch.addEventListener('input', () => {
+      chrome.storage.local.get(['sessionActivityLog'], (result) => {
+        const logs = result.sessionActivityLog || [];
+        renderSessionLog(filterLogs(logs));
+        updateAnalytics(logs);
+      });
+    });
+  }
+
+  if (dateFrom && dateTo) {
+    dateFrom.addEventListener('change', updateFilters);
+    dateTo.addEventListener('change', updateFilters);
+  }
+
+  if (durationFilter) {
+    durationFilter.addEventListener('change', updateFilters);
+  }
+
+  if (exportLogsButton) {
+    exportLogsButton.addEventListener('click', () => {
+      chrome.storage.local.get(['sessionActivityLog'], (result) => {
+        const logs = result.sessionActivityLog || [];
+        exportLogs(logs);
+      });
+    });
+  }
+
+  function updateFilters() {
+    chrome.storage.local.get(['sessionActivityLog'], (result) => {
+      const logs = result.sessionActivityLog || [];
+      renderSessionLog(filterLogs(logs));
+      updateAnalytics(logs);
+    });
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    // ... existing initialization code ...
+    
+    // Initialize Chart.js
+    if (activityChart) {
+      initializeChart();
+    }
+    
+    // Load initial data
+    chrome.storage.local.get(['sessionActivityLog'], (result) => {
+      const logs = result.sessionActivityLog || [];
+      renderSessionLog(logs);
+      updateAnalytics(logs);
+    });
+  });
+
+  // Script Management
+  const scriptNameInput = document.getElementById('script-name');
+  const scriptDomainsInput = document.getElementById('script-domains');
+  const scriptCodeInput = document.getElementById('script-code');
+  const scriptDescriptionInput = document.getElementById('script-description');
+  const saveScriptButton = document.getElementById('save-script');
+  const scriptsList = document.getElementById('scripts-list');
+
+  // Load scripts from storage
+  function loadScripts() {
+    chrome.storage.local.get(['customScripts'], (result) => {
+      const scripts = result.customScripts || [];
+      renderScripts(scripts);
+    });
+  }
+
+  // Save script to storage
+  function saveScript(script) {
+    chrome.storage.local.get(['customScripts'], (result) => {
+      const scripts = result.customScripts || [];
+      const existingIndex = scripts.findIndex(s => s.id === script.id);
+      
+      if (existingIndex >= 0) {
+        scripts[existingIndex] = script;
+      } else {
+        scripts.push(script);
+      }
+      
+      chrome.storage.local.set({ customScripts: scripts }, () => {
+        renderScripts(scripts);
+        // Notify background script of script update
+        chrome.runtime.sendMessage({ 
+          type: 'updateScripts', 
+          scripts: scripts 
+        });
+      });
+    });
+  }
+
+  // Delete script from storage
+  function deleteScript(scriptId) {
+    chrome.storage.local.get(['customScripts'], (result) => {
+      const scripts = result.customScripts || [];
+      const updatedScripts = scripts.filter(s => s.id !== scriptId);
+      
+      chrome.storage.local.set({ customScripts: updatedScripts }, () => {
+        renderScripts(updatedScripts);
+        // Notify background script of script update
+        chrome.runtime.sendMessage({ 
+          type: 'updateScripts', 
+          scripts: updatedScripts 
+        });
+      });
+    });
+  }
+
+  // Render scripts list
+  function renderScripts(scripts) {
+    if (!scriptsList) return;
+    
+    scriptsList.innerHTML = '';
+    
+    if (scripts.length === 0) {
+      scriptsList.innerHTML = '<p class="no-scripts">No scripts added yet.</p>';
+      return;
+    }
+    
+    scripts.forEach(script => {
+      const scriptElement = document.createElement('div');
+      scriptElement.className = 'script-item';
+      
+      const header = document.createElement('div');
+      header.className = 'script-header';
+      
+      const name = document.createElement('div');
+      name.className = 'script-name';
+      name.textContent = script.name;
+      
+      const actions = document.createElement('div');
+      actions.className = 'script-actions';
+      
+      const editButton = document.createElement('button');
+      editButton.className = 'edit';
+      editButton.textContent = 'Edit';
+      editButton.onclick = () => editScript(script);
+      
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'delete';
+      deleteButton.textContent = 'Delete';
+      deleteButton.onclick = () => {
+        if (confirm('Are you sure you want to delete this script?')) {
+          deleteScript(script.id);
+        }
+      };
+      
+      actions.appendChild(editButton);
+      actions.appendChild(deleteButton);
+      
+      header.appendChild(name);
+      header.appendChild(actions);
+      
+      const domains = document.createElement('div');
+      domains.className = 'script-domains';
+      domains.textContent = `Domains: ${script.domains.join(', ')}`;
+      
+      const description = document.createElement('div');
+      description.className = 'script-description';
+      description.textContent = script.description;
+      
+      scriptElement.appendChild(header);
+      scriptElement.appendChild(domains);
+      scriptElement.appendChild(description);
+      
+      scriptsList.appendChild(scriptElement);
+    });
+  }
+
+  // Edit script
+  function editScript(script) {
+    scriptNameInput.value = script.name;
+    scriptDomainsInput.value = script.domains.join(', ');
+    scriptCodeInput.value = script.code;
+    scriptDescriptionInput.value = script.description;
+    
+    // Scroll to form
+    document.querySelector('.script-form').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Save script button click handler
+  if (saveScriptButton) {
+    saveScriptButton.addEventListener('click', async () => {
+      const name = scriptNameInput.value.trim();
+      const domains = scriptDomainsInput.value
+        .split(',')
+        .map(d => d.trim())
+        .filter(d => d);
+      const code = scriptCodeInput.value.trim();
+      const description = scriptDescriptionInput.value.trim();
+      
+      // Clear any existing error states
+      [scriptNameInput, scriptDomainsInput, scriptCodeInput].forEach(input => {
+        input.classList.remove('input-error');
+      });
+      
+      // Validate inputs
+      let hasError = false;
+      if (!name) {
+        scriptNameInput.classList.add('input-error');
+        showFeedback('Script name is required', 'error');
+        hasError = true;
+      }
+      if (!domains.length) {
+        scriptDomainsInput.classList.add('input-error');
+        showFeedback('At least one domain is required', 'error');
+        hasError = true;
+      }
+      if (!code) {
+        scriptCodeInput.classList.add('input-error');
+        showFeedback('Script code is required', 'error');
+        hasError = true;
+      }
+      
+      if (hasError) return;
+      
+      // Show loading state
+      saveScriptButton.classList.add('loading');
+      showLoadingFeedback('Saving script...');
+      
+      try {
+        const script = {
+          id: Date.now().toString(),
+          name,
+          domains,
+          code,
+          description,
+          enabled: true
+        };
+        
+        await new Promise((resolve, reject) => {
+          saveScript(script, (success) => {
+            if (success) resolve();
+            else reject(new Error('Failed to save script'));
+          });
+        });
+        
+        // Clear form
+        scriptNameInput.value = '';
+        scriptDomainsInput.value = '';
+        scriptCodeInput.value = '';
+        scriptDescriptionInput.value = '';
+        
+        showFeedback('Script saved successfully!', 'success');
+      } catch (error) {
+        showFeedback('Failed to save script. Please try again.', 'error');
+        console.error('Script save error:', error);
+      } finally {
+        saveScriptButton.classList.remove('loading');
+      }
+    });
+  }
+
+  // Load scripts when page loads
+  loadScripts();
+
+  // Feedback Management
+  const globalFeedback = document.getElementById('global-feedback');
+
+  function showFeedback(message, type = 'success', duration = 3000) {
+    if (!globalFeedback) return;
+    
+    globalFeedback.textContent = message;
+    globalFeedback.className = `feedback-message ${type}`;
+    
+    if (duration > 0) {
+      setTimeout(() => {
+        globalFeedback.textContent = '';
+        globalFeedback.className = 'feedback-message';
+      }, duration);
+    }
+  }
+
+  function showLoadingFeedback(message) {
+    showFeedback(message, 'loading', 0);
+  }
+
+  function clearFeedback() {
+    if (globalFeedback) {
+      globalFeedback.textContent = '';
+      globalFeedback.className = 'feedback-message';
+    }
+  }
+
+  // DOM Elements
+  const authSection = document.getElementById('authSection');
+  const profileSection = document.getElementById('profileSection');
+  const teamSection = document.getElementById('teamSection');
+  const syncStatus = document.getElementById('syncStatus');
+
+  // Auth Elements
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const loginEmail = document.getElementById('loginEmail');
+  const loginPassword = document.getElementById('loginPassword');
+  const registerName = document.getElementById('registerName');
+  const registerEmail = document.getElementById('registerEmail');
+  const registerPassword = document.getElementById('registerPassword');
+  const loginButton = document.getElementById('loginButton');
+  const registerButton = document.getElementById('registerButton');
+  const loginError = document.getElementById('loginError');
+  const registerError = document.getElementById('registerError');
+  const logoutButton = document.getElementById('logoutButton');
+  const userName = document.getElementById('userName');
+  const userEmail = document.getElementById('userEmail');
+
+  // Team Elements
+  const createTeamButton = document.getElementById('createTeamButton');
+  const teamList = document.getElementById('teamList');
+
+  // Support Elements
+  const supportRequests = document.getElementById('supportRequests');
+  const newRequestForm = document.getElementById('newRequestForm');
+  const requestDetails = document.getElementById('requestDetails');
+  const requestsList = document.getElementById('requestsList');
+  const requestSubject = document.getElementById('requestSubject');
+  const requestMessage = document.getElementById('requestMessage');
+  const submitRequest = document.getElementById('submitRequest');
+  const requestStatus = document.getElementById('requestStatus');
+  const requestInfo = document.getElementById('requestInfo');
+  const requestResponses = document.getElementById('requestResponses');
+  const responseMessage = document.getElementById('responseMessage');
+  const submitResponse = document.getElementById('submitResponse');
+  const closeRequest = document.getElementById('closeRequest');
+
+  let currentRequestId = null;
+
+  // Load support requests
+  async function loadSupportRequests() {
+    try {
+      const response = await fetch('https://api.bytescookies.com/api/support', {
+        headers: {
+          'Authorization': `Bearer ${authManager.getAuthToken()}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load support requests');
+      }
+
+      const requests = await response.json();
+      renderSupportRequests(requests);
+    } catch (error) {
+      showStatus('Failed to load support requests', 'error');
+    }
+  }
+
+  // Render support requests
+  function renderSupportRequests(requests) {
+    requestsList.innerHTML = requests.map(request => `
+      <div class="request-item ${request.isPremium ? 'premium' : ''} ${request.priority === 'high' ? 'high-priority' : ''}"
+           data-id="${request._id}">
+        <div class="request-subject">${request.subject}</div>
+        <div class="request-status">Status: ${request.status}</div>
+        <div class="request-date">${new Date(request.createdAt).toLocaleDateString()}</div>
+      </div>
+    `).join('');
+
+    // Add click handlers
+    document.querySelectorAll('.request-item').forEach(item => {
+      item.addEventListener('click', () => {
+        currentRequestId = item.dataset.id;
+        loadRequestDetails(currentRequestId);
+      });
+    });
+  }
+
+  // Load request details
+  async function loadRequestDetails(requestId) {
+    try {
+      const response = await fetch(`https://api.bytescookies.com/api/support/${requestId}`, {
+        headers: {
+          'Authorization': `Bearer ${authManager.getAuthToken()}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load request details');
+      }
+
+      const request = await response.json();
+      renderRequestDetails(request);
+    } catch (error) {
+      showStatus('Failed to load request details', 'error');
+    }
+  }
+
+  // Render request details
+  function renderRequestDetails(request) {
+    requestInfo.innerHTML = `
+      <div class="request-header">
+        <h5>${request.subject}</h5>
+        <div class="request-meta">
+          <span class="status">Status: ${request.status}</span>
+          <span class="priority">Priority: ${request.priority}</span>
+          <span class="date">Created: ${new Date(request.createdAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+      <div class="request-message">${request.message}</div>
+    `;
+
+    requestResponses.innerHTML = request.responses.map(response => `
+      <div class="response-item ${response.from === 'support' ? 'support' : ''}">
+        <div class="response-meta">
+          <span class="from">${response.from === 'support' ? 'Support' : 'You'}</span>
+          <span class="date">${new Date(response.timestamp).toLocaleDateString()}</span>
+        </div>
+        <div class="response-message">${response.message}</div>
+      </div>
+    `).join('');
+
+    newRequestForm.style.display = 'none';
+    requestDetails.style.display = 'block';
+  }
+
+  // Handle new request submission
+  async function handleNewRequest() {
+    try {
+      const subject = requestSubject.value.trim();
+      const message = requestMessage.value.trim();
+
+      if (!subject || !message) {
+        showStatus('Please fill in all fields', 'error');
+        return;
+      }
+
+      const response = await fetch('https://api.bytescookies.com/api/support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authManager.getAuthToken()}`
+        },
+        body: JSON.stringify({ subject, message })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit request');
+      }
+
+      showStatus('Support request submitted successfully', 'success');
+      requestSubject.value = '';
+      requestMessage.value = '';
+      loadSupportRequests();
+    } catch (error) {
+      showStatus(error.message, 'error');
+    }
+  }
+
+  // Handle response submission
+  async function handleResponse() {
+    try {
+      const message = responseMessage.value.trim();
+
+      if (!message) {
+        showStatus('Please enter a response', 'error');
+        return;
+      }
+
+      const response = await fetch(`https://api.bytescookies.com/api/support/${currentRequestId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authManager.getAuthToken()}`
+        },
+        body: JSON.stringify({ message })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit response');
+      }
+
+      showStatus('Response sent successfully', 'success');
+      responseMessage.value = '';
+      loadRequestDetails(currentRequestId);
+    } catch (error) {
+      showStatus(error.message, 'error');
+    }
+  }
+
+  // Show status message
+  function showStatus(message, type = 'info') {
+    requestStatus.textContent = message;
+    requestStatus.className = `status-message ${type}`;
+    requestStatus.style.display = 'block';
+
+    setTimeout(() => {
+      requestStatus.style.display = 'none';
+    }, 3000);
+  }
+
+  // Setup support event listeners
+  function setupSupportListeners() {
+    submitRequest.addEventListener('click', handleNewRequest);
+    submitResponse.addEventListener('click', handleResponse);
+    closeRequest.addEventListener('click', () => {
+      requestDetails.style.display = 'none';
+      newRequestForm.style.display = 'block';
+      currentRequestId = null;
+    });
+  }
+
+  // Initialize support features
+  async function initSupport() {
+    if (authManager.isAuthenticated()) {
+      await loadSupportRequests();
+      setupSupportListeners();
+    }
+  }
+
+  // Update UI when auth state changes
+  async function updateUI() {
+    if (authManager.isAuthenticated()) {
+      const user = authManager.getCurrentUser();
+      authSection.style.display = 'none';
+      profileSection.style.display = 'block';
+      teamSection.style.display = 'block';
+      
+      userName.textContent = user.name;
+      userEmail.textContent = user.email;
+      
+      // Update premium UI
+      await premiumManager.updateUI();
+      
+      // Initialize support
+      await initSupport();
+      
+      // Start sync if authenticated
+      syncManager.startSync();
+    } else {
+      authSection.style.display = 'block';
+      profileSection.style.display = 'none';
+      teamSection.style.display = 'none';
+      
+      // Stop sync if not authenticated
+      syncManager.stopSync();
+    }
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', async () => {
+    await init();
+    await initPremiumFeatures();
+  });
+
+  // Listen for premium status changes
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && changes.currentUser) {
+      premiumManager.updateUI();
+    }
+  });
+
+  // Initialize premium features
+  async function initPremiumFeatures() {
+    await premiumManager.updateUI();
+    
+    // Add click handlers for premium features
+    document.querySelectorAll('[data-premium]').forEach(element => {
+      element.addEventListener('click', async (event) => {
+        const feature = element.dataset.premium;
+        await premiumManager.gateFeature(feature, () => {
+          // Feature is available, proceed with normal click handling
+          handlePremiumFeatureClick(feature, event);
+        });
+      });
+    });
+
+    // Add upgrade button handler
+    const upgradeButton = document.getElementById('upgradeButton');
+    if (upgradeButton) {
+      upgradeButton.addEventListener('click', handleUpgrade);
+    }
+  }
+
+  // Handle premium feature clicks
+  function handlePremiumFeatureClick(feature, event) {
+    switch (feature) {
+      case 'sessionSnippets':
+        // Handle session snippets feature
+        break;
+      case 'advancedActivityLog':
+        // Handle advanced activity log feature
+        break;
+      case 'customScripts':
+        // Handle custom scripts feature
+        break;
+      // Add more premium features as needed
+    }
+  }
+
+  // Handle upgrade button click
+  async function handleUpgrade() {
+    // Open upgrade page or show upgrade modal
+    window.open('https://bytescookies.com/upgrade', '_blank');
+  }
 });
+
