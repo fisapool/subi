@@ -1,0 +1,30 @@
+{
+  "name": "sessionbuddy",
+  "version": "1.0.0",
+  "description": "Chrome extension for managing cookie stores",
+  "scripts": {
+    "dev": "vite",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && vite build && npm run post-build",
+    "post-build": "cp manifest.json background.js content-script.js session-buddy.html main.html redirect.js set-background-color.js settings.js settings.html dist/ && cp -r assets dist/ && cp src/popup.html dist/ && sed -i '' 's|src=\"./popup.ts\"|src=\"/assets/index.5ee68d82.js\"|' dist/popup.html && sed -i '' 's|href=\"./assets/tailwind.css\"|href=\"/assets/index.7d23c72d.css\"|' dist/popup.html && mkdir -p dist/_locales/en && cp _locales/en/messages.json dist/_locales/en/",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^1.0.14",
+    "@pinia/testing": "^0.1.0",
+    "@tailwindcss/postcss": "^4.1.4",
+    "@types/chrome": "^0.0.260",
+    "@vitejs/plugin-vue": "^2.3.3",
+    "@vue/test-utils": "^2.4.6",
+    "autoprefixer": "^10.4.13",
+    "pinia": "^2.1.0",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.2.7",
+    "typescript": "^5.0.0",
+    "vite": "^2.9.18",
+    "vitest": "^1.0.0",
+    "vue": "^3.3.0"
+  }
+}
