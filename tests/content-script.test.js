@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { resetAllMocks, cleanupAfterTest } from './helpers/reset-mocks';
 import { initializeContentScript } from '../content';
 

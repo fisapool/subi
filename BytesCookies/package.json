@@ -1,16 +1,17 @@
 {
-  "name": "bytescookies",
+  "name": "bytescookies-extension",
   "version": "1.0.0",
   "description": "Browser extension for managing cookies",
   "main": "background.js",
+  "type": "module",
   "scripts": {
-    "test": "jest --runInBand --testTimeout=120000",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --testTimeout=120000",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
   },
   "jest": {
-    "setupFiles": [
-      "<rootDir>/tests/setup.js"
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/jest.setup.js"
     ],
     "testEnvironment": "jsdom",
     "moduleNameMapper": {
@@ -20,9 +21,10 @@
       "^.+\\.js$": "babel-jest"
     },
     "testTimeout": 120000,
-    "setupFilesAfterEnv": [
-      "<rootDir>/tests/jest.setup.js"
-    ]
+    "transformIgnorePatterns": [
+      "node_modules/(?!(webextension-polyfill)/)"
+    ],
+    "moduleFileExtensions": ["js", "json"]
   },
   "dependencies": {
     "webextension-polyfill": "^0.10.0"

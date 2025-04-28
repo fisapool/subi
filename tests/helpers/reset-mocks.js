@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 /**
  * Helper functions for resetting mocks in tests
  */

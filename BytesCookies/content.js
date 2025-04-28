@@ -9,7 +9,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   return true; // Keep the message channel open for the asynchronous response
 });
 
-function testProtection() {
+export function testProtection() {
   const results = [];
   
   // Test 1: Check if the extension is active
@@ -42,4 +42,117 @@ function testProtection() {
   }
   
   return results;
+}
+
+export function initializeContent() {
+  return new Promise((resolve) => {
+    // Set up message listener for communication with background script
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      if (request.action === 'testProtection') {
+        const results = testProtection();
+        sendResponse({ success: true, results });
+      }
+      return true; // Keep the message channel open for async response
+    });
+
+    // Initialize UI elements if they exist
+    const testProtectionBtn = document.getElementById('testProtectionBtn');
+    if (testProtectionBtn) {
+      testProtectionBtn.addEventListener('click', () => {
+        chrome.runtime.sendMessage({ action: 'testProtection' }, (response) => {
+          if (response && response.success) {
+            displayResults(response.results);
+          } else {
+            displayError('Failed to test protection');
+          }
+        });
+      });
+    }
+    
+    resolve();
+  });
+}
+
+export function handleCookieConsent() {
+  return new Promise((resolve) => {
+    // Implementation for handling cookie consent in content script
+    console.log('Content script: Cookie consent handled');
+    
+    // Find and interact with cookie consent elements
+    const consentElements = findCookieConsentElements();
+    if (consentElements.length > 0) {
+      consentElements.forEach(element => {
+        element.addEventListener('click', () => {
+          console.log('Cookie consent element clicked');
+        });
+      });
+    }
+    
+    resolve(true);
+  });
+}
+
+export function handleCookieSettings() {
+  return new Promise((resolve) => {
+    // Implementation for handling cookie settings in content script
+    console.log('Content script: Cookie settings handled');
+    
+    // Find and interact with cookie settings elements
+    const settingsElements = findCookieSettingsElements();
+    if (settingsElements.length > 0) {
+      settingsElements.forEach(element => {
+        element.addEventListener('click', () => {
+          console.log('Cookie settings element clicked');
+        });
+      });
+    }
+    
+    resolve(true);
+  });
+}
+
+// Helper functions
+function findCookieConsentElements() {
+  // Find common cookie consent elements
+  const selectors = [
+    'button[id*="cookie"][id*="consent"]',
+    'button[id*="cookie"][id*="accept"]',
+    'button[id*="cookie"][id*="agree"]',
+    'button[id*="gdpr"][id*="consent"]',
+    'button[id*="gdpr"][id*="accept"]',
+    'button[id*="gdpr"][id*="agree"]',
+    'button[id*="privacy"][id*="consent"]',
+    'button[id*="privacy"][id*="accept"]',
+    'button[id*="privacy"][id*="agree"]'
+  ];
+  
+  return document.querySelectorAll(selectors.join(', '));
+}
+
+function findCookieSettingsElements() {
+  // Find common cookie settings elements
+  const selectors = [
+    'button[id*="cookie"][id*="settings"]',
+    'button[id*="cookie"][id*="preferences"]',
+    'button[id*="gdpr"][id*="settings"]',
+    'button[id*="gdpr"][id*="preferences"]',
+    'button[id*="privacy"][id*="settings"]',
+    'button[id*="privacy"][id*="preferences"]'
+  ];
+  
+  return document.querySelectorAll(selectors.join(', '));
+}
+
+function displayResults(results) {
+  const resultsElement = document.getElementById('results');
+  if (resultsElement) {
+    resultsElement.innerHTML = results.map(result => `<div>${result}</div>`).join('');
+  }
+}
+
+function displayError(message) {
+  const errorElement = document.getElementById('errorMessage');
+  if (errorElement) {
+    errorElement.innerHTML = `<div class="error">${message}</div>`;
+  }
 } 
