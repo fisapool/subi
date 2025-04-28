@@ -1,5 +1,5 @@
 {
-  "name": "bytescookies",
+  "name": "bytescookies-extension",
   "version": "1.0.0",
   "description": "Browser extension for managing cookies",
   "main": "background.js",
@@ -21,7 +21,6 @@
       "^.+\\.js$": "babel-jest"
     },
     "testTimeout": 120000,
-    "modulePathIgnorePatterns": ["<rootDir>/BytesCookies/package.json"],
     "transformIgnorePatterns": [
       "node_modules/(?!(webextension-polyfill)/)"
     ],

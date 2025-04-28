@@ -1,33 +1,29 @@
 {
   "manifest_version": 3,
-  "name": "Advanced Session Snippets",
-  "version": "1.0",
-  "description": "Save and restore browser sessions including tabs, cookies, and form data",
+  "name": "FISABytes Cookie Manager",
+  "version": "2.0",
+  "description": "A powerful Chrome extension for managing browser cookies and sessions with enhanced security features.",
   "permissions": [
-    "tabs",
-    "cookies",
     "storage",
-    "activeTab",
-    "scripting"
+    "tabs",
+    "scripting",
+    "activeTab"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
+    "default_popup": "popup.html"
   },
+  "options_page": "options.html",
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["src/content.js"]
     }
   ]
-} 
+}
