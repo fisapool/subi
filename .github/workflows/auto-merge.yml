@@ -1,0 +1,33 @@
+name: Auto Merge to Main
+
+on:
+  push:
+    branches:
+      - feature  # Change this to your feature branch
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+
+      - name: Merge feature into main
+        run: |
+          git fetch origin feature:feature
+          git checkout main
+          git merge feature --no-ff -m "Automated merge from feature branch"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

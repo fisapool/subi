@@ -1,0 +1,27 @@
+name: Auto Create Pull Request
+
+on:
+  push:
+    branches:
+      - feature  # Change this to your feature branch
+
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: 'Automated Pull Request'
+          body: 'This pull request is automatically created by GitHub Actions.'
+          branch: feature
+          base: main
+          draft: false
+          delete-branch: true
+          delete-branch-fail-silently: true 
