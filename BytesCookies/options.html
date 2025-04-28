@@ -150,14 +150,419 @@
       background-color: #f0f9f0;
       border: 1px solid #c8e6c9;
     }
+    /* Task Management Styles */
+    .task-management {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .task-form {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .task-form input,
+    .task-form select {
+      padding: 8px;
+      border: 1px solid #cbd5e0;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .task-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .task-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      background: white;
+    }
+    
+    .task-info {
+      flex: 1;
+    }
+    
+    .task-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    
+    .task-domain {
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .task-priority {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+    
+    .priority-high {
+      background-color: #fed7d7;
+      color: #c53030;
+    }
+    
+    .priority-medium {
+      background-color: #fefcbf;
+      color: #975a16;
+    }
+    
+    .priority-low {
+      background-color: #e6fffa;
+      color: #2c7a7b;
+    }
+    
+    .task-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .task-actions button {
+      padding: 4px 8px;
+      font-size: 12px;
+      border: 1px solid #cbd5e0;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+    }
+    
+    .task-actions button.delete {
+      color: #e53e3e;
+      border-color: #e53e3e;
+    }
+    
+    .task-actions button.delete:hover {
+      background-color: #fff5f5;
+    }
+
+    .section {
+      margin-bottom: 2rem;
+      padding: 1rem;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .setting-group {
+      margin: 1rem 0;
+    }
+
+    .setting-description {
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .domain-list {
+      margin: 1rem 0;
+    }
+
+    .domain-input {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .domain-input input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .domain-list-items {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .domain-list-items li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      background: #f5f5f5;
+      margin-bottom: 0.25rem;
+      border-radius: 4px;
+    }
+
+    .domain-list-items button {
+      background: #ff4444;
+      color: white;
+      border: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .domain-list-items button:hover {
+      background: #cc0000;
+    }
+
+    /* Auth styles */
+    .auth-container {
+      max-width: 400px;
+      margin: 20px auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .auth-form input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .auth-form button {
+      padding: 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .auth-form button:hover {
+      background: #45a049;
+    }
+
+    .auth-error {
+      color: #f44336;
+      margin-top: 10px;
+    }
+
+    .auth-success {
+      color: #4CAF50;
+      margin-top: 10px;
+    }
+
+    /* Sync status styles */
+    .sync-status {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px;
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .sync-status.syncing {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .sync-status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .sync-status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    /* Team styles */
+    .team-container {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .team-list {
+      display: grid;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .team-card {
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+    }
+
+    .team-card h3 {
+      margin: 0 0 10px 0;
+    }
+
+    .team-members {
+      margin-top: 10px;
+    }
+
+    .team-member {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 5px;
+    }
+
+    .team-member .role {
+      font-size: 0.8em;
+      color: #666;
+    }
+
+    /* Premium Feature Styles */
+    .premium-locked {
+      opacity: 0.7;
+      position: relative;
+    }
+
+    .premium-locked::after {
+      content: '🔒';
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 16px;
+    }
+
+    .premium-badge {
+      background: linear-gradient(45deg, #FFD700, #FFA500);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    .upgrade-prompt {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      margin: 10px 0;
+      text-align: center;
+    }
+
+    .upgrade-button {
+      background: linear-gradient(45deg, #4CAF50, #45a049);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .upgrade-button:hover {
+      background: linear-gradient(45deg, #45a049, #3d8b40);
+    }
+
+    /* Support Section Styles */
+    .support-requests {
+      margin-bottom: 20px;
+    }
+
+    .support-form {
+      margin-bottom: 20px;
+    }
+
+    .support-form input,
+    .support-form textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .support-form textarea {
+      height: 100px;
+      resize: vertical;
+    }
+
+    .support-details {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .request-item {
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .request-item:hover {
+      background: #f5f5f5;
+    }
+
+    .request-item.premium {
+      border-left: 4px solid #FFD700;
+    }
+
+    .request-item.high-priority {
+      border-left: 4px solid #ff4444;
+    }
+
+    .response-item {
+      padding: 10px;
+      margin: 5px 0;
+      border-left: 3px solid #4CAF50;
+      background: #f9f9f9;
+    }
+
+    .response-item.support {
+      border-left-color: #2196F3;
+    }
+
+    .status-message {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-message.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div id="app">
     <header>
       <h1>BytesCookies Options</h1>
-      <div id="storage-usage" class="storage-usage">Storage Usage: Calculating...</div>
+      <div id="global-feedback" class="feedback-message"></div>
     </header>
+    
+    <nav id="navigation">
+      <button id="cookie-settings-tab" class="active">Cookie Settings</button>
+      <button id="productivity-tab">Productivity</button>
+      <button id="scripts-tab">Scripts</button>
+      <button id="activity-tab">Activity Log</button>
+      <button id="security-tab">Security</button>
+    </nav>
 
     <div class="tabs">
       <button id="cookie-settings-tab" class="tab-button active">Cookie Settings</button>
@@ -207,6 +612,28 @@
           <p class="help-text">Websites to mute notifications for during meeting mode.</p>
         </div>
         
+        <!-- Task Management Section -->
+        <div class="task-management">
+          <h3>Task Management</h3>
+          <form id="task-form" class="task-form">
+            <input type="text" id="task-title" placeholder="Task Title" required>
+            <input type="text" id="task-domain" placeholder="Domain (e.g., github.com)" required>
+            <select id="task-priority">
+              <option value="low">Low Priority</option>
+              <option value="medium" selected>Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+            <button type="submit" class="primary-button">Add Task</button>
+          </form>
+          
+          <div id="tasks-container">
+            <h4>Your Tasks</h4>
+            <ul id="task-list" class="task-list">
+              <!-- Tasks will be listed here -->
+            </ul>
+          </div>
+        </div>
+        
         <button id="save-productivity-settings" class="primary-button">Save Productivity Settings</button>
         <div id="productivity-settings-feedback" class="feedback-message"></div>
         
@@ -221,10 +648,34 @@
       <!-- Scripts Tab -->
       <div id="scripts-content" class="tab-pane">
         <h2>Custom Scripts</h2>
-        <p>This feature allows you to run custom scripts on specific websites.</p>
-        <div class="scripting-feature">
-          <button id="add-script-button" class="secondary-button">Add New Script</button>
-          <div id="scripts-list"></div>
+        <div class="settings-section">
+          <div class="script-form">
+            <h3>Add New Script</h3>
+            <div class="form-group">
+              <label for="script-name">Script Name:</label>
+              <input type="text" id="script-name" placeholder="Enter script name">
+            </div>
+            <div class="form-group">
+              <label for="script-domains">Target Domains (comma-separated):</label>
+              <input type="text" id="script-domains" placeholder="example.com, *.example.com">
+            </div>
+            <div class="form-group">
+              <label for="script-code">Script Code:</label>
+              <textarea id="script-code" rows="10" placeholder="Enter your JavaScript code"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="script-description">Description:</label>
+              <textarea id="script-description" rows="3" placeholder="Describe what this script does"></textarea>
+            </div>
+            <button id="save-script" class="primary-button">Save Script</button>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h3>Your Scripts</h3>
+          <div id="scripts-list" class="scripts-list">
+            <!-- Scripts will be listed here -->
+          </div>
         </div>
       </div>
 
@@ -237,9 +688,59 @@
           <p class="help-text">When enabled, the extension will log your browsing activity for analysis.</p>
         </div>
         
+        <!-- Search and Filter Controls -->
+        <div class="activity-filters">
+          <div class="search-box">
+            <input type="text" id="activity-search" placeholder="Search domains...">
+          </div>
+          <div class="filter-controls">
+            <div class="date-range">
+              <label>Date Range:</label>
+              <input type="date" id="date-from">
+              <input type="date" id="date-to">
+            </div>
+            <div class="duration-filter">
+              <label>Duration:</label>
+              <select id="duration-filter">
+                <option value="all">All</option>
+                <option value="short">Short (< 5 min)</option>
+                <option value="medium">Medium (5-30 min)</option>
+                <option value="long">Long (> 30 min)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics Summary -->
+        <div class="analytics-summary">
+          <h3>Analytics</h3>
+          <div class="analytics-grid">
+            <div class="analytics-card">
+              <h4>Total Sessions</h4>
+              <div id="total-sessions">0</div>
+            </div>
+            <div class="analytics-card">
+              <h4>Total Time</h4>
+              <div id="total-time">0h 0m</div>
+            </div>
+            <div class="analytics-card">
+              <h4>Most Active Domain</h4>
+              <div id="most-active-domain">-</div>
+            </div>
+            <div class="analytics-card">
+              <h4>Average Session</h4>
+              <div id="avg-session">0m</div>
+            </div>
+          </div>
+          <div class="analytics-chart">
+            <canvas id="activity-chart"></canvas>
+          </div>
+        </div>
+        
         <div class="activity-controls">
           <button id="clear-activity-log" class="secondary-button">Clear Activity Log</button>
           <button id="clear-logs-button" class="secondary-button">Clear All Logs</button>
+          <button id="export-logs" class="primary-button">Export Logs</button>
         </div>
         
         <div id="sessions-container">
@@ -267,10 +768,172 @@
         <button id="save-security-settings" class="primary-button">Save Security Settings</button>
         <div id="security-settings-feedback" class="feedback-message"></div>
       </div>
+
+      <div class="section">
+        <h2>Focus Mode Settings</h2>
+        <div class="setting-group">
+          <label>
+            <input type="checkbox" id="focusModeEnabled">
+            Enable Focus Mode
+          </label>
+          <div class="setting-description">Automatically manage tabs and notifications when Focus Mode is active.</div>
+        </div>
+        
+        <div class="setting-group">
+          <h3>Tab Management</h3>
+          <div class="domain-list" id="focusPinTabs">
+            <h4>Pin Tabs</h4>
+            <div class="domain-input">
+              <input type="text" placeholder="Enter domain (e.g., github.com)">
+              <button class="add-domain">Add</button>
+            </div>
+            <ul class="domain-list-items"></ul>
+          </div>
+          
+          <div class="domain-list" id="focusMuteTabs">
+            <h4>Mute Tabs</h4>
+            <div class="domain-input">
+              <input type="text" placeholder="Enter domain (e.g., youtube.com)">
+              <button class="add-domain">Add</button>
+            </div>
+            <ul class="domain-list-items"></ul>
+          </div>
+          
+          <div class="domain-list" id="focusBlockNotifications">
+            <h4>Block Notifications</h4>
+            <div class="domain-input">
+              <input type="text" placeholder="Enter domain (e.g., facebook.com)">
+              <button class="add-domain">Add</button>
+            </div>
+            <ul class="domain-list-items"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Meeting Mode Settings</h2>
+        <div class="setting-group">
+          <label>
+            <input type="checkbox" id="meetingModeEnabled">
+            Enable Meeting Mode
+          </label>
+          <div class="setting-description">Automatically mute distractions and block notifications during meetings.</div>
+        </div>
+        
+        <div class="setting-group">
+          <h3>Distraction Management</h3>
+          <div class="domain-list" id="meetingMuteDomains">
+            <h4>Mute Domains</h4>
+            <div class="domain-input">
+              <input type="text" placeholder="Enter domain (e.g., youtube.com)">
+              <button class="add-domain">Add</button>
+            </div>
+            <ul class="domain-list-items"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Section -->
+  <div id="authSection" class="auth-container">
+    <h2>Account</h2>
+    <div id="loginForm" class="auth-form">
+      <h3>Login</h3>
+      <input type="email" id="loginEmail" placeholder="Email" required>
+      <input type="password" id="loginPassword" placeholder="Password" required>
+      <button id="loginButton">Login</button>
+      <div id="loginError" class="auth-error"></div>
+    </div>
+    <div id="registerForm" class="auth-form">
+      <h3>Register</h3>
+      <input type="text" id="registerName" placeholder="Name" required>
+      <input type="email" id="registerEmail" placeholder="Email" required>
+      <input type="password" id="registerPassword" placeholder="Password" required>
+      <button id="registerButton">Register</button>
+      <div id="registerError" class="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- User Profile Section (hidden when not logged in) -->
+  <div id="profileSection" class="auth-container" style="display: none;">
+    <h2>Profile</h2>
+    <div id="userInfo">
+      <p>Name: <span id="userName"></span></p>
+      <p>Email: <span id="userEmail"></span></p>
+    </div>
+    <button id="logoutButton">Logout</button>
+  </div>
+
+  <!-- Team Section (hidden when not logged in) -->
+  <div id="teamSection" class="team-container" style="display: none;">
+    <h2>Teams</h2>
+    <button id="createTeamButton">Create Team</button>
+    <div id="teamList" class="team-list"></div>
+  </div>
+
+  <!-- Sync Status -->
+  <div id="syncStatus" class="sync-status" style="display: none;"></div>
+
+  <!-- Add premium badges to premium features -->
+  <div class="feature-section">
+    <h3>Session Snippets <span class="premium-badge">Premium</span></h3>
+    <div data-premium="sessionSnippets">
+      <!-- Session snippets content -->
+    </div>
+  </div>
+
+  <div class="feature-section">
+    <h3>Advanced Activity Log <span class="premium-badge">Premium</span></h3>
+    <div data-premium="advancedActivityLog">
+      <!-- Advanced activity log content -->
+    </div>
+  </div>
+
+  <div class="feature-section">
+    <h3>Custom Scripts <span class="premium-badge">Premium</span></h3>
+    <div data-premium="customScripts">
+      <!-- Custom scripts content -->
+    </div>
+  </div>
+
+  <!-- Add upgrade prompt section -->
+  <div id="upgradePrompt" class="upgrade-prompt" style="display: none;">
+    <h3>Upgrade to Premium</h3>
+    <p>Get access to all premium features including session snippets, advanced activity log, custom scripts, and more!</p>
+    <button class="upgrade-button" id="upgradeButton">Upgrade Now</button>
+  </div>
+
+  <!-- Support Section -->
+  <div class="feature-section">
+    <h3>Support <span class="premium-badge">Premium</span></h3>
+    <div data-premium="support">
+      <div id="supportRequests" class="support-requests">
+        <h4>Your Support Requests</h4>
+        <div id="requestsList"></div>
+      </div>
+
+      <div id="newRequestForm" class="support-form">
+        <h4>New Support Request</h4>
+        <input type="text" id="requestSubject" placeholder="Subject" />
+        <textarea id="requestMessage" placeholder="Describe your issue..."></textarea>
+        <button id="submitRequest">Submit Request</button>
+        <div id="requestStatus" class="status-message"></div>
+      </div>
+
+      <div id="requestDetails" class="support-details" style="display: none;">
+        <h4>Request Details</h4>
+        <div id="requestInfo"></div>
+        <div id="requestResponses"></div>
+        <textarea id="responseMessage" placeholder="Add a response..."></textarea>
+        <button id="submitResponse">Send Response</button>
+        <button id="closeRequest">Close</button>
+      </div>
     </div>
   </div>
 
   <script src="src/utils.js"></script>
   <script src="options.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

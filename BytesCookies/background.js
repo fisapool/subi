@@ -507,6 +507,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: false, error: error.message });
       });
     return true; // indicate async response
+  } else if (message.action === 'updateMode') {
+    handleModeChange(message.mode, message.state);
   }
   return true; // indicate async response
 });
@@ -535,6 +537,153 @@ async function testCookieProtection() {
     return results;
   });
 }
+
+// Focus/Meeting Mode handling
+async function handleModeChange(mode, state) {
+  if (mode === 'focusMode') {
+    if (state) {
+      // Actions to take when Focus Mode is enabled
+      console.log('Focus Mode enabled');
+      // Get focus mode settings from storage
+      chrome.storage.local.get(['focusModeSettings'], async (result) => {
+        const settings = result.focusModeSettings || {};
+        const { pinTabs = [], muteTabs = [], blockNotifications = [] } = settings;
+        
+        // Get all tabs
+        const tabs = await chrome.tabs.query({});
+        
+        // Apply focus mode actions
+        for (const tab of tabs) {
+          const url = new URL(tab.url);
+          const domain = url.hostname;
+          
+          // Pin tabs if domain is in pinTabs
+          if (pinTabs.includes(domain)) {
+            await chrome.tabs.update(tab.id, { pinned: true });
+          }
+          
+          // Mute tabs if domain is in muteTabs
+          if (muteTabs.includes(domain)) {
+            await chrome.tabs.update(tab.id, { muted: true });
+          }
+          
+          // Block notifications if domain is in blockNotifications
+          if (blockNotifications.includes(domain)) {
+            await chrome.notifications.clearAll();
+          }
+        }
+      });
+    } else {
+      // Actions to take when Focus Mode is disabled
+      console.log('Focus Mode disabled');
+      // Unpin and unmute all tabs
+      const tabs = await chrome.tabs.query({});
+      for (const tab of tabs) {
+        await chrome.tabs.update(tab.id, { 
+          pinned: false,
+          muted: false
+        });
+      }
+    }
+  } else if (mode === 'meetingMode') {
+    if (state) {
+      // Actions to take when Meeting Mode is enabled
+      console.log('Meeting Mode enabled');
+      // Get meeting mode settings from storage
+      chrome.storage.local.get(['meetingModeSettings'], async (result) => {
+        const settings = result.meetingModeSettings || {};
+        const { muteDomains = [] } = settings;
+        
+        // Get all tabs
+        const tabs = await chrome.tabs.query({});
+        
+        // Mute specified domains
+        for (const tab of tabs) {
+          const url = new URL(tab.url);
+          const domain = url.hostname;
+          
+          if (muteDomains.includes(domain)) {
+            await chrome.tabs.update(tab.id, { muted: true });
+          }
+        }
+        
+        // Block all notifications
+        await chrome.notifications.clearAll();
+      });
+    } else {
+      // Actions to take when Meeting Mode is disabled
+      console.log('Meeting Mode disabled');
+      // Unmute all tabs
+      const tabs = await chrome.tabs.query({});
+      for (const tab of tabs) {
+        await chrome.tabs.update(tab.id, { muted: false });
+      }
+    }
+  }
+}
+
+// Listen for storage changes to keep modes in sync
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (changes.focusMode) {
+    console.log(`Focus Mode changed to: ${changes.focusMode.newValue}`);
+    handleModeChange('focusMode', changes.focusMode.newValue);
+  }
+  if (changes.meetingMode) {
+    console.log(`Meeting Mode changed to: ${changes.meetingMode.newValue}`);
+    handleModeChange('meetingMode', changes.meetingMode.newValue);
+  }
+});
+
+// Script Management
+let customScripts = [];
+
+// Load scripts from storage
+chrome.storage.local.get(['customScripts'], (result) => {
+  customScripts = result.customScripts || [];
+});
+
+// Listen for script updates
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'updateScripts') {
+    customScripts = message.scripts;
+    sendResponse({ success: true });
+  }
+});
+
+// Listen for tab updates to inject scripts
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url) {
+    const url = new URL(tab.url);
+    const domain = url.hostname;
+    
+    // Find matching scripts for this domain
+    const matchingScripts = customScripts.filter(script => {
+      return script.enabled && script.domains.some(pattern => {
+        if (pattern.startsWith('*.')) {
+          const baseDomain = pattern.slice(2);
+          return domain.endsWith(baseDomain);
+        }
+        return domain === pattern;
+      });
+    });
+    
+    // Inject matching scripts
+    if (matchingScripts.length > 0) {
+      matchingScripts.forEach(script => {
+        try {
+          chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            func: new Function(script.code)
+          }).catch(error => {
+            console.error(`Failed to execute script ${script.name}:`, error);
+          });
+        } catch (error) {
+          console.error(`Error preparing script ${script.name}:`, error);
+        }
+      });
+    }
+  }
+});
 
 export function initializeBackground() {
   return new Promise((resolve) => {

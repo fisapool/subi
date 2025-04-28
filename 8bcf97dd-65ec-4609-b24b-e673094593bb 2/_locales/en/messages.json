@@ -1,0 +1,191 @@
+{
+      "date_year": {
+      "message": "Year"
+   },
+      "date_month": {
+      "message": "Month"
+   },
+      "date_day": {
+      "message": "Day"
+   },
+      "date_dayname": {
+      "message": "Day Name"
+   },
+      "date_time": {
+      "message": "Time"
+   },
+      "timeframe_today": {
+      "message": "Today"
+   },
+      "timeframe_inTheFuture": {
+      "message": "In the Future"
+   },
+      "timeframe_yesterday": {
+      "message": "Yesterday"
+   },
+      "timeframe_thisWeek": {
+      "message": "This Week"
+   },
+      "timeframe_lastWeek": {
+      "message": "Last Week"
+   },
+      "timeframe_twoWeeksAgo": {
+      "message": "Two Weeks Ago"
+   },
+      "timeframe_threeWeeksAgo": {
+      "message": "Three Weeks Ago"
+   },
+      "timeframe_lastMonth": {
+      "message": "Last Month"
+   },
+      "timeframe_thisYear": {
+      "message": "This Year"
+   },
+      "timeframe_lastYear": {
+      "message": "Last Year"
+   },
+      "timeframe_older": {
+      "message": "Older"
+   },
+      "misc_oldSessions": {
+      "message": "Old Sessions"
+   },
+      "misc_unknown": {
+      "message": "Unknown"
+   },
+      "misc_completed": {
+      "message": "Completed"
+   },
+      "misc_session": {
+      "message": "Session"
+   },
+      "misc_sessions": {
+      "message": "Sessions"
+   },
+      "linkset_type_currentSession": {
+      "message": "Current Session"
+   },
+      "linkset_type_currentSessions": {
+      "message": "Current Sessions"
+   },
+      "linkset_type_previousSession": {
+      "message": "Previous Session"
+   },
+      "linkset_type_previousSessions": {
+      "message": "Previous Sessions"
+   },
+      "linkset_type_savedLinkset": {
+      "message": "Saved Session"
+   },
+      "linkset_type_savedLinksets": {
+      "message": "Saved Sessions"
+   },
+      "linkset": {
+      "message": "Session"
+   },
+      "linksets": {
+      "message": "$COUNT$ Sessions",
+      "placeholders": {
+         "count": {
+            "content": "$1",
+            "example": "7"
+         }
+      }
+   },
+      "misc_mostRecent": {
+      "message": "most recent"
+   },
+      "misc_loading": {
+      "message": "Loading . . . .",
+	  "description": "4 periods are relevant here"
+   },
+      "action_saved": {
+      "message": "Saved"
+   },
+      "action_updated": {
+      "message": "Updated"
+   },
+      "action_refreshed": {
+      "message": "Refreshed"
+   },
+      "action_recorded": {
+      "message": "Recorded"
+   },
+      "unitOfTime_second": {
+      "message": "second"
+   },
+      "unitOfTime_seconds": {
+      "message": "seconds"
+   },
+      "unitOfTime_minute": {
+      "message": "minute"
+   },
+      "unitOfTime_minutes": {
+      "message": "minutes"
+   },
+      "unitOfTime_hour": {
+      "message": "hour"
+   },
+      "unitOfTime_hours": {
+      "message": "hours"
+   },
+      "unitOfTime_day": {
+      "message": "day"
+   },
+      "unitOfTime_days": {
+      "message": "days"
+   },
+      "unitOfTime_week": {
+      "message": "week"
+   },
+      "unitOfTime_weeks": {
+      "message": "weeks"
+   },
+      "unitOfTime_month": {
+      "message": "month"
+   },
+      "unitOfTime_months": {
+      "message": "months"
+   },
+      "unitOfTime_year": {
+      "message": "year"
+   },
+      "unitOfTime_years": {
+      "message": "years"
+   },
+      "actionTimeframe_momentsAgo": {
+      "message": "$ACTION$ moments ago",
+      "placeholders": {
+         "action": {
+            "content": "$1",
+            "example": "updated"
+         }
+      }
+   },
+      "actionTimeframe_moreThanAYearAgo": {
+      "message": "$ACTION$ more than a year ago",
+      "placeholders": {
+         "action": {
+            "content": "$1",
+            "example": "updated"
+         }
+      }
+   },
+      "actionTimeframe_actionNUnitOfTimeAgo": {
+      "message": "$ACTION$ $AMOUNT_OF_TIME$ $UNIT_OF_TIME$ ago",
+      "placeholders": {
+         "action": {
+            "content": "$1",
+            "example": "updated"
+         },
+         "AMOUNT_OF_TIME": {
+            "content": "$2",
+            "example": "5"
+         },
+         "UNIT_OF_TIME": {
+            "content": "$3",
+            "example": "minutes"
+         }
+      }
+   }
+}

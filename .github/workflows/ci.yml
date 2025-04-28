@@ -49,5 +49,4 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           merge-method: squash
-          delete-branch: true
-          delete-branch-fail-silently: true 
+          pull-request-number: ${{ github.event.pull_request.number }} 

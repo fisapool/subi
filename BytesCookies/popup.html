@@ -142,10 +142,211 @@
         color: #c62828;
         border: 1px solid #ffcdd2;
       }
+      /* Session Snippets styles */
+      .session-snippets {
+        margin-top: 20px;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+      }
+      
+      .session-snippets h2 {
+        margin-bottom: 16px;
+        font-size: 18px;
+      }
+      
+      .saved-sessions {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        margin-top: 12px;
+      }
+      
+      .session-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        border-bottom: 1px solid #eee;
+      }
+      
+      .session-item:last-child {
+        border-bottom: none;
+      }
+      
+      .session-info {
+        flex: 1;
+      }
+      
+      .session-name {
+        font-weight: 500;
+      }
+      
+      .session-date {
+        font-size: 12px;
+        color: #666;
+      }
+      
+      .session-actions {
+        display: flex;
+        gap: 8px;
+      }
+      
+      .session-actions button {
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+      
+      .new-session-form {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      
+      .new-session-form input {
+        flex: 1;
+      }
+      /* Focus/Meeting Mode styles */
+      .productivity-section {
+        margin-top: 20px;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+      }
+
+      .mode-control {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+
+      .mode-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .mode-header h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #2c3e50;
+      }
+
+      .mode-toggle {
+        background: #e9ecef;
+        border: none;
+        border-radius: 16px;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .mode-toggle.active {
+        background: #4CAF50;
+        color: white;
+      }
+
+      .mode-description {
+        font-size: 12px;
+        color: #6c757d;
+      }
+
+      .mode-status-indicator {
+        margin-top: 12px;
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .mode-status-indicator.focus-active {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      .mode-status-indicator.meeting-active {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+
+      .auth-container {
+        margin-bottom: 15px;
+      }
+
+      .auth-container h3 {
+        margin: 0 0 10px 0;
+        color: #333;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      .error {
+        color: #dc3545;
+        font-size: 0.9em;
+        margin: 5px 0;
+      }
+
+      .sync-status {
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 4px;
+        display: none;
+      }
+
+      .sync-status.success {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .sync-status.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .sync-status.info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .profile-section {
+        margin-bottom: 15px;
+      }
+
+      .profile-section h3 {
+        margin: 0 0 10px 0;
+        color: #333;
+      }
+
+      .profile-info {
+        margin-bottom: 10px;
+      }
+
+      .profile-info span {
+        font-weight: bold;
+      }
+
+      hr {
+        margin: 15px 0;
+        border: none;
+        border-top: 1px solid #ddd;
+      }
     </style>
   </head>
   <body>
     <div id="app">
+      <header>
+        <h1>BytesCookies</h1>
+        <div id="popup-feedback" class="feedback-message"></div>
+      </header>
       <!-- Loading overlay -->
       <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-spinner"></div>
@@ -158,6 +359,35 @@
           </div>
         </div>
         <div class="content">
+          <div id="authSection" class="auth-container">
+            <h3>Sign In</h3>
+            <input id="loginEmail" type="email" placeholder="Email" />
+            <input id="loginPassword" type="password" placeholder="Password" />
+            <button id="loginButton">Login</button>
+            <div id="loginError" class="error"></div>
+            
+            <hr>
+            
+            <h3>Register</h3>
+            <input id="registerName" type="text" placeholder="Name" />
+            <input id="registerEmail" type="email" placeholder="Email" />
+            <input id="registerPassword" type="password" placeholder="Password" />
+            <button id="registerButton">Register</button>
+            <div id="registerError" class="error"></div>
+          </div>
+
+          <div id="profileSection" class="profile-section" style="display:none;">
+            <h3>Profile</h3>
+            <div class="profile-info">
+              Welcome, <span id="userName"></span>
+              <br>
+              Email: <span id="userEmail"></span>
+            </div>
+            <button id="logoutButton">Logout</button>
+          </div>
+
+          <div id="syncStatus" class="sync-status"></div>
+
           <div class="input-group">
             <label for="domain">Target Domain:</label>
             <input type="text" id="domain" placeholder="Enter target domain (e.g., example.com)">
@@ -184,39 +414,36 @@
           </div>
           <!-- Productivity Section -->
           <div class="productivity-section">
-            <h2>Productivity Features</h2>
-            <div class="feature-toggle">
-              <input type="checkbox" id="toggleFocusMode" />
-              <label for="toggleFocusMode" class="feature-label">Session-Based Focus Modes</label>
-              <button id="configFocusMode" class="config-button">Configure</button>
+            <h2>Productivity Controls</h2>
+            
+            <!-- Focus Mode Controls -->
+            <div class="mode-control">
+              <div class="mode-header">
+                <h3>Focus Mode</h3>
+                <button id="toggle-focus-mode" class="mode-toggle">
+                  <span class="mode-status">Off</span>
+                </button>
+              </div>
+              <div class="mode-description">
+                Automatically pin important tabs and mute distractions
+              </div>
             </div>
-            <div class="feature-description">
-              Create distraction-free environments by pinning relevant tabs and optionally blocking notifications for specific sessions.
+
+            <!-- Meeting Mode Controls -->
+            <div class="mode-control">
+              <div class="mode-header">
+                <h3>Meeting Mode</h3>
+                <button id="toggle-meeting-mode" class="mode-toggle">
+                  <span class="mode-status">Off</span>
+                </button>
+              </div>
+              <div class="mode-description">
+                Mute notifications and distractions during meetings
+              </div>
             </div>
-            <div class="feature-toggle">
-              <input type="checkbox" id="toggleCookieDeletion" />
-              <label for="toggleCookieDeletion" class="feature-label">One-Click Session Cookie Deletion</label>
-            </div>
-            <div class="feature-description">
-              Quickly delete all cookies for a website's current session.
-            </div>
-            <!-- Placeholder for other toggles (disabled for MVP) -->
-            <div class="feature-toggle">
-              <input type="checkbox" id="togglePlaceholder1" disabled />
-              <label for="togglePlaceholder1" class="feature-label">Session-Aware Task Prioritization (Coming Soon)</label>
-              <button class="config-button" disabled>Configure</button>
-            </div>
-            <div class="feature-description">
-              Subtly highlight tasks related to your currently active website sessions.
-            </div>
-            <div class="feature-toggle">
-              <input type="checkbox" id="togglePlaceholder2" disabled />
-              <label for="togglePlaceholder2" class="feature-label">Session Snippets (Coming Soon)</label>
-              <button class="config-button" disabled>Configure</button>
-            </div>
-            <div class="feature-description">
-              Save and restore granular states within browsing sessions (URLs, cookies, form data).
-            </div>
+
+            <!-- Mode Status Indicator -->
+            <div id="mode-status" class="mode-status-indicator"></div>
           </div>
           <div id="options-navigation" style="margin-top: 20px;">
             <button id="openOptionsPage" style="width: 100%; padding: 10px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer;">
@@ -252,6 +479,17 @@
                 <li><strong>Netscape:</strong> Traditional .txt format used by browsers</li>
                 <li><strong>CSV:</strong> Simple format with domain, name, value columns</li>
               </ul>
+            </div>
+          </div>
+          <!-- Session Snippets Section -->
+          <div class="session-snippets">
+            <h2>Session Snippets</h2>
+            <div class="new-session-form">
+              <input type="text" id="newSessionName" placeholder="Enter session name">
+              <button id="saveCurrentSession">Save Current Session</button>
+            </div>
+            <div class="saved-sessions" id="savedSessionsList">
+              <!-- Saved sessions will be listed here -->
             </div>
           </div>
         </div>

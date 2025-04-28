@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Buddy - Session Manager</title>
+    <link rel="stylesheet" href="./assets/tailwind.css">
+    <link rel="stylesheet" href="./assets/popup.css">
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <h1>Session Manager</h1>
+            <button class="btn btn-primary" id="newSession">New Session</button>
+        </div>
+        
+        <div class="session-list" id="sessionList">
+            <!-- Sessions will be populated here -->
+        </div>
+
+        <div class="status-bar">
+            <span id="status">Ready</span>
+            <button class="btn btn-secondary" id="settings">Settings</button>
+        </div>
+
+        <!-- Warning dialog -->
+        <div class="overlay" id="overlay"></div>
+        <div class="warning-dialog" id="warningDialog">
+            <div class="warning-dialog-header">
+                <h3 class="warning-dialog-title">Cookie Validation Warnings</h3>
+                <span class="warning-dialog-close" id="closeWarningDialog">&times;</span>
+            </div>
+            <div class="warning-dialog-content" id="warningDialogContent">
+                <!-- Warning content will be populated here -->
+            </div>
+            <div class="warning-dialog-actions">
+                <button class="btn btn-secondary" id="cancelImport">Cancel</button>
+                <button class="btn btn-warning" id="proceedImport">Proceed Anyway</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./assets/popup.js"></script>
+</body>
+</html>

@@ -24,4 +24,13 @@ jobs:
           base: main
           draft: false
           delete-branch: true
-          delete-branch-fail-silently: true 
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: 'Automated Pull Request'
+          body: 'This pull request is automatically created by GitHub Actions.'
+          branch: feature
+          base: main
+          draft: false
+          delete-branch: true 

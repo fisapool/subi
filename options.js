@@ -1,5 +1,6 @@
 import SessionManager from './session-manager.js';
 import ScriptManager from './script-manager.js';
+import customScriptsManager from './custom-scripts.js';
 
 // Initialize managers
 const sessionManager = new SessionManager();
@@ -243,4 +244,111 @@ function showError(message) {
 function showSuccess(message) {
     // You can implement a better success UI
     alert(message);
-} 
+}
+
+// Show status message
+function showStatus(message, isError = false) {
+    const statusDiv = document.createElement('div');
+    statusDiv.textContent = message;
+    statusDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        border-radius: 4px;
+        background-color: ${isError ? '#f44336' : '#4CAF50'};
+        color: white;
+        z-index: 1000;
+    `;
+    document.body.appendChild(statusDiv);
+    setTimeout(() => statusDiv.remove(), 3000);
+}
+
+// Render scripts list
+async function renderScripts() {
+    const scripts = customScriptsManager.getAllScripts();
+    scriptList.innerHTML = '';
+
+    scripts.forEach(script => {
+        const scriptElement = document.createElement('div');
+        scriptElement.className = 'list-item';
+        scriptElement.innerHTML = `
+            <div class="script-header">
+                <h3>${script.name}</h3>
+                <div class="actions">
+                    <button class="edit-script">Edit</button>
+                    <button class="delete-script">Delete</button>
+                </div>
+            </div>
+            <div class="script-details">
+                <p><strong>Last Modified:</strong> ${new Date(script.lastModified).toLocaleString()}</p>
+                <p><strong>Status:</strong> ${script.enabled ? 'Enabled' : 'Disabled'}</p>
+            </div>
+        `;
+
+        // Add event listeners
+        const editButton = scriptElement.querySelector('.edit-script');
+        editButton.addEventListener('click', () => {
+            scriptNameInput.value = script.name;
+            scriptCodeInput.value = script.code;
+            saveScriptButton.dataset.editMode = 'true';
+            saveScriptButton.dataset.originalName = script.name;
+        });
+
+        const deleteButton = scriptElement.querySelector('.delete-script');
+        deleteButton.addEventListener('click', async () => {
+            if (confirm(`Are you sure you want to delete "${script.name}"?`)) {
+                await customScriptsManager.removeScript(script.name);
+                showStatus(`Script "${script.name}" deleted`);
+                renderScripts();
+            }
+        });
+
+        scriptList.appendChild(scriptElement);
+    });
+}
+
+// Save script handler
+saveScriptButton.addEventListener('click', async () => {
+    const name = scriptNameInput.value.trim();
+    const code = scriptCodeInput.value.trim();
+
+    if (!name || !code) {
+        showStatus('Please enter both name and code', true);
+        return;
+    }
+
+    try {
+        if (saveScriptButton.dataset.editMode === 'true') {
+            // Delete old script if name changed
+            if (saveScriptButton.dataset.originalName !== name) {
+                await customScriptsManager.removeScript(saveScriptButton.dataset.originalName);
+            }
+            delete saveScriptButton.dataset.editMode;
+            delete saveScriptButton.dataset.originalName;
+        }
+
+        await customScriptsManager.addScript(name, code);
+        showStatus(`Script "${name}" saved successfully`);
+        
+        // Clear inputs
+        scriptNameInput.value = '';
+        scriptCodeInput.value = '';
+        
+        // Refresh list
+        renderScripts();
+    } catch (error) {
+        console.error('Error saving script:', error);
+        showStatus('Error saving script', true);
+    }
+});
+
+// Initial render
+renderScripts();
+
+// Listen for storage changes
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'sync' && changes.customScripts) {
+        renderScripts();
+    }
+}); 
