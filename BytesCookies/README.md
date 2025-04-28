@@ -135,4 +135,4 @@ BytesCookies is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-*Last updated: [Current Date]* 
+*Last updated: [28/04/2025]* 
