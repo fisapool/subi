@@ -1,10 +1,33 @@
+<<<<<<< HEAD
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+=======
 # Node.js dependencies
 node_modules/
+>>>>>>> origin/main
 
 # Build output
 dist/
 build/
 
+<<<<<<< HEAD
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+=======
 # Environment variables
 .env
 .env.local
@@ -33,4 +56,5 @@ yarn-error.log*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
+>>>>>>> origin/main
 Thumbs.db 

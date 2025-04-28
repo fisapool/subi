@@ -1,0 +1,344 @@
+/* Button styles */
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #4CAF50;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  position: relative; /* For tooltip positioning */
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Status message */
+.status-message {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+  display: none;
+}
+
+.status-message.success {
+  background-color: #dff0d8;
+  color: #3c763d;
+  border: 1px solid #d6e9c6;
+}
+
+.status-message.error {
+  background-color: #f2dede;
+  color: #a94442;
+  border: 1px solid #ebccd1;
+}
+
+.status-message.warning {
+  background-color: #fcf8e3;
+  color: #8a6d3b;
+  border: 1px solid #faebcc;
+}
+
+.status-message.info {
+  background-color: #d9edf7;
+  color: #31708f;
+  border: 1px solid #bce8f1;
+}
+
+/* Error display */
+.error-display {
+  display: none;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+  border-radius: 4px;
+}
+
+.error-message {
+  color: #a94442;
+  margin-bottom: 10px;
+}
+
+.error-details {
+  margin-top: 10px;
+}
+
+.toggle-details {
+  background: none;
+  border: none;
+  color: #a94442;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.details-content {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #ebccd1;
+  border-radius: 4px;
+}
+
+/* Results list */
+.results-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.results-list li {
+  padding: 8px;
+  margin: 4px 0;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+/* Button container */
+.button-container {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+/* Test protection button */
+.test-protection-button {
+  background-color: #007bff;
+}
+
+.test-protection-button:hover {
+  background-color: #0056b3;
+}
+
+/* Save and restore buttons */
+#saveSessionCookiesButton,
+#restoreSessionCookiesButton {
+  background-color: #6c757d;
+}
+
+#saveSessionCookiesButton:hover,
+#restoreSessionCookiesButton:hover {
+  background-color: #5a6268;
+}
+
+.test-results {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.test-results ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.test-results li {
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.test-results li:last-child {
+  border-bottom: none;
+}
+
+/* Tooltip styles */
+.tooltip {
+  visibility: hidden;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  background-color: #333;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  max-width: 200px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Tooltip arrow */
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+/* Show tooltip on hover */
+button:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Help button styles */
+.help-button {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 16px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.help-button:hover {
+  background-color: #0056b3;
+}
+
+/* Help section styles */
+.help-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.help-section h3 {
+  margin-top: 0;
+  color: #495057;
+  font-size: 16px;
+}
+
+.help-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.help-link {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  color: #495057;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.help-link:hover {
+  background-color: #dee2e6;
+  text-decoration: none;
+}
+
+.help-icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* Feedback section styles */
+.feedback-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f0f7ff;
+  border: 1px solid #cce5ff;
+  border-radius: 4px;
+}
+
+.feedback-section h3 {
+  margin-top: 0;
+  color: #004085;
+  font-size: 16px;
+}
+
+.feedback-section p {
+  margin-bottom: 15px;
+  color: #495057;
+  font-size: 14px;
+}
+
+.feedback-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feedback-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  border-radius: 4px;
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.feedback-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+}
+
+.github-feedback {
+  background-color: #24292e;
+}
+
+.github-feedback:hover {
+  background-color: #1a1f24;
+}
+
+.quick-feedback {
+  background-color: #28a745;
+}
+
+.quick-feedback:hover {
+  background-color: #218838;
+}
+
+.feedback-icon {
+  margin-right: 8px;
+  font-size: 16px;
+} 

@@ -1,0 +1,149 @@
+.error-section {
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #ff6b6b;
+  border-radius: 4px;
+  background-color: #fff5f5;
+}
+
+.error-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.error-title {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+.error-details-toggle {
+  background: none;
+  border: none;
+  color: #2196f3;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.error-details-toggle:hover {
+  text-decoration: underline;
+}
+
+.error-message {
+  color: #d32f2f;
+  margin-bottom: 8px;
+}
+
+.error-details {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 8px;
+  margin: 8px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.error-details pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: monospace;
+  font-size: 12px;
+  color: #495057;
+}
+
+.error-dismiss {
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.error-dismiss:hover {
+  background-color: #ff5252;
+}
+
+.helper-text {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.input-group {
+  margin-bottom: 16px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.input-group input[type="number"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.input-group input[type="number"]:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+.format-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.format-info h4 {
+  margin: 0 0 10px 0;
+  color: #495057;
+  font-size: 14px;
+}
+
+.format-info ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.format-info li {
+  margin: 5px 0;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.format-info li strong {
+  color: #495057;
+}
+
+.failed-cookies-list {
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.failed-cookies-list li {
+  margin: 5px 0;
+  padding: 5px;
+  background-color: #fff3f3;
+  border-radius: 3px;
+  font-size: 13px;
+  color: #dc3545;
+}
+
+.failed-cookies-list li strong {
+  color: #495057;
+} 
