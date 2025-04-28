@@ -230,6 +230,25 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
   }
 });
 
+// New function to notify when session cookies are at risk
+function notifySessionCookieRisk(cookie) {
+  chrome.notifications.create({
+    type: 'basic',
+    iconUrl: 'icon.png',
+    title: 'Session Cookie Risk',
+    message: `Session cookie "${cookie.name}" for domain "${cookie.domain}" is at risk.`
+  });
+}
+
+// New function to log session cookie events
+function logSessionCookieEvent(event) {
+  chrome.storage.local.get('sessionCookieLogs', (data) => {
+    const logs = data.sessionCookieLogs || [];
+    logs.push({ timestamp: new Date().toISOString(), ...event });
+    chrome.storage.local.set({ sessionCookieLogs: logs });
+  });
+}
+
 // Listen for cookie changes to detect session cookie removal
 chrome.cookies.onChanged.addListener(async (changeInfo) => {
   if (!sessionLoggingEnabled) return;
@@ -243,6 +262,10 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
         endSession(tabId, domain);
       }
     }
+    // Notify user about the risk
+    notifySessionCookieRisk(changeInfo.cookie);
+    // Log the event
+    logSessionCookieEvent({ type: 'deletion', cookie: changeInfo.cookie });
   }
 });
 

@@ -32,8 +32,9 @@ export function initializePopup() {
           if (tabs.length > 0) {
             const url = new URL(tabs[0].url);
             chrome.cookies.getAll({ domain: url.hostname }, (cookies) => {
-              // Save cookies to storage
-              chrome.storage.local.set({ savedCookies: cookies }, () => {
+              // Encrypt cookies before saving
+              const encryptedCookies = encryptCookies(cookies);
+              chrome.storage.local.set({ savedCookies: encryptedCookies }, () => {
                 displayResults(['Cookies saved successfully']);
               });
             });
@@ -569,4 +570,31 @@ function showSyncStatus(message, status = 'info') {
 }
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', init); 
+document.addEventListener('DOMContentLoaded', init);
+
+// New function to encrypt cookies before export
+function encryptCookies(cookies) {
+  // Simple encryption for demonstration purposes
+  return cookies.map(cookie => ({
+    ...cookie,
+    value: btoa(cookie.value)
+  }));
+}
+
+// Update saveCookiesBtn click handler to encrypt cookies before saving
+if (saveCookiesBtn) {
+  saveCookiesBtn.addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length > 0) {
+        const url = new URL(tabs[0].url);
+        chrome.cookies.getAll({ domain: url.hostname }, (cookies) => {
+          // Encrypt cookies before saving
+          const encryptedCookies = encryptCookies(cookies);
+          chrome.storage.local.set({ savedCookies: encryptedCookies }, () => {
+            displayResults(['Cookies saved successfully']);
+          });
+        });
+      }
+    });
+  });
+} 

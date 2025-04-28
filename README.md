@@ -1,138 +1,303 @@
 # BytesCookies
 
-A browser extension for managing cookies and sessions with advanced protection features.
+A powerful browser extension for managing cookies, sessions, and productivity with advanced protection features.
 
-## Features
+## 🚀 Features
 
-- **Session Cookie Protection**: Automatically detect and protect session cookies from being cleared
-- **Cookie Import/Export**: Save and restore your cookies across sessions
-- **Test Protection**: Verify that your session cookies are being properly protected
-- **Storage Management**: Monitor and manage your extension's storage usage
+### Currently Implemented (Free Version)
 
-## Installation
+#### Core Privacy Features
+- **Session Cookie Protection**
+  - Automatically detect and protect session cookies from being cleared
+  - Manual import/export of cookies
+  - Test feature to verify cookie protection
+  - Support for multiple cookie formats (JSON, Netscape, CSV)
+
+#### Productivity Features
+- **Focus Mode**
+  - Configure per-site actions (pin, mute, block notifications)
+  - Manage focus settings via options page
+  - Customize behavior for specific websites
+
+- **Meeting Mode**
+  - Automatically mute specified sites during meetings
+  - Configure meeting-specific settings
+  - Background muting for uninterrupted meetings
+
+#### Additional Features
+- **Activity Log**
+  - Track extension and browsing activity
+  - View and clear recent session logs
+  - Basic activity monitoring
+
+- **Custom Scripts (Basic)**
+  - Add and manage custom scripts
+  - Basic script execution support
+  - Options page management
+
+### Coming Soon (Premium Features)
+
+- **Advanced Session Management**
+  - Save and restore complete browser sessions
+  - Include cookies and form data in sessions
+  - Cloud sync across devices
+
+- **Enhanced Productivity**
+  - Session-aware task prioritization
+  - Quick access popup controls
+  - Advanced focus and meeting automation
+
+- **Advanced Analytics**
+  - Detailed activity filtering and search
+  - Export and analyze browsing patterns
+  - Custom reporting
+
+- **Premium Script Management**
+  - Full script synchronization
+  - Popup-based script controls
+  - Advanced automation features
+
+## 💻 Installation
 
 1. Download the extension from the Chrome Web Store (link coming soon)
-2. Click "Add to Chrome" to install the extension
-3. Grant the necessary permissions when prompted
+2. Click "Add to Chrome" to install
+3. Grant necessary permissions when prompted
 
-## Usage
+## 📁 Project Structure
+
+```
+bytescookies/
+├── .bin/                    # Binary files
+├── node_modules/           # Dependencies
+├── .babelrc               # Babel configuration
+├── .gitignore             # Git ignore rules
+├── .package-lock.json     # Package lock file
+├── auth.js                # Authentication logic
+├── background.js          # Extension background script
+├── babel.config.js        # Babel configuration
+├── content.js             # Content script
+├── cookie-utils.js        # Cookie utility functions
+├── index.html             # Main HTML file
+├── manifest.json          # Extension manifest
+├── options.css            # Options page styles
+├── options.html           # Options page HTML
+├── options.js             # Options page logic
+├── package.json           # Project configuration
+├── package-lock.json      # Package lock file
+├── popup.css              # Popup styles
+├── popup.html             # Popup HTML
+├── popup.js               # Popup logic
+├── popup_part2.css        # Additional popup styles
+├── popup_part2.html       # Additional popup HTML
+├── popup_part2.js         # Additional popup logic
+├── premium.js             # Premium features
+├── session-snippets.js    # Session management
+├── sync.js                # Synchronization logic
+├── task-storage.js        # Task storage
+├── tasks.html             # Tasks page
+├── utils.js               # Utility functions
+├── CONTRIBUTING.md        # Contribution guidelines
+├── ISSUES.md              # Issue reporting guide
+├── LICENSE                # License file
+└── README.md              # Project documentation
+```
+
+## 🌳 Free Version Features Tree
+
+```
+bytescookies (Free Version)
+├── Core Privacy Features
+│   ├── Session Cookie Protection
+│   │   ├── Automatic Detection
+│   │   ├── Manual Import/Export
+│   │   └── Test Protection
+│   │
+│   └── Cookie Formats
+│       └── JSON
+│
+├── Productivity Features
+│   ├── Focus Mode
+│   │   ├── Per-site Actions
+│   │   │   ├── Pin Tabs
+│   │   │   ├── Mute Notifications
+│   │   │   └── Block Distractions
+│   │   └── Options Page Management
+│   │
+│   └── Meeting Mode
+│       ├── Site Muting
+│       ├── Meeting Settings
+│       └── Background Muting
+│
+├── Activity Log
+│   ├── Extension Activity
+│   ├── Browsing Activity
+│   └── Session Logs
+│
+└── Custom Scripts (Basic)
+    ├── Script Management
+    ├── Basic Execution
+    └── Options Page Controls
+```
+
+## 🌟 Premium Version Features Tree
+
+```
+bytescookies (Premium Version)
+├── Advanced Session Management
+│   ├── Complete Session Save/Restore
+│   │   ├── Open Tabs
+│   │   ├── Cookies
+│   │   └── Form Data
+│   ├── Cloud Sync
+│   │   ├── Cross-Device Synchronization
+│   │   ├── Automatic Backup
+│   │   └── Version History
+│   └── Session Snippets
+│       ├── Named Sessions
+│       ├── Scheduled Restore
+│       └── Session Templates
+│
+├── Enhanced Productivity
+│   ├── Session-Aware Task Prioritization
+│   │   ├── Context-Based Highlighting
+│   │   ├── Task Suggestions
+│   │   └── Priority Overrides
+│   ├── Quick Access Popup Controls
+│   │   ├── Focus Mode Toggle
+│   │   ├── Meeting Mode Toggle
+│   │   └── Script Quick Actions
+│   └── Advanced Automation
+│       ├── Scheduled Actions
+│       ├── Conditional Rules
+│       └── Workflow Templates
+│
+├── Advanced Analytics
+│   ├── Detailed Activity Filtering
+│   │   ├── Date Ranges
+│   │   ├── Site Categories
+│   │   └── Custom Filters
+│   ├── Activity Search
+│   │   ├── Full-Text Search
+│   │   ├── Tag-Based Search
+│   │   └── Saved Searches
+│   ├── Export & Analysis
+│   │   ├── CSV/JSON Export
+│   │   ├── Usage Patterns
+│   │   └── Productivity Insights
+│   └── Custom Reporting
+│       ├── Report Templates
+│       ├── Scheduled Reports
+│       └── Share Reports
+│
+├── Premium Script Management
+│   ├── Full Script Synchronization
+│   │   ├── Cloud Backup
+│   │   ├── Version Control
+│   │   └── Conflict Resolution
+│   ├── Popup-Based Script Controls
+│   │   ├── Quick Enable/Disable
+│   │   ├── Script Parameters
+│   │   └── Execution History
+│   └── Advanced Automation
+│       ├── Script Scheduling
+│       ├── Conditional Execution
+│       └── Script Chaining
+│
+├── User Accounts & Collaboration
+│   ├── User Authentication
+│   │   ├── Email/Password
+│   │   ├── OAuth Integration
+│   │   └── Two-Factor Auth
+│   ├── Team Features
+│   │   ├── Shared Sessions
+│   │   ├── Shared Scripts
+│   │   └── Team Permissions
+│   └── Collaboration Tools
+│       ├── Comments & Notes
+│       ├── Activity Feed
+│       └── Team Notifications
+│
+└── Premium Support
+    ├── Priority Help
+    │   ├── Direct Email Support
+    │   ├── Faster Response Times
+    │   └── Feature Requests
+    ├── Documentation
+    │   ├── Advanced Guides
+    │   ├── API Documentation
+    │   └── Video Tutorials
+    └── Community
+        ├── Premium Forums
+        ├── User Groups
+        └── Early Access
+```
+
+## 🎯 Usage
 
 ### Session Cookie Protection
 
-BytesCookies automatically detects and protects session cookies. These are cookies that:
-- Have no expiration date
-- Have the `session` flag set
-- Are manually marked as session cookies in the options
-
-To verify that your session cookies are being protected:
 1. Click the BytesCookies icon in your browser toolbar
-2. Click the "Test Protection" button
-3. Review the results to see which cookies are protected
+2. Use the "Test Protection" button to verify cookie protection
+3. Import/export cookies as needed
 
-### Cookie Import/Export
+### Focus Mode
 
-#### Supported Formats
+1. Open BytesCookies options
+2. Navigate to Focus Mode settings
+3. Add websites and configure actions:
+   - Pin tabs
+   - Mute notifications
+   - Block distractions
 
-BytesCookies supports importing cookies in the following formats:
+### Meeting Mode
 
-- **JSON**: Standard JSON format with cookie objects
-  ```json
-  {
-    "cookies": [
-      {
-        "name": "sessionId",
-        "value": "abc123",
-        "domain": ".example.com"
-      }
-    ],
-    "timestamp": 1625097600000,
-    "version": "1.0"
-  }
-  ```
+1. Access Meeting Mode in options
+2. Add websites to mute during meetings
+3. Enable/disable as needed
 
-- **Netscape**: Traditional Netscape cookie file format
-  ```
-  # Netscape HTTP Cookie File
-  # https://example.com/
-  # This is a generated file!  Do not edit.
-  
-  .example.com	TRUE	/	FALSE	1625097600	sessionId	abc123
-  ```
+### Activity Log
 
-- **CSV**: Comma-separated values format
-  ```
-  domain,path,secure,expiry,name,value
-  .example.com,/,TRUE,1625097600,sessionId,abc123
-  ```
+1. View logs in the options page
+2. Enable/disable logging
+3. Clear logs when needed
 
-#### Exporting Cookies
+## 🌐 Browser Compatibility
 
-1. Click the BytesCookies icon in your browser toolbar
-2. Click the "Save Session Cookies" button
-3. Your cookies will be saved to the extension's storage
+- **Chrome**: Version 88+ (fully supported)
+- **Edge**: Version 88+ (fully supported)
+- **Firefox**: Version 78+ (limited support)
+- **Safari**: Version 14+ (limited support)
 
-#### Importing Cookies
+## 🛠️ Development
 
-1. Click the BytesCookies icon in your browser toolbar
-2. Click the "Restore Session Cookies" button
-3. Your previously saved cookies will be restored
+### Prerequisites
+- Node.js
+- npm or yarn
+- Chrome/Edge browser
 
-### Storage Management
+### Setup
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Load the extension in your browser
 
-BytesCookies uses Chrome's storage API to save your cookies and settings. There are limits to how much data can be stored:
-
-- **Local Storage**: Limited to approximately 5MB
-- **Sync Storage**: Limited to approximately 100KB per item and 100 items total
-
-To clear logs and free up storage:
-1. Open the BytesCookies options page
-2. Navigate to the "Storage" tab
-3. Click the "Clear Logs" button
-
-## Browser Compatibility
-
-BytesCookies is designed to work with the following browsers:
-
-- **Chrome**: Version 88 or higher (fully supported)
-- **Edge**: Version 88 or higher (fully supported)
-- **Firefox**: Version 78 or higher (limited support)
-- **Safari**: Version 14 or higher (limited support)
-
-Some features may be disabled in browsers with limited support.
-
-## Troubleshooting
-
-### Common Issues
-
-- **"Failed to import cookies"**: Check that your import file is in one of the supported formats
-- **"Session cookies not protected"**: Verify that the cookies have no expiration date or the session flag
-- **"Storage limit reached"**: Clear logs or remove unused saved cookies
-
-### Getting Help
-
-If you encounter issues not covered in this documentation:
-
-1. Check the [GitHub Issues](https://github.com/fisapool/BytesCookies/issues) page
-2. Create a new issue with details about your problem
-3. Include your browser version and any error messages
-
-## Feedback
-
-We welcome feedback to improve BytesCookies:
-
-- **Feature Requests**: Submit via [GitHub Issues](https://github.com/fisapool/BytesCookies/issues)
-- **Bug Reports**: Include steps to reproduce and expected vs. actual behavior
-- **General Feedback**: Email us at feedback@bytescookies.com
-
-## License
+## 📝 License
 
 BytesCookies is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🤝 Contributing
 
-- Thanks to all contributors who have helped improve BytesCookies
-- Special thanks to the open-source community for inspiration and tools
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+## 🐛 Reporting Issues
+
+Found a bug? Please check our [Issues Guide](ISSUES.md) before reporting.
+
+## 📞 Support
+
+- **Documentation**: Check our [GitHub Wiki](https://github.com/fisapool/BytesCookies/wiki)
+- **Issues**: [GitHub Issues](https://github.com/fisapool/BytesCookies/issues)
+- **Email**: support@bytescookies.com
 
 ---
 
-*Last updated: [28/04/2025]* 
+*Last updated: [Current Date]* 

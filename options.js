@@ -1433,5 +1433,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Open upgrade page or show upgrade modal
     window.open('https://bytescookies.com/upgrade', '_blank');
   }
+
+  // New function to load session cookie settings
+  function loadSessionCookieSettings() {
+    chrome.storage.local.get('sessionCookieNames', (data) => {
+      const sessionCookieNames = data.sessionCookieNames || [];
+      const container = document.getElementById('sessionCookieSettings');
+      if (container) {
+        container.innerHTML = sessionCookieNames.map(name => `<div>${name}</div>`).join('');
+      }
+    });
+  }
+
+  // Call loadSessionCookieSettings when options page is loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    loadSessionCookieSettings();
+  });
 });
 
