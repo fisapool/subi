@@ -66,6 +66,82 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
+      /* Error display styles */
+      .error-section {
+        background-color: #fff8f8;
+        border: 1px solid #ffcccc;
+        border-radius: 4px;
+        padding: 12px;
+        margin-top: 16px;
+      }
+      .error-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .error-title {
+        font-weight: bold;
+        color: #d32f2f;
+      }
+      .error-details-toggle {
+        background: none;
+        border: none;
+        color: #4CAF50;
+        cursor: pointer;
+        font-size: 12px;
+        padding: 4px 8px;
+      }
+      .error-message {
+        color: #d32f2f;
+        margin-bottom: 8px;
+      }
+      .error-details {
+        background-color: #f9f9f9;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        font-size: 12px;
+      }
+      .error-dismiss {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 12px;
+        margin-top: 8px;
+        cursor: pointer;
+      }
+      .failed-cookies-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .failed-cookies-list li {
+        padding: 4px 0;
+        border-bottom: 1px solid #eee;
+      }
+      .failed-cookies-list li:last-child {
+        border-bottom: none;
+      }
+      .status-message {
+        padding: 8px 12px;
+        border-radius: 4px;
+        margin-top: 8px;
+        font-size: 14px;
+      }
+      .status-message.success {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+      }
+      .status-message.error {
+        background-color: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+      }
     </style>
   </head>
   <body>
@@ -83,8 +159,9 @@
         </div>
         <div class="content">
           <div class="input-group">
-            <label for="domain">Domain:</label>
-            <input type="text" id="domain" placeholder="Enter domain (e.g., example.com)">
+            <label for="domain">Target Domain:</label>
+            <input type="text" id="domain" placeholder="Enter target domain (e.g., example.com)">
+            <small class="helper-text">Optional: Specify a different domain for imported cookies</small>
           </div>
           <div class="button-group">
             <button id="saveSessionCookiesButton" class="action-button">
@@ -101,8 +178,9 @@
             </label>
           </div>
           <div class="input-group">
-            <label for="cookieDuration">Session Cookie Duration (hours):</label>
-            <input type="number" id="cookieDuration" min="1" max="168" placeholder="Enter duration in hours" />
+            <label for="cookieDuration">Session Cookie Duration (minutes):</label>
+            <input type="number" id="cookieDuration" min="1" max="1440" placeholder="Enter duration in minutes" />
+            <small class="helper-text">Maximum duration: 24 hours (1440 minutes)</small>
           </div>
           <!-- Productivity Section -->
           <div class="productivity-section">
@@ -148,17 +226,33 @@
           <!-- Status message -->
           <div id="statusMessage" class="status-message" style="display: none;"></div>
           <!-- Error display -->
-          <div id="errorDisplay" class="error-section">
-            <div id="errorList" class="error-list"></div>
+          <div id="errorDisplay" class="error-section" style="display: none;">
+            <div class="error-header">
+              <span class="error-title">Error Details</span>
+              <button id="showErrorDetails" class="error-details-toggle">Show Details</button>
+            </div>
+            <div id="errorMessage" class="error-message"></div>
+            <div id="errorDetails" class="error-details" style="display: none;">
+              <div id="errorStack"></div>
+            </div>
             <button id="dismissError" class="error-dismiss">Dismiss</button>
           </div>
           <!-- Quick Start Tips -->
           <div class="tips-section">
             <h3>Quick Start:</h3>
             <ul class="tips-list" style="counter-reset: step">
-              <li>Click "Import Cookies" and select your .json cookie file</li>
-              <li>Wait for import confirmation</li>
+              <li>Click "Import Cookies" and select your cookie file (.json, .txt, or .csv)</li>
+              <li>Optionally specify a target domain for the imported cookies</li>
+              <li>Wait for import confirmation and check details if any cookies fail to import</li>
             </ul>
+            <div class="format-info">
+              <h4>Supported Formats:</h4>
+              <ul>
+                <li><strong>JSON:</strong> Standard format with url and cookies array</li>
+                <li><strong>Netscape:</strong> Traditional .txt format used by browsers</li>
+                <li><strong>CSV:</strong> Simple format with domain, name, value columns</li>
+              </ul>
+            </div>
           </div>
         </div>
         <div class="footer">
@@ -168,6 +262,8 @@
         </div>
       </div>
     </div>
+    <!-- Scripts -->
+    <script src="src/utils.js"></script>
     <script src="src/popup.js"></script>
   </body>
 </html>

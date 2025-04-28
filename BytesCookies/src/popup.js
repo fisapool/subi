@@ -15,13 +15,14 @@ window.cookieUtils = {
     });
   },
 
-  importCookies: async function(cookies, tab) {
+  importCookies: async function(cookies, tab, targetDomain = null) {
     if (!Array.isArray(cookies)) {
       throw new Error('Cookies must be an array');
     }
     if (!tab || !tab.url) {
       throw new Error('Invalid tab or URL');
     }
+
     let imported = 0;
     let failed = 0;
     let failedCookies = [];
@@ -29,17 +30,18 @@ window.cookieUtils = {
     const url = new URL(tab.url);
     const setCookiePromises = cookies.map(cookie => {
       return new Promise((resolve) => {
-        const domain = cookie.domain ? cookie.domain.replace(/^\./, '') : url.hostname;
+        const domain = targetDomain || (cookie.domain ? cookie.domain.replace(/^\./, '') : url.hostname);
         const cookieDetails = {
           url: url.protocol + '//' + domain,
           name: cookie.name,
           value: cookie.value,
-          path: cookie.path,
+          path: cookie.path || '/',
           secure: cookie.secure,
           httpOnly: cookie.httpOnly,
-          sameSite: cookie.sameSite,
+          sameSite: cookie.sameSite || 'no_restriction',
           expirationDate: cookie.expirationDate
         };
+
         chrome.cookies.set(cookieDetails, (result) => {
           if (chrome.runtime.lastError || !result) {
             failed++;
@@ -100,6 +102,115 @@ window.cookieUtils = {
     }
     
     return true;
+  },
+
+  // Parse different cookie formats
+  parseCookieData: function(data, format) {
+    try {
+      switch (format) {
+        case 'json':
+          return this.parseJsonFormat(data);
+        case 'netscape':
+          return this.parseNetscapeFormat(data);
+        case 'csv':
+          return this.parseCsvFormat(data);
+        default:
+          throw new Error(`Unsupported format: ${format}`);
+      }
+    } catch (error) {
+      throw new Error(`Failed to parse ${format} format: ${error.message}`);
+    }
+  },
+
+  parseJsonFormat: function(data) {
+    if (typeof data === 'string') {
+      data = JSON.parse(data);
+    }
+    if (!Array.isArray(data)) {
+      throw new Error('JSON data must be an array');
+    }
+    return data.map(entry => {
+      if (!entry.url || !Array.isArray(entry.cookies)) {
+        throw new Error('Invalid JSON format: Each entry must have url and cookies array');
+      }
+      return entry;
+    });
+  },
+
+  parseNetscapeFormat: function(data) {
+    const lines = data.split('\n');
+    const cookies = [];
+    let currentDomain = '';
+
+    for (const line of lines) {
+      if (line.startsWith('#') || !line.trim()) continue;
+      
+      const parts = line.split('\t');
+      if (parts.length < 7) continue;
+
+      const [domain, subdomain, path, secure, expiry, name, value] = parts;
+      
+      if (!currentDomain || domain !== currentDomain) {
+        currentDomain = domain;
+        cookies.push({
+          url: `https://${domain}`,
+          cookies: []
+        });
+      }
+
+      cookies[cookies.length - 1].cookies.push({
+        name,
+        value,
+        domain: subdomain === 'TRUE' ? `.${domain}` : domain,
+        path: path || '/',
+        secure: secure === 'TRUE',
+        httpOnly: false,
+        sameSite: 'no_restriction',
+        expirationDate: expiry === 'TRUE' ? undefined : parseInt(expiry)
+      });
+    }
+
+    return cookies;
+  },
+
+  parseCsvFormat: function(data) {
+    const lines = data.split('\n');
+    const cookies = [];
+    let currentDomain = '';
+
+    // Skip header if present
+    const startIndex = lines[0].toLowerCase().includes('domain') ? 1 : 0;
+
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const parts = line.split(',').map(part => part.trim());
+      if (parts.length < 3) continue;
+
+      const [domain, name, value, ...rest] = parts;
+      
+      if (!currentDomain || domain !== currentDomain) {
+        currentDomain = domain;
+        cookies.push({
+          url: `https://${domain}`,
+          cookies: []
+        });
+      }
+
+      cookies[cookies.length - 1].cookies.push({
+        name,
+        value,
+        domain,
+        path: rest[0] || '/',
+        secure: rest[1] === 'true',
+        httpOnly: rest[2] === 'true',
+        sameSite: rest[3] || 'no_restriction',
+        expirationDate: rest[4] ? parseInt(rest[4]) : undefined
+      });
+    }
+
+    return cookies;
   }
 };
 document.addEventListener('DOMContentLoaded', () => {
@@ -160,32 +271,43 @@ document.addEventListener('DOMContentLoaded', () => {
       // Send a message to options page to switch to productivity tab
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs.length > 0) {
-          // First check if we can inject the content script
-          chrome.scripting.executeScript({
-            target: { tabId: tabs[0].id },
-            files: ['src/content.js']
-          }).then(() => {
-            // Now send the message
-            chrome.tabs.sendMessage(tabs[0].id, { action: 'switchToProductivityTab' }, (response) => {
+          const tab = tabs[0];
+          
+          // Check if this is an extension page
+          if (tab.url && tab.url.startsWith('chrome-extension://')) {
+            // For extension pages, just send the message directly
+            chrome.tabs.sendMessage(tab.id, { action: 'switchToProductivityTab' }, (response) => {
               if (chrome.runtime.lastError) {
                 console.warn('Message sending failed:', chrome.runtime.lastError.message);
               } else if (response && response.success) {
                 console.log('Successfully switched to productivity tab');
               }
             });
-          }).catch((err) => {
-            console.warn('Failed to inject content script:', err);
-          });
+          } else {
+            // For regular web pages, inject the content script first
+            chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              files: ['src/content.js']
+            }).then(() => {
+              // Now send the message
+              chrome.tabs.sendMessage(tab.id, { action: 'switchToProductivityTab' }, (response) => {
+                if (chrome.runtime.lastError) {
+                  console.warn('Message sending failed:', chrome.runtime.lastError.message);
+                } else if (response && response.success) {
+                  console.log('Successfully switched to productivity tab');
+                }
+              });
+            }).catch(error => {
+              console.warn('Failed to inject content script:', error);
+            });
+          }
         }
       });
     });
   });
 
   // Load saved settings
-  chrome.storage.local.get(['protectCookies', 'sessionCookieDuration', 'focusModeEnabled'], (result) => {
-    if (result.protectCookies !== undefined) {
-      protectSessionCheckbox.checked = result.protectCookies;
-    }
+  chrome.storage.local.get(['sessionCookieDuration', 'focusModeEnabled'], (result) => {
     if (result.sessionCookieDuration !== undefined) {
       cookieDuration.value = result.sessionCookieDuration;
     } else {
@@ -487,11 +609,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Update import handler with better error handling
+  // Update import handler with better error handling and format support
   restoreSessionCookiesButton.addEventListener('click', () => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
+    input.accept = '.json,.txt,.csv';
 
     input.addEventListener('change', async (event) => {
       try {
@@ -510,17 +632,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = new FileReader();
             reader.onload = async () => {
               try {
-                const sessionCookieDataJson = reader.result;
+                const fileContent = reader.result;
                 let sessionCookies;
-                
-                try {
-                  sessionCookies = JSON.parse(sessionCookieDataJson);
-                } catch (e) {
-                  throw new Error('Invalid file format: The file is not a valid JSON file.');
+                let format = 'json';
+
+                // Detect format based on file extension and content
+                if (file.name.endsWith('.csv')) {
+                  format = 'csv';
+                } else if (file.name.endsWith('.txt')) {
+                  format = 'netscape';
                 }
-                
-                // Validate the cookie data structure
-                window.cookieUtils.validateCookieData(sessionCookies);
+
+                try {
+                  sessionCookies = window.cookieUtils.parseCookieData(fileContent, format);
+                } catch (e) {
+                  throw new Error(`Failed to parse ${format} format: ${e.message}`);
+                }
+
+                // Get target domain from input if specified
+                const domainInput = document.getElementById('domain');
+                const targetDomain = domainInput.value.trim() || null;
 
                 let totalImported = 0;
                 let totalFailed = 0;
@@ -529,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (const entry of sessionCookies) {
                   const { url, cookies } = entry;
                   const dummyTab = { url };
-                  const result = await window.cookieUtils.importCookies(cookies, dummyTab);
+                  const result = await window.cookieUtils.importCookies(cookies, dummyTab, targetDomain);
                   totalImported += result.imported;
                   totalFailed += result.failed;
                   
@@ -566,7 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                   });
                 } else {
-                  throw new Error('No cookies were imported. Make sure you\'re using the correct session file.');
+                  throw new Error('No cookies were imported. Make sure you\'re using a valid cookie file.');
                 }
               } catch (error) {
                 showError(error);
@@ -584,8 +715,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         );
       } catch (error) {
+        console.error('Import session cookies error:', error);
         showError(error);
-        hideLoading();
       }
     });
 

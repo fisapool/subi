@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const deleteSessionCookiesButton = document.getElementById('deleteSessionCookiesButton');
   const exportSessionCookiesButton = document.getElementById('exportSessionCookiesButton');
   const importSessionCookiesButton = document.getElementById('importSessionCookiesButton');
-  const protectCookiesToggle = document.getElementById('protectCookiesToggle');
   const sessionCookieDuration = document.getElementById('sessionCookieDuration');
   const statusMessage = document.getElementById('statusMessage');
 
@@ -46,10 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Load saved settings
-  chrome.storage.local.get(['protectCookies', 'sessionCookieDuration', 'focusModeEnabled', 'meetingModeEnabled'], (result) => {
-    if (result.protectCookies !== undefined) {
-      protectCookiesToggle.checked = result.protectCookies;
-    }
+  chrome.storage.local.get(['sessionCookieDuration', 'focusModeEnabled', 'meetingModeEnabled'], (result) => {
     if (result.sessionCookieDuration !== undefined) {
       sessionCookieDuration.value = result.sessionCookieDuration;
     } else {
@@ -63,22 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleMeetingMode.checked = result.meetingModeEnabled;
     }
     updateConfigButtonVisibility();
-  });
-
-  protectCookiesToggle.addEventListener('change', () => {
-    chrome.storage.local.set({ protectCookies: protectCookiesToggle.checked });
-  });
-
-  sessionCookieDuration.addEventListener('change', () => {
-    let duration = parseInt(sessionCookieDuration.value, 10);
-    if (isNaN(duration) || duration < 1) {
-      duration = 1;
-      sessionCookieDuration.value = duration;
-    } else if (duration > 720) {
-      duration = 720;
-      sessionCookieDuration.value = duration;
-    }
-    chrome.storage.local.set({ sessionCookieDuration: duration });
   });
 
   // Helper to show status message
