@@ -1,5 +1,7 @@
+import { jest } from '@jest/globals';
+
 // Configure Jest timeout globally
-jest.setTimeout(120000);
+// jest.setTimeout(120000); // Removed since it's in jest.config
 
 // Mock fetch API
 global.fetch = jest.fn(() =>

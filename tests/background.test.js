@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { resetAllMocks, cleanupAfterTest } from './helpers/reset-mocks';
 import { initializeBackground } from '../background';
 
@@ -12,6 +13,18 @@ describe('Background Script', () => {
 
   it('should initialize without errors', done => {
     expect(() => initializeBackground()).not.toThrow();
+    done();
+  });
+
+  it('should handle messages from content script', done => {
+    const mockMessage = { action: 'testProtection' };
+    const mockSendResponse = jest.fn();
+
+    // Mock chrome.runtime.onMessage.addListener
+    const listener = chrome.runtime.onMessage.addListener.mock.calls[0][0];
+    listener(mockMessage, {}, mockSendResponse);
+
+    expect(mockSendResponse).toHaveBeenCalled();
     done();
   });
 

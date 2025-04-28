@@ -535,3 +535,78 @@ async function testCookieProtection() {
     return results;
   });
 }
+
+export function initializeBackground() {
+  return new Promise((resolve) => {
+    // Initialize settings from storage
+    chrome.storage.local.get(['sessionLoggingEnabled'], (result) => {
+      sessionLoggingEnabled = result.sessionLoggingEnabled || false;
+      detectBrowserCompatibility();
+      
+      // Set up event listeners
+      chrome.runtime.onMessage.addListener(handleMessage);
+      chrome.tabs.onUpdated.addListener(handleTabUpdate);
+      chrome.tabs.onRemoved.addListener(handleTabRemove);
+      chrome.storage.onChanged.addListener((changes, area) => {
+        // Handle storage changes
+        if (area === 'local' && changes.sessionLoggingEnabled) {
+          sessionLoggingEnabled = changes.sessionLoggingEnabled.newValue;
+        }
+      });
+      
+      // Load initial settings
+      loadProductivitySettings();
+      
+      resolve();
+    });
+  });
+}
+
+export function handleMessage(request, sender, sendResponse) {
+  if (request.action === 'testProtection') {
+    testCookieProtection()
+      .then(results => {
+        sendResponse({ success: true, results });
+      })
+      .catch(error => {
+        console.error('Cookie protection test failed:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep the message channel open for async response
+  }
+}
+
+export function handleTabUpdate(tabId, changeInfo, tab) {
+  if (changeInfo.status === 'complete' && tab.url) {
+    const domain = getDomainFromUrl(tab.url);
+    if (domain) {
+      startSession(tabId, domain);
+    }
+  }
+}
+
+export function handleTabRemove(tabId) {
+  // End all sessions for this tab
+  for (const key of activeSessions.keys()) {
+    if (key.startsWith(`${tabId}_`)) {
+      const domain = key.split('_')[1];
+      endSession(tabId, domain);
+    }
+  }
+}
+
+export function handleCookieConsent() {
+  return new Promise((resolve) => {
+    // Implementation for handling cookie consent
+    console.log('Cookie consent handled');
+    resolve(true);
+  });
+}
+
+export function handleCookieSettings() {
+  return new Promise((resolve) => {
+    // Implementation for handling cookie settings
+    console.log('Cookie settings handled');
+    resolve(true);
+  });
+}
