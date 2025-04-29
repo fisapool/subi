@@ -43,15 +43,17 @@ export function resetChromeMocks() {
 
   mockCookies.set.mockImplementation((details: chrome.cookies.SetDetails, callback?: (cookie: Cookie | null) => void) => {
     const cookie: Cookie = {
-      name: details.name,
-      value: details.value,
+      name: details.name || '',
+      value: details.value || '',
       domain: new URL(details.url).hostname,
       path: '/',
       secure: details.secure || false,
       httpOnly: details.httpOnly || false,
       sameSite: details.sameSite || 'no_restriction',
       expirationDate: details.expirationDate,
-      storeId: details.storeId
+      storeId: details.storeId || '',
+      session: false,
+      hostOnly: false
     };
     if (callback) {
       callback(cookie);

@@ -1,0 +1,14 @@
+{
+  "cookies": [
+    {
+      "name": "session",
+      "value": "test-session-value",
+      "domain": ".example.com",
+      "path": "/",
+      "secure": "invalid-boolean",
+      "httpOnly": true,
+      "sameSite": "invalid-samesite",
+      "expirationDate": "not-a-number"
+    }
+  ]
+} 

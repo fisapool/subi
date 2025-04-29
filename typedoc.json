@@ -1,0 +1,11 @@
+{
+  "entryPoints": ["src"],
+  "out": "docs",
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"],
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "includeVersion": true,
+  "theme": "default",
+  "name": "FISABytes Documentation",
+  "readme": "README.md"
+} 

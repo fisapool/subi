@@ -1,15 +1,14 @@
 import { 
   Cookie, 
   ValidationResult, 
-  ValidationErrorInfo,
+  ValidationError,
   ValidationWarning,
-  SecurityError,
-  ValidationError
+  SecurityError
 } from '../types';
 
 export class CookieValidator {
-  private static readonly REQUIRED_FIELDS = ['domain', 'name', 'value', 'path'];
-  private static readonly DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
+  private static readonly REQUIRED_FIELDS = ['domain', 'name', 'value', 'path'] as const;
+  private static readonly DOMAIN_REGEX = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?$/;
   private static readonly MAX_COOKIE_SIZE = 4096;
   private static readonly MAX_DOMAIN_LENGTH = 255;
   private static readonly SUSPICIOUS_PATTERNS = [
@@ -24,7 +23,7 @@ export class CookieValidator {
   ];
 
   async validateCookie(cookie: Cookie): Promise<ValidationResult> {
-    const errors: ValidationErrorInfo[] = [];
+    const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
     try {
@@ -52,36 +51,38 @@ export class CookieValidator {
         metadata: this.generateMetadata(cookie)
       };
     } catch (error) {
-      throw new ValidationError('Validation failed', error);
+      throw new ValidationError('Validation failed', error as Error);
     }
   }
 
-  private validateRequiredFields(cookie: Cookie, errors: ValidationErrorInfo[]): void {
+  private validateRequiredFields(cookie: Cookie, errors: ValidationError[]): void {
     CookieValidator.REQUIRED_FIELDS.forEach(field => {
       if (!cookie[field]) {
         errors.push({
           field,
           code: 'MISSING_REQUIRED_FIELD',
           message: `Missing required field: ${field}`,
-          severity: 'error'
+          severity: 'error',
+          name: 'ValidationError'
         });
       }
     });
   }
 
-  private validateDomain(domain: string, errors: ValidationErrorInfo[]): void {
+  private validateDomain(domain: string, errors: ValidationError[]): void {
     if (!CookieValidator.DOMAIN_REGEX.test(domain)) {
       errors.push({
         field: 'domain',
         code: 'INVALID_DOMAIN_FORMAT',
         message: 'Invalid domain format',
-        severity: 'error'
+        severity: 'error',
+        name: 'ValidationError'
       });
     }
   }
 
   private validateValue(value: string, warnings: ValidationWarning[]): void {
-    if (value.length > 4096) {
+    if (value && value.length > 4096) {
       warnings.push({
         field: 'value',
         code: 'VALUE_TOO_LONG',
@@ -93,7 +94,7 @@ export class CookieValidator {
 
   private async performSecurityChecks(
     cookie: Cookie, 
-    errors: ValidationErrorInfo[], 
+    errors: ValidationError[], 
     warnings: ValidationWarning[]
   ): Promise<void> {
     // Check for suspicious values
@@ -102,7 +103,8 @@ export class CookieValidator {
         field: 'value',
         code: 'SUSPICIOUS_CONTENT',
         message: 'Cookie value contains suspicious content',
-        severity: 'error'
+        severity: 'error',
+        name: 'ValidationError'
       });
     }
   }
@@ -119,31 +121,33 @@ export class CookieValidator {
     return CookieValidator.SUSPICIOUS_PATTERNS.some(pattern => pattern.test(value));
   }
 
-  private validateFormat(cookie: Cookie, errors: ValidationErrorInfo[]): void {
+  private validateFormat(cookie: Cookie, errors: ValidationError[]): void {
     // Check domain format
     if (cookie.domain && !this.isValidDomainFormat(cookie.domain)) {
       errors.push({
         field: 'domain',
         code: 'INVALID_DOMAIN_FORMAT',
         message: 'Invalid domain format',
-        severity: 'error'
+        severity: 'error',
+        name: 'ValidationError'
       });
     }
 
     // Check path format
-    if (!cookie.path.startsWith('/')) {
+    if (cookie.path && !cookie.path.startsWith('/')) {
       errors.push({
         field: 'path',
         code: 'INVALID_PATH_FORMAT',
         message: 'Path must start with /',
-        severity: 'error'
+        severity: 'error',
+        name: 'ValidationError'
       });
     }
   }
 
   private validateSecurityFlags(cookie: Cookie, warnings: ValidationWarning[]): void {
     // HTTPS domains should use secure flag
-    if (cookie.domain.includes('https://') && !cookie.secure) {
+    if (cookie.domain && cookie.domain.includes('https://') && !cookie.secure) {
       warnings.push({
         field: 'secure',
         code: 'MISSING_SECURE_FLAG',
@@ -163,7 +167,17 @@ export class CookieValidator {
     }
 
     // Check SameSite attribute
-    if (!cookie.sameSite || cookie.sameSite === 'none') {
+    const validSameSiteValues = ['strict', 'lax', 'none'];
+    const sameSiteValue = typeof cookie.sameSite === 'string' ? cookie.sameSite.toLowerCase() : '';
+    
+    if (!sameSiteValue || !validSameSiteValues.includes(sameSiteValue)) {
+      warnings.push({
+        field: 'sameSite',
+        code: 'WEAK_SAME_SITE',
+        message: 'Consider using strict SameSite policy',
+        severity: 'warning'
+      });
+    } else if (sameSiteValue === 'none') {
       warnings.push({
         field: 'sameSite',
         code: 'WEAK_SAME_SITE',
@@ -175,7 +189,7 @@ export class CookieValidator {
 
   private validateSize(cookie: Cookie, warnings: ValidationWarning[]): void {
     const size = JSON.stringify(cookie).length;
-    if (size > this.MAX_COOKIE_SIZE) {
+    if (size > CookieValidator.MAX_COOKIE_SIZE) {
       warnings.push({
         field: 'size',
         code: 'COOKIE_TOO_LARGE',

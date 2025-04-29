@@ -1,0 +1,24 @@
+{
+  "cookies": [
+    {
+      "name": "session",
+      "value": "test-session-value",
+      "domain": ".example.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": true,
+      "sameSite": "strict",
+      "expirationDate": 1735689600
+    },
+    {
+      "name": "preferences",
+      "value": "theme=dark",
+      "domain": ".example.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false,
+      "sameSite": "lax",
+      "expirationDate": 1735689600
+    }
+  ]
+} 

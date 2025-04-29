@@ -13,6 +13,7 @@ export interface EncryptedData {
   data: string;
   iv: string;
   hash: string;
+  salt: string;
   timestamp: number;
   version: string;
 }
@@ -22,7 +23,7 @@ export interface ValidationError {
   code: string;
   message: string;
   severity: 'error' | 'warning';
-  name?: string;
+  name: string;
 }
 
 export interface ValidationWarning {
@@ -92,8 +93,11 @@ export class SecurityError extends Error {
 }
 
 export class ValidationError extends Error {
+  public name: string;
+  
   constructor(message: string, public originalError?: Error) {
     super(message);
     this.name = 'ValidationError';
+    Object.setPrototypeOf(this, ValidationError.prototype);
   }
 } 
