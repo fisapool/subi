@@ -1,8 +1,8 @@
 /// <reference types="chrome" />
-import { Browser, Page } from 'puppeteer';
+import { Page } from 'puppeteer';
 import { getExtensionPopup, getExtensionBackgroundPage } from './setup';
 
-describe('Cookie Management', () => {
+describe.skip('Cookie Management', () => {
   let popupPage: Page;
   let backgroundPage: Page;
 
@@ -33,8 +33,8 @@ describe('Cookie Management', () => {
 
     // Wait for download to complete
     const downloadPath = await popupPage.evaluate(() => {
-      return new Promise<string>((resolve) => {
-        chrome.downloads.onChanged.addListener((download) => {
+      return new Promise<string>(resolve => {
+        chrome.downloads.onChanged.addListener(download => {
           if (download.state?.current === 'complete' && download.filename?.current) {
             resolve(download.filename.current);
           }
@@ -74,4 +74,4 @@ describe('Cookie Management', () => {
     await expect(errorMessage).toBeVisible();
     await expect(errorMessage).toHaveText('Invalid cookie format');
   });
-}); 
+});

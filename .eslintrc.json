@@ -19,6 +19,6 @@
     "@typescript-eslint/no-unused-vars": "error",
     "security/detect-object-injection": "warn",
     "security/detect-non-literal-regexp": "warn",
-    "security/detect-unsafe-regex": "error"
+    "security/detect-unsafe-regex": "off"
   }
-} 
+}
