@@ -1,6 +1,55 @@
-# BytesCookies
+# FISABytes Cookie Manager
 
-A powerful browser extension for managing cookies, sessions, and productivity with advanced protection features.
+A powerful Chrome extension for managing browser cookies and sessions with enhanced security features.
+
+## Features
+
+- Session cookie monitoring and protection
+- Focus mode for productivity
+- Meeting mode for muting distracting tabs
+- Cookie consent management
+- Session activity logging
+
+## Installation
+
+### Development Mode
+
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Build the extension:
+   ```
+   npm run build
+   ```
+4. Load the extension in Chrome:
+   - Open Chrome and navigate to `chrome://extensions/`
+   - Enable "Developer mode" in the top right
+   - Click "Load unpacked" and select the `dist` folder
+
+### Production Mode
+
+The extension is available on the Chrome Web Store (link coming soon).
+
+## Development
+
+- `npm run build` - Build the extension
+- `npm run watch` - Build and watch for changes
+
+## Project Structure
+
+- `src/` - Source files
+  - `background.js` - Background service worker
+  - `content.js` - Content scripts
+  - `popup.js` - Popup UI logic
+  - `options.js` - Options page logic
+- `dist/` - Built extension files
+- `manifest.json` - Extension manifest
+
+## License
+
+MIT
 
 ## 🚀 Features
 
