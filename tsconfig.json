@@ -15,8 +15,10 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["jest", "puppeteer", "node"]
+    "types": ["jest", "puppeteer", "node", "vitest"],
+    "allowJs": true,
+    "checkJs": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "tests/**/*.ts", "tests/**/*.tsx"],
   "exclude": ["node_modules"]
 } 

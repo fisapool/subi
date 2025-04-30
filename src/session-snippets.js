@@ -2,13 +2,12 @@
 // Handles saving and restoring browser sessions including tabs, cookies, and forms
 
 // Session snippet data structure
-class SessionSnippet {
-  constructor(name) {
+export class SessionSnippet {
+  constructor(name, tabs = [], cookies = {}, forms = {}) {
     this.name = name;
-    this.createdAt = Date.now();
-    this.tabs = [];
-    this.cookies = {};
-    this.forms = {};
+    this.tabs = tabs;
+    this.cookies = cookies;
+    this.forms = forms;
   }
 }
 
