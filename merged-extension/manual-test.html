@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Session Buddy - Manual Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .test-item {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+    .test-result {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .failure {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+    button {
+      padding: 8px 16px;
+      background: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background: #1976d2;
+    }
+    pre {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Session Buddy - Manual Test</h1>
+  <p>This page provides a manual testing interface for the Session Buddy extension with sidepanels.</p>
+  
+  <div class="test-section">
+    <h2>Sidepanel Navigation Tests</h2>
+    
+    <div class="test-item">
+      <h3>Test 1: Switch to Main Panel</h3>
+      <p>Click the button to switch to the main panel.</p>
+      <button id="switchToMain">Switch to Main Panel</button>
+      <div id="test1-result" class="test-result pending">Test not run</div>
+    </div>
+    
+    <div class="test-item">
+      <h3>Test 2: Switch to Welcome Panel</h3>
+      <p>Click the button to switch to the welcome panel.</p>
+      <button id="switchToWelcome">Switch to Welcome Panel</button>
+      <div id="test2-result" class="test-result pending">Test not run</div>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Session Management Tests</h2>
+    
+    <div class="test-item">
+      <h3>Test 3: Save Current Session</h3>
+      <p>Click the button to save the current session.</p>
+      <button id="saveSession">Save Current Session</button>
+      <div id="test3-result" class="test-result pending">Test not run</div>
+    </div>
+    
+    <div class="test-item">
+      <h3>Test 4: Load Sessions</h3>
+      <p>Click the button to load saved sessions.</p>
+      <button id="loadSessions">Load Sessions</button>
+      <div id="test4-result" class="test-result pending">Test not run</div>
+    </div>
+    
+    <div class="test-item">
+      <h3>Test 5: Create New Session</h3>
+      <p>Click the button to create a new session.</p>
+      <button id="createSession">Create New Session</button>
+      <div id="test5-result" class="test-result pending">Test not run</div>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Service Worker Tests</h2>
+    
+    <div class="test-item">
+      <h3>Test 6: Check Service Worker Registration</h3>
+      <p>Click the button to check if the service worker is registered.</p>
+      <button id="checkServiceWorker">Check Service Worker</button>
+      <div id="test6-result" class="test-result pending">Test not run</div>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Console Output</h2>
+    <pre id="console-output">Console output will appear here...</pre>
+  </div>
+  
+  <script>
+    // Redirect console output to our custom element
+    const consoleOutput = document.getElementById('console-output');
+    const originalConsoleLog = console.log;
+    const originalConsoleError = console.error;
+    
+    console.log = function() {
+      const args = Array.from(arguments);
+      consoleOutput.textContent += args.join(' ') + '\n';
+      originalConsoleLog.apply(console, arguments);
+    };
+    
+    console.error = function() {
+      const args = Array.from(arguments);
+      consoleOutput.textContent += 'ERROR: ' + args.join(' ') + '\n';
+      originalConsoleError.apply(console, arguments);
+    };
+    
+    // Test functions
+    function updateTestResult(testId, success, message) {
+      const resultElement = document.getElementById(`test${testId}-result`);
+      resultElement.textContent = message;
+      resultElement.className = 'test-result ' + (success ? 'success' : 'failure');
+    }
+    
+    // Test 1: Switch to Main Panel
+    document.getElementById('switchToMain').addEventListener('click', () => {
+      try {
+        if (window.sidepanelUtils) {
+          window.sidepanelUtils.switchPanel('sidepanels/main-sp.html');
+          updateTestResult(1, true, 'Successfully switched to main panel');
+        } else {
+          updateTestResult(1, false, 'Failed: sidepanelUtils not found');
+        }
+      } catch (error) {
+        updateTestResult(1, false, 'Error: ' + error.message);
+      }
+    });
+    
+    // Test 2: Switch to Welcome Panel
+    document.getElementById('switchToWelcome').addEventListener('click', () => {
+      try {
+        if (window.sidepanelUtils) {
+          window.sidepanelUtils.switchPanel('sidepanels/welcome-sp.html');
+          updateTestResult(2, true, 'Successfully switched to welcome panel');
+        } else {
+          updateTestResult(2, false, 'Failed: sidepanelUtils not found');
+        }
+      } catch (error) {
+        updateTestResult(2, false, 'Error: ' + error.message);
+      }
+    });
+    
+    // Test 3: Save Current Session
+    document.getElementById('saveSession').addEventListener('click', () => {
+      try {
+        if (window.sidepanelUtils) {
+          window.sidepanelUtils.saveCurrentSession();
+          updateTestResult(3, true, 'Successfully saved current session');
+        } else {
+          updateTestResult(3, false, 'Failed: sidepanelUtils not found');
+        }
+      } catch (error) {
+        updateTestResult(3, false, 'Error: ' + error.message);
+      }
+    });
+    
+    // Test 4: Load Sessions
+    document.getElementById('loadSessions').addEventListener('click', () => {
+      try {
+        if (window.sidepanelUtils) {
+          window.sidepanelUtils.loadSessions();
+          updateTestResult(4, true, 'Successfully loaded sessions');
+        } else {
+          updateTestResult(4, false, 'Failed: sidepanelUtils not found');
+        }
+      } catch (error) {
+        updateTestResult(4, false, 'Error: ' + error.message);
+      }
+    });
+    
+    // Test 5: Create New Session
+    document.getElementById('createSession').addEventListener('click', () => {
+      try {
+        if (window.sidepanelUtils) {
+          // Mock prompt for testing
+          const originalPrompt = window.prompt;
+          window.prompt = () => 'Test Session';
+          
+          window.sidepanelUtils.createNewSession();
+          
+          // Restore original prompt
+          window.prompt = originalPrompt;
+          
+          updateTestResult(5, true, 'Successfully created new session');
+        } else {
+          updateTestResult(5, false, 'Failed: sidepanelUtils not found');
+        }
+      } catch (error) {
+        updateTestResult(5, false, 'Error: ' + error.message);
+      }
+    });
+    
+    // Test 6: Check Service Worker
+    document.getElementById('checkServiceWorker').addEventListener('click', () => {
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistration().then(registration => {
+            if (registration) {
+              updateTestResult(6, true, 'Service worker is registered');
+            } else {
+              updateTestResult(6, false, 'Service worker is not registered');
+            }
+          }).catch(error => {
+            updateTestResult(6, false, 'Error checking service worker: ' + error.message);
+          });
+        } else {
+          updateTestResult(6, false, 'Service workers are not supported in this browser');
+        }
+      } catch (error) {
+        updateTestResult(6, false, 'Error: ' + error.message);
+      }
+    });
+    
+    // Load sidepanel.js for testing
+    const script = document.createElement('script');
+    script.src = 'sidepanels/sidepanel.js';
+    document.head.appendChild(script);
+    
+    script.onload = () => {
+      console.log('sidepanel.js loaded successfully');
+    };
+    
+    script.onerror = () => {
+      console.error('Failed to load sidepanel.js');
+    };
+  </script>
+</body>
+</html> 

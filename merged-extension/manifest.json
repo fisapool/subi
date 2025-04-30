@@ -1,20 +1,20 @@
 {
   "update_url": "https://clients2.google.com/service/update2/crx",
 
-  "name": "FISABytes Sessions",
+  "name": "Session Buddy with Sidepanels",
   "version": "4.0.5",
-  "description": "FISABytes Sessions - Keep Tabs and Manage Sessions",
+  "description": "Keep Tabs, Manage Sessions, and Use Sidepanels",
   "default_locale": "en",
   "minimum_chrome_version": "109",
   "manifest_version": 3,
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "background.bundle.js",
     "type": "module"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content-script.js"],
+      "js": ["content.bundle.js"],
       "run_at": "document_start"
     }
   ],
@@ -29,13 +29,23 @@
       "19": "assets/icons/logo-19.png",
       "38": "assets/icons/logo-38.png"
     },
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_title": "Click to open panel"
   },
   "options_page": "settings.html",
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'self'; default-src 'self'; connect-src 'self' https://*; img-src 'self' data: https://*; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; form-action 'self'"
   },
-  "permissions": ["tabs", "unlimitedStorage", "storage", "alarms", "cookies", "activeTab", "webNavigation"],
+  "permissions": [
+    "tabs",
+    "unlimitedStorage",
+    "storage",
+    "alarms",
+    "cookies",
+    "activeTab",
+    "webNavigation",
+    "sidePanel"
+  ],
   "host_permissions": ["http://*/*", "https://*/*"],
   "optional_host_permissions": ["file:///*"],
   "incognito": "spanning",
@@ -56,9 +66,13 @@
         "main.bundle.js",
         "assets/tailwind.css",
         "set-background-color.js",
-        "background.js"
+        "background.bundle.js",
+        "sidepanels/*"
       ],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "side_panel": {
+    "default_path": "sidepanels/welcome-sp.html"
+  }
 }

@@ -1,60 +1,22 @@
 {
-  "name": "fisabytes",
+  "name": "subi-extension",
   "version": "1.0.0",
-  "description": "FISABytes Browser Extension",
+  "description": "Chrome Extension with E2E Testing",
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:e2e": "jest --config jest.config.e2e.js",
-    "test:e2e:watch": "jest --config jest.config.e2e.js --watch",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
-    "type-check": "tsc --noEmit",
-    "security-check": "snyk test",
-    "build": "tsc && npm run build:extension",
-    "build:extension": "powershell -Command \"New-Item -ItemType Directory -Force -Path dist; Copy-Item manifest.json,popup.html,service-worker-loader.js -Destination dist; Copy-Item -Path assets,img,_locales -Destination dist -Recurse -Force\"",
-    "docs": "typedoc --out docs src",
-    "prepare": "husky install",
-    "lint-staged": "lint-staged"
-  },
-  "devDependencies": {
-    "@types/chrome": "^0.0.317",
-    "@types/jest": "^29.0.0",
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "@vitest/coverage-v8": "^1.0.0",
-    "eslint": "^8.0.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-security": "^1.7.1",
-    "husky": "^8.0.0",
-    "jest": "^29.0.0",
-    "jest-environment-puppeteer": "^11.0.0",
-    "jest-puppeteer": "^11.0.0",
-    "jsdom": "^22.0.0",
-    "lint-staged": "^15.0.0",
-    "pinia": "^3.0.2",
-    "prettier": "^3.0.0",
-    "snyk": "^1.1000.0",
-    "ts-jest": "^29.0.0",
-    "typedoc": "^0.25.0",
-    "typescript": "^5.0.0",
-    "vitest": "^1.0.0"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md}": [
-      "prettier --write"
-    ]
+    "test": "jest",
+    "test:e2e": "jest -c jest.e2e.config.js"
   },
   "dependencies": {
-    "@types/crypto-js": "^4.2.2",
-    "crypto-js": "^4.2.0",
-    "puppeteer": "^24.7.2"
+    "puppeteer": "^21.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "jest-puppeteer": "^9.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/preset-typescript": "^7.0.0",
+    "babel-jest": "^29.0.0",
+    "identity-obj-proxy": "^3.0.0"
   }
 }

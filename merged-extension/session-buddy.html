@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="theme-color" content="#000000"/>
+    <meta name="description" content="Save, organize, and recall your browser tabs"/>
+    <title>Session Buddy</title>
+    <link rel="stylesheet" href="assets/tailwind.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+    <div id="app">
+        <header class="dashboard-header">
+            <h1>Session Buddy</h1>
+            <button id="newSessionBtn" class="btn btn-primary">New Session</button>
+        </header>
+        <div id="dashboard-container">
+            <!-- Dashboard content will be mounted here -->
+        </div>
+    </div>
+    <script src="set-background-color.js"></script>
+    <script src="main.bundle.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize dashboard UI
+            if (window.initializeDashboard) {
+                window.initializeDashboard();
+            }
+            
+            // Add event listener for the new session button
+            document.getElementById('newSessionBtn').addEventListener('click', function() {
+                // Open the popup to create a new session
+                chrome.runtime.sendMessage({ type: 'OPEN_POPUP' });
+            });
+        });
+    </script>
+</body>
+</html>
