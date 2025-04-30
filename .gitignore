@@ -28,3 +28,14 @@ yarn-error.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Chrome extension specific
+*.crx
+*.pem
+*.zip
+chrome-extensions-samples/
+subi/
+
+# Temporary files
+*.tmp
+*.temp
