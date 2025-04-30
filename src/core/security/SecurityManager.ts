@@ -54,32 +54,39 @@ export class SecurityManager {
     const validationRules = [
       this.validateCookieStructure,
       this.validateCookieDomain,
-      this.validateCookieValues
+      this.validateCookieValues,
     ];
 
     return validationRules.every(rule => rule(data));
   }
 
   private validateCookieStructure(data: any): boolean {
-    return Array.isArray(data) && data.every(cookie => 
-      typeof cookie === 'object' &&
-      'name' in cookie &&
-      'value' in cookie &&
-      'domain' in cookie
+    return (
+      Array.isArray(data) &&
+      data.every(
+        cookie =>
+          typeof cookie === 'object' && 'name' in cookie && 'value' in cookie && 'domain' in cookie
+      )
     );
   }
 
   private validateCookieDomain(data: any): boolean {
-    return Array.isArray(data) && data.every(cookie =>
-      typeof cookie.domain === 'string' &&
-      cookie.domain.match(/^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/)
+    return (
+      Array.isArray(data) &&
+      data.every(
+        cookie =>
+          typeof cookie.domain === 'string' &&
+          cookie.domain.match(/^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/)
+      )
     );
   }
 
   private validateCookieValues(data: any): boolean {
-    return Array.isArray(data) && data.every(cookie =>
-      typeof cookie.value === 'string' &&
-      cookie.value.length <= 4096 // Maximum cookie value size
+    return (
+      Array.isArray(data) &&
+      data.every(
+        cookie => typeof cookie.value === 'string' && cookie.value.length <= 4096 // Maximum cookie value size
+      )
     );
   }
-} 
+}

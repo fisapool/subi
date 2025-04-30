@@ -1,51 +1,51 @@
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if (request.action === "testProtection") {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.action === 'testProtection') {
     // Perform the protection test
     const results = testProtection();
-    
+
     // Send the results back to the popup
-    sendResponse({success: true, results: results});
+    sendResponse({ success: true, results: results });
   }
   return true; // Keep the message channel open for the asynchronous response
 });
 
 export function testProtection() {
   const results = [];
-  
+
   // Test 1: Check if the extension is active
-  results.push("Extension is active and running.");
-  
+  results.push('Extension is active and running.');
+
   // Test 2: Check if the content script is loaded
-  results.push("Content script is loaded and functioning.");
-  
+  results.push('Content script is loaded and functioning.');
+
   // Test 3: Check if the protection is enabled
   const protectionEnabled = localStorage.getItem('protectionEnabled') === 'true';
   results.push(`Protection is ${protectionEnabled ? 'enabled' : 'disabled'}.`);
-  
+
   // Test 4: Check if the extension can access the DOM
   try {
     const body = document.body;
-    results.push("Extension can access the DOM.");
+    results.push('Extension can access the DOM.');
   } catch (error) {
-    results.push("Extension cannot access the DOM: " + error.message);
+    results.push('Extension cannot access the DOM: ' + error.message);
   }
-  
+
   // Test 5: Check if the extension can modify the DOM
   try {
     const testElement = document.createElement('div');
     testElement.style.display = 'none';
     document.body.appendChild(testElement);
     document.body.removeChild(testElement);
-    results.push("Extension can modify the DOM.");
+    results.push('Extension can modify the DOM.');
   } catch (error) {
-    results.push("Extension cannot modify the DOM: " + error.message);
+    results.push('Extension cannot modify the DOM: ' + error.message);
   }
-  
+
   return results;
 }
 
 export function initializeContent() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     // Set up message listener for communication with background script
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.action === 'testProtection') {
@@ -59,7 +59,7 @@ export function initializeContent() {
     const testProtectionBtn = document.getElementById('testProtectionBtn');
     if (testProtectionBtn) {
       testProtectionBtn.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: 'testProtection' }, (response) => {
+        chrome.runtime.sendMessage({ action: 'testProtection' }, response => {
           if (response && response.success) {
             displayResults(response.results);
           } else {
@@ -68,16 +68,16 @@ export function initializeContent() {
         });
       });
     }
-    
+
     resolve();
   });
 }
 
 export function handleCookieConsent() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     // Implementation for handling cookie consent in content script
     console.log('Content script: Cookie consent handled');
-    
+
     // Find and interact with cookie consent elements
     const consentElements = findCookieConsentElements();
     if (consentElements.length > 0) {
@@ -87,16 +87,16 @@ export function handleCookieConsent() {
         });
       });
     }
-    
+
     resolve(true);
   });
 }
 
 export function handleCookieSettings() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     // Implementation for handling cookie settings in content script
     console.log('Content script: Cookie settings handled');
-    
+
     // Find and interact with cookie settings elements
     const settingsElements = findCookieSettingsElements();
     if (settingsElements.length > 0) {
@@ -106,7 +106,7 @@ export function handleCookieSettings() {
         });
       });
     }
-    
+
     resolve(true);
   });
 }
@@ -123,9 +123,9 @@ function findCookieConsentElements() {
     'button[id*="gdpr"][id*="agree"]',
     'button[id*="privacy"][id*="consent"]',
     'button[id*="privacy"][id*="accept"]',
-    'button[id*="privacy"][id*="agree"]'
+    'button[id*="privacy"][id*="agree"]',
   ];
-  
+
   return document.querySelectorAll(selectors.join(', '));
 }
 
@@ -137,9 +137,9 @@ function findCookieSettingsElements() {
     'button[id*="gdpr"][id*="settings"]',
     'button[id*="gdpr"][id*="preferences"]',
     'button[id*="privacy"][id*="settings"]',
-    'button[id*="privacy"][id*="preferences"]'
+    'button[id*="privacy"][id*="preferences"]',
   ];
-  
+
   return document.querySelectorAll(selectors.join(', '));
 }
 
@@ -155,4 +155,4 @@ function displayError(message) {
   if (errorElement) {
     errorElement.innerHTML = `<div class="error">${message}</div>`;
   }
-} 
+}

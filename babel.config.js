@@ -1,11 +1,10 @@
 /** @type {import('@babel/core').TransformOptions} */
-const config = {
+module.exports = {
   presets: [
     ['@babel/preset-env', {
       targets: {
-        node: 'current'
-      },
-      modules: 'auto'
+        chrome: '88'
+      }
     }]
   ],
   env: {
@@ -20,6 +19,4 @@ const config = {
       ]
     }
   }
-};
-
-export default config; 
+}; 

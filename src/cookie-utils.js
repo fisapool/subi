@@ -3,58 +3,58 @@
  */
 
 const CookieUtils = {
-    async safeOperation(operation) {
-        try {
-            return await operation();
-        } catch (error) {
-            if (error.message.includes('Expected at most 1 argument')) {
-                // Handle the specific error by using chrome API as fallback
-                return new Promise((resolve, reject) => {
-                    try {
-                        chrome[operation.name](...operation.arguments, resolve);
-                    } catch (chromeError) {
-                        reject(chromeError);
-                    }
-                });
-            }
-            throw error;
-        }
-    },
-
-    createCookieUrl(cookie) {
-        return `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`;
-    },
-
-    async getAllCookies(domain) {
-        return this.safeOperation(async () => {
-            return await browser.cookies.getAll({ domain });
+  async safeOperation(operation) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error.message.includes('Expected at most 1 argument')) {
+        // Handle the specific error by using chrome API as fallback
+        return new Promise((resolve, reject) => {
+          try {
+            chrome[operation.name](...operation.arguments, resolve);
+          } catch (chromeError) {
+            reject(chromeError);
+          }
         });
-    },
-
-    async setCookie(cookie) {
-        return this.safeOperation(async () => {
-            return await browser.cookies.set({
-                url: this.createCookieUrl(cookie),
-                name: cookie.name,
-                value: cookie.value,
-                domain: cookie.domain,
-                path: cookie.path,
-                secure: cookie.secure,
-                httpOnly: cookie.httpOnly,
-                sameSite: cookie.sameSite,
-                expirationDate: cookie.expirationDate
-            });
-        });
-    },
-
-    async removeCookie(cookie) {
-        return this.safeOperation(async () => {
-            return await browser.cookies.remove({
-                url: this.createCookieUrl(cookie),
-                name: cookie.name
-            });
-        });
+      }
+      throw error;
     }
+  },
+
+  createCookieUrl(cookie) {
+    return `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`;
+  },
+
+  async getAllCookies(domain) {
+    return this.safeOperation(async () => {
+      return await browser.cookies.getAll({ domain });
+    });
+  },
+
+  async setCookie(cookie) {
+    return this.safeOperation(async () => {
+      return await browser.cookies.set({
+        url: this.createCookieUrl(cookie),
+        name: cookie.name,
+        value: cookie.value,
+        domain: cookie.domain,
+        path: cookie.path,
+        secure: cookie.secure,
+        httpOnly: cookie.httpOnly,
+        sameSite: cookie.sameSite,
+        expirationDate: cookie.expirationDate,
+      });
+    });
+  },
+
+  async removeCookie(cookie) {
+    return this.safeOperation(async () => {
+      return await browser.cookies.remove({
+        url: this.createCookieUrl(cookie),
+        name: cookie.name,
+      });
+    });
+  },
 };
 
 export default CookieUtils;
@@ -69,7 +69,7 @@ export const exportCookies = async () => {
     return {
       cookies,
       timestamp: Date.now(),
-      version: '1.0'
+      version: '1.0',
     };
   } catch (error) {
     console.error('Failed to export cookies:', error);
@@ -82,7 +82,7 @@ export const exportCookies = async () => {
  * @param {Object} importData - Data containing cookies to import
  * @returns {Promise<Object>} Result of the import operation
  */
-export const importCookies = async (importData) => {
+export const importCookies = async importData => {
   if (!importData || !Array.isArray(importData.cookies)) {
     throw new Error('Invalid import data format');
   }
@@ -105,7 +105,7 @@ export const importCookies = async (importData) => {
         secure: cookie.secure,
         httpOnly: cookie.httpOnly,
         sameSite: cookie.sameSite,
-        expirationDate: cookie.expirationDate
+        expirationDate: cookie.expirationDate,
       });
       imported++;
     } catch (error) {
@@ -117,6 +117,6 @@ export const importCookies = async (importData) => {
   return {
     success: true,
     imported,
-    failed
+    failed,
   };
-}; 
+};

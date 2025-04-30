@@ -14,7 +14,7 @@ describe('Cookie Store', () => {
     const url = 'https://example.com';
     const mockCookieData = [
       { name: 'test1', value: 'value1', domain: 'example.com' },
-      { name: 'test2', value: 'value2', domain: 'example.com' }
+      { name: 'test2', value: 'value2', domain: 'example.com' },
     ];
 
     mockCookies.getAll.mockImplementation((details, callback) => {
@@ -33,7 +33,7 @@ describe('Cookie Store', () => {
     const details = {
       url: 'https://example.com',
       name: 'test',
-      value: 'value'
+      value: 'value',
     };
     const mockCookie = { ...details, domain: 'example.com' };
 
@@ -52,7 +52,7 @@ describe('Cookie Store', () => {
   it('should remove a cookie', async () => {
     const details = {
       url: 'https://example.com',
-      name: 'test'
+      name: 'test',
     };
 
     mockCookies.remove.mockImplementation((removeDetails, callback) => {
@@ -69,14 +69,14 @@ describe('Cookie Store', () => {
   it('should handle errors when getting cookies', async () => {
     const url = 'https://example.com';
     const errorMessage = 'Failed to get cookies';
-    
+
     mockCookies.getAll.mockImplementation((details, callback) => {
       if (callback) {
         callback([]);
       }
       return Promise.resolve([]);
     });
-    
+
     (chrome.runtime as any).lastError = { message: errorMessage };
 
     await expect(cookieStore.getAll(url)).rejects.toThrow(errorMessage);
@@ -86,7 +86,7 @@ describe('Cookie Store', () => {
     const details = {
       url: 'https://example.com',
       name: 'test',
-      value: 'value'
+      value: 'value',
     };
     const errorMessage = 'Failed to set cookie';
 
@@ -96,7 +96,7 @@ describe('Cookie Store', () => {
       }
       return Promise.resolve(null);
     });
-    
+
     (chrome.runtime as any).lastError = { message: errorMessage };
 
     await expect(cookieStore.set(details)).rejects.toThrow(errorMessage);
@@ -105,7 +105,7 @@ describe('Cookie Store', () => {
   it('should handle errors when removing cookies', async () => {
     const details = {
       url: 'https://example.com',
-      name: 'test'
+      name: 'test',
     };
     const errorMessage = 'Failed to remove cookie';
 
@@ -115,9 +115,9 @@ describe('Cookie Store', () => {
       }
       return Promise.resolve();
     });
-    
+
     (chrome.runtime as any).lastError = { message: errorMessage };
 
     await expect(cookieStore.remove(details)).rejects.toThrow(errorMessage);
   }, 10000);
-}); 
+});

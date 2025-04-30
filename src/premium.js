@@ -5,7 +5,7 @@ class PremiumManager {
       advancedActivityLog: true,
       customScripts: true,
       cloudSync: true,
-      teamCollaboration: true
+      teamCollaboration: true,
     };
   }
 
@@ -30,7 +30,7 @@ class PremiumManager {
     const message = `Upgrade to Premium to access ${featureName}!`;
     chrome.runtime.sendMessage({
       type: 'showUpgradePrompt',
-      message
+      message,
     });
   }
 
@@ -52,7 +52,7 @@ class PremiumManager {
   async updateUI() {
     const hasPremium = await this.hasPremiumAccess();
     const premiumElements = document.querySelectorAll('[data-premium]');
-    
+
     premiumElements.forEach(element => {
       const feature = element.dataset.premium;
       if (this.isPremiumFeature(feature)) {
@@ -70,4 +70,4 @@ class PremiumManager {
 
 // Export singleton instance
 const premiumManager = new PremiumManager();
-export default premiumManager; 
+export default premiumManager;

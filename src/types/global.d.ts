@@ -4,4 +4,4 @@ declare global {
   var browser: Browser;
 }
 
-export {}; 
+export {};

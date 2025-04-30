@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi } from 'vitest';
 
 type Cookie = chrome.cookies.Cookie;
 type StorageData = { [key: string]: any };
@@ -6,22 +6,22 @@ type StorageData = { [key: string]: any };
 export const mockCookies = {
   getAll: vi.fn(),
   set: vi.fn(),
-  remove: vi.fn()
+  remove: vi.fn(),
 };
 
 export const mockStorage = {
   local: {
     get: vi.fn(),
-    set: vi.fn()
-  }
+    set: vi.fn(),
+  },
 };
 
 export const mockChrome = {
   cookies: mockCookies,
   storage: mockStorage,
   runtime: {
-    lastError: null
-  }
+    lastError: null,
+  },
 };
 
 // Reset all mocks before each test
@@ -31,50 +31,58 @@ export function resetChromeMocks() {
   mockCookies.remove.mockReset();
   mockStorage.local.get.mockReset();
   mockStorage.local.set.mockReset();
-  
+
   // Set default implementations
-  mockCookies.getAll.mockImplementation((details: { url: string }, callback?: (cookies: Cookie[]) => void) => {
-    const cookies: Cookie[] = [];
-    if (callback) {
-      callback(cookies);
+  mockCookies.getAll.mockImplementation(
+    (details: { url: string }, callback?: (cookies: Cookie[]) => void) => {
+      const cookies: Cookie[] = [];
+      if (callback) {
+        callback(cookies);
+      }
+      return Promise.resolve(cookies);
     }
-    return Promise.resolve(cookies);
-  });
+  );
 
-  mockCookies.set.mockImplementation((details: chrome.cookies.SetDetails, callback?: (cookie: Cookie | null) => void) => {
-    const cookie: Cookie = {
-      name: details.name || '',
-      value: details.value || '',
-      domain: new URL(details.url).hostname,
-      path: '/',
-      secure: details.secure || false,
-      httpOnly: details.httpOnly || false,
-      sameSite: details.sameSite || 'no_restriction',
-      expirationDate: details.expirationDate,
-      storeId: details.storeId || '',
-      session: false,
-      hostOnly: false
-    };
-    if (callback) {
-      callback(cookie);
+  mockCookies.set.mockImplementation(
+    (details: chrome.cookies.SetDetails, callback?: (cookie: Cookie | null) => void) => {
+      const cookie: Cookie = {
+        name: details.name || '',
+        value: details.value || '',
+        domain: new URL(details.url).hostname,
+        path: '/',
+        secure: details.secure || false,
+        httpOnly: details.httpOnly || false,
+        sameSite: details.sameSite || 'no_restriction',
+        expirationDate: details.expirationDate,
+        storeId: details.storeId || '',
+        session: false,
+        hostOnly: false,
+      };
+      if (callback) {
+        callback(cookie);
+      }
+      return Promise.resolve(cookie);
     }
-    return Promise.resolve(cookie);
-  });
+  );
 
-  mockCookies.remove.mockImplementation((details: { url: string; name: string; storeId?: string }, callback?: () => void) => {
-    if (callback) {
-      callback();
+  mockCookies.remove.mockImplementation(
+    (details: { url: string; name: string; storeId?: string }, callback?: () => void) => {
+      if (callback) {
+        callback();
+      }
+      return Promise.resolve();
     }
-    return Promise.resolve();
-  });
+  );
 
-  mockStorage.local.get.mockImplementation((key: string, callback?: (result: StorageData) => void) => {
-    const result = {};
-    if (callback) {
-      callback(result);
+  mockStorage.local.get.mockImplementation(
+    (key: string, callback?: (result: StorageData) => void) => {
+      const result = {};
+      if (callback) {
+        callback(result);
+      }
+      return Promise.resolve(result);
     }
-    return Promise.resolve(result);
-  });
+  );
 
   mockStorage.local.set.mockImplementation((items: StorageData, callback?: () => void) => {
     if (callback) {
@@ -85,4 +93,4 @@ export function resetChromeMocks() {
 }
 
 // Make chrome global
-global.chrome = mockChrome as any; 
+global.chrome = mockChrome as any;

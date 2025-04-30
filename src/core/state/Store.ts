@@ -24,8 +24,8 @@ export class Store {
       lastOperation: {
         type: null,
         timestamp: 0,
-        success: false
-      }
+        success: false,
+      },
     };
   }
 
@@ -53,4 +53,4 @@ export class Store {
   private notifySubscribers(): void {
     this.subscribers.forEach(subscriber => subscriber(this.state));
   }
-} 
+}

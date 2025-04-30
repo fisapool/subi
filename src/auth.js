@@ -7,7 +7,7 @@ class AuthManager {
     this.syncManager = null;
     this.tokenRefreshPromise = null;
     this.TOKEN_EXPIRY_BUFFER = 5 * 60 * 1000; // 5 minutes in milliseconds
-    
+
     // Bind methods
     this.handleStorageChange = this.handleStorageChange.bind(this);
     this.refreshToken = this.refreshToken.bind(this);
@@ -17,7 +17,10 @@ class AuthManager {
   async init() {
     try {
       // Get token from chrome.storage.local
-      const { authToken, currentUser } = await chrome.storage.local.get(['authToken', 'currentUser']);
+      const { authToken, currentUser } = await chrome.storage.local.get([
+        'authToken',
+        'currentUser',
+      ]);
       this.authToken = authToken;
       this.currentUser = currentUser;
 
@@ -52,9 +55,9 @@ class AuthManager {
       const response = await fetch(`${this.API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, name })
+        body: JSON.stringify({ email, password, name }),
       });
 
       if (!response.ok) {
@@ -81,9 +84,9 @@ class AuthManager {
         const response = await fetch(`${this.API_BASE_URL}/api/auth/login`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email, password }),
         });
 
         if (!response.ok) {
@@ -118,8 +121,8 @@ class AuthManager {
         await fetch(`${this.API_BASE_URL}/api/auth/logout`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.authToken}`
-          }
+            Authorization: `Bearer ${this.authToken}`,
+          },
         });
       }
     } catch (error) {
@@ -132,11 +135,11 @@ class AuthManager {
   // Handle successful authentication
   async handleAuthSuccess(data) {
     const { token, user } = data;
-    
+
     // Store in chrome.storage.local
     await chrome.storage.local.set({
       authToken: token,
-      currentUser: user
+      currentUser: user,
     });
 
     this.authToken = token;
@@ -157,7 +160,7 @@ class AuthManager {
   async clearAuthState() {
     // Clear from chrome.storage.local
     await chrome.storage.local.remove(['authToken', 'currentUser']);
-    
+
     this.authToken = null;
     this.currentUser = null;
     this.syncManager = null;
@@ -173,7 +176,7 @@ class AuthManager {
       if (tokenData && tokenData.exp) {
         const expiryTime = tokenData.exp * 1000; // Convert to milliseconds
         const currentTime = Date.now();
-        
+
         if (currentTime + this.TOKEN_EXPIRY_BUFFER >= expiryTime) {
           // Token is about to expire, refresh it
           await this.refreshToken();
@@ -183,8 +186,8 @@ class AuthManager {
 
       const response = await fetch(`${this.API_BASE_URL}/api/auth/me`, {
         headers: {
-          'Authorization': `Bearer ${this.authToken}`
-        }
+          Authorization: `Bearer ${this.authToken}`,
+        },
       });
 
       if (!response.ok) {
@@ -218,8 +221,8 @@ class AuthManager {
         const response = await fetch(`${this.API_BASE_URL}/api/auth/refresh`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.authToken}`
-          }
+            Authorization: `Bearer ${this.authToken}`,
+          },
         });
 
         if (!response.ok) {
@@ -246,9 +249,14 @@ class AuthManager {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join('')
+      );
       return JSON.parse(jsonPayload);
     } catch (error) {
       console.error('JWT parsing error:', error);
@@ -284,4 +292,4 @@ class AuthManager {
 
 // Export singleton instance
 const authManager = new AuthManager();
-export default authManager; 
+export default authManager;

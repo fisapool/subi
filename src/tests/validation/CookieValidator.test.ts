@@ -12,7 +12,7 @@ describe('CookieValidator', () => {
     path: '/',
     secure: true,
     httpOnly: true,
-    sameSite: 'strict'
+    sameSite: 'strict',
   };
 
   describe('validateCookie', () => {
@@ -21,11 +21,13 @@ describe('CookieValidator', () => {
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
-      expect(result.metadata).toEqual(expect.objectContaining({
-        created: expect.any(Number),
-        size: expect.any(Number),
-        hasSecureFlag: true
-      }));
+      expect(result.metadata).toEqual(
+        expect.objectContaining({
+          created: expect.any(Number),
+          size: expect.any(Number),
+          hasSecureFlag: true,
+        })
+      );
     });
 
     it('should handle missing required fields', async () => {
@@ -38,43 +40,51 @@ describe('CookieValidator', () => {
       const result = await validator.validateCookie(invalidCookie);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContainEqual(expect.objectContaining({
-        field: 'value',
-        code: 'MISSING_REQUIRED_FIELD'
-      }));
-      expect(result.errors).toContainEqual(expect.objectContaining({
-        field: 'path',
-        code: 'MISSING_REQUIRED_FIELD'
-      }));
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          field: 'value',
+          code: 'MISSING_REQUIRED_FIELD',
+        })
+      );
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          field: 'path',
+          code: 'MISSING_REQUIRED_FIELD',
+        })
+      );
     });
 
     it('should validate domain format', async () => {
       const invalidDomainCookie = {
         ...validCookie,
-        domain: 'invalid-domain'
+        domain: 'invalid-domain',
       };
 
       const result = await validator.validateCookie(invalidDomainCookie);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContainEqual(expect.objectContaining({
-        field: 'domain',
-        code: 'INVALID_DOMAIN_FORMAT'
-      }));
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          field: 'domain',
+          code: 'INVALID_DOMAIN_FORMAT',
+        })
+      );
     });
 
     it('should warn about long cookie values', async () => {
       const longValueCookie = {
         ...validCookie,
-        value: 'a'.repeat(5000)
+        value: 'a'.repeat(5000),
       };
 
       const result = await validator.validateCookie(longValueCookie);
 
-      expect(result.warnings).toContainEqual(expect.objectContaining({
-        field: 'value',
-        code: 'VALUE_TOO_LONG'
-      }));
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          field: 'value',
+          code: 'VALUE_TOO_LONG',
+        })
+      );
     });
 
     it('should detect suspicious content', async () => {
@@ -86,38 +96,42 @@ describe('CookieValidator', () => {
         'onclick=alert(1)',
         'onerror=alert(1)',
         'onload=alert(1)',
-        '%3Cscript%3Ealert(1)%3C/script%3E'
+        '%3Cscript%3Ealert(1)%3C/script%3E',
       ];
 
       for (const pattern of suspiciousPatterns) {
         const suspiciousCookie = {
           ...validCookie,
-          value: pattern
+          value: pattern,
         };
 
         const result = await validator.validateCookie(suspiciousCookie);
 
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContainEqual(expect.objectContaining({
-          field: 'value',
-          code: 'SUSPICIOUS_CONTENT'
-        }));
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            field: 'value',
+            code: 'SUSPICIOUS_CONTENT',
+          })
+        );
       }
     });
 
     it('should validate path format', async () => {
       const invalidPathCookie = {
         ...validCookie,
-        path: 'invalid-path'
+        path: 'invalid-path',
       };
 
       const result = await validator.validateCookie(invalidPathCookie);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContainEqual(expect.objectContaining({
-        field: 'path',
-        code: 'INVALID_PATH_FORMAT'
-      }));
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          field: 'path',
+          code: 'INVALID_PATH_FORMAT',
+        })
+      );
     });
 
     it('should warn about missing security flags', async () => {
@@ -126,23 +140,29 @@ describe('CookieValidator', () => {
         domain: 'https://example.com',
         secure: false,
         httpOnly: false,
-        sameSite: 'none'
+        sameSite: 'none',
       };
 
       const result = await validator.validateCookie(insecureCookie);
 
-      expect(result.warnings).toContainEqual(expect.objectContaining({
-        field: 'secure',
-        code: 'MISSING_SECURE_FLAG'
-      }));
-      expect(result.warnings).toContainEqual(expect.objectContaining({
-        field: 'httpOnly',
-        code: 'MISSING_HTTPONLY_FLAG'
-      }));
-      expect(result.warnings).toContainEqual(expect.objectContaining({
-        field: 'sameSite',
-        code: 'WEAK_SAME_SITE'
-      }));
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          field: 'secure',
+          code: 'MISSING_SECURE_FLAG',
+        })
+      );
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          field: 'httpOnly',
+          code: 'MISSING_HTTPONLY_FLAG',
+        })
+      );
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          field: 'sameSite',
+          code: 'WEAK_SAME_SITE',
+        })
+      );
     });
 
     it('should warn about large cookie size', async () => {
@@ -150,15 +170,17 @@ describe('CookieValidator', () => {
         ...validCookie,
         value: 'a'.repeat(4000), // This will make the stringified cookie exceed 4096 bytes
         extraField1: 'a'.repeat(1000),
-        extraField2: 'a'.repeat(1000)
+        extraField2: 'a'.repeat(1000),
       } as Cookie;
 
       const result = await validator.validateCookie(largeCookie);
 
-      expect(result.warnings).toContainEqual(expect.objectContaining({
-        field: 'size',
-        code: 'COOKIE_TOO_LARGE'
-      }));
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          field: 'size',
+          code: 'COOKIE_TOO_LARGE',
+        })
+      );
     });
 
     it('should handle validation errors gracefully', async () => {
@@ -171,35 +193,41 @@ describe('CookieValidator', () => {
       const emptyValuesCookie = {
         ...validCookie,
         value: '',
-        path: ''
+        path: '',
       };
 
       const result = await validator.validateCookie(emptyValuesCookie);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContainEqual(expect.objectContaining({
-        field: 'value',
-        code: 'MISSING_REQUIRED_FIELD'
-      }));
-      expect(result.errors).toContainEqual(expect.objectContaining({
-        field: 'path',
-        code: 'MISSING_REQUIRED_FIELD'
-      }));
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          field: 'value',
+          code: 'MISSING_REQUIRED_FIELD',
+        })
+      );
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          field: 'path',
+          code: 'MISSING_REQUIRED_FIELD',
+        })
+      );
     });
 
     it('should validate domain length', async () => {
       const longDomainCookie = {
         ...validCookie,
-        domain: `${'a'.repeat(250)}.com`
+        domain: `${'a'.repeat(250)}.com`,
       };
 
       const result = await validator.validateCookie(longDomainCookie);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContainEqual(expect.objectContaining({
-        field: 'domain',
-        code: 'INVALID_DOMAIN_FORMAT'
-      }));
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          field: 'domain',
+          code: 'INVALID_DOMAIN_FORMAT',
+        })
+      );
     });
 
     it('should accept valid domain variations', async () => {
@@ -208,7 +236,7 @@ describe('CookieValidator', () => {
         'sub.example.com',
         'sub-domain.example.com',
         'example-domain.com',
-        'example.co.uk'
+        'example.co.uk',
       ];
 
       for (const domain of validDomains) {
@@ -221,14 +249,16 @@ describe('CookieValidator', () => {
     it('should validate sameSite enum values', async () => {
       const invalidSameSiteCookie = {
         ...validCookie,
-        sameSite: 'invalid' as any
+        sameSite: 'invalid' as any,
       };
 
       const result = await validator.validateCookie(invalidSameSiteCookie);
-      expect(result.warnings).toContainEqual(expect.objectContaining({
-        field: 'sameSite',
-        code: 'WEAK_SAME_SITE'
-      }));
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          field: 'sameSite',
+          code: 'WEAK_SAME_SITE',
+        })
+      );
     });
 
     it('should accumulate multiple validation errors', async () => {
@@ -236,31 +266,37 @@ describe('CookieValidator', () => {
         ...validCookie,
         domain: 'invalid-domain',
         path: 'invalid-path',
-        value: '<script>alert(1)</script>'
+        value: '<script>alert(1)</script>',
       };
 
       const result = await validator.validateCookie(multipleErrorsCookie);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(4);
-      expect(result.errors).toContainEqual(expect.objectContaining({
-        field: 'domain',
-        code: 'INVALID_DOMAIN_FORMAT'
-      }));
-      expect(result.errors).toContainEqual(expect.objectContaining({
-        field: 'path',
-        code: 'INVALID_PATH_FORMAT'
-      }));
-      expect(result.errors).toContainEqual(expect.objectContaining({
-        field: 'value',
-        code: 'SUSPICIOUS_CONTENT'
-      }));
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          field: 'domain',
+          code: 'INVALID_DOMAIN_FORMAT',
+        })
+      );
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          field: 'path',
+          code: 'INVALID_PATH_FORMAT',
+        })
+      );
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          field: 'value',
+          code: 'SUSPICIOUS_CONTENT',
+        })
+      );
     });
 
     it('should generate accurate metadata', async () => {
       const testCookie = {
         ...validCookie,
-        secure: false
+        secure: false,
       };
 
       const result = await validator.validateCookie(testCookie);
@@ -269,7 +305,7 @@ describe('CookieValidator', () => {
       expect(result.metadata).toEqual({
         created: expect.any(Number),
         size: cookieSize,
-        hasSecureFlag: false
+        hasSecureFlag: false,
       });
       expect(result.metadata.created).toBeLessThanOrEqual(Date.now());
       expect(result.metadata.created).toBeGreaterThan(Date.now() - 1000); // Within last second
@@ -280,19 +316,23 @@ describe('CookieValidator', () => {
         domain: 'example.com',
         name: 'session',
         value: 'abc123',
-        path: '/'
+        path: '/',
       };
 
       const result = await validator.validateCookie(minimalCookie);
       expect(result.isValid).toBe(true);
-      expect(result.warnings).toContainEqual(expect.objectContaining({
-        field: 'httpOnly',
-        code: 'MISSING_HTTPONLY_FLAG'
-      }));
-      expect(result.warnings).toContainEqual(expect.objectContaining({
-        field: 'sameSite',
-        code: 'WEAK_SAME_SITE'
-      }));
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          field: 'httpOnly',
+          code: 'MISSING_HTTPONLY_FLAG',
+        })
+      );
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          field: 'sameSite',
+          code: 'WEAK_SAME_SITE',
+        })
+      );
     });
 
     it('should validate domain with special TLDs', async () => {
@@ -301,7 +341,7 @@ describe('CookieValidator', () => {
         'example.com.br',
         'example.edu',
         'example.gov',
-        'example.app'
+        'example.app',
       ];
 
       for (const domain of specialTLDs) {
@@ -315,14 +355,16 @@ describe('CookieValidator', () => {
       it('should reject domains exceeding maximum length', async () => {
         const longDomain = 'a'.repeat(256) + '.com';
         const cookie = { ...validCookie, domain: longDomain };
-        
+
         const result = await validator.validateCookie(cookie);
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContainEqual(expect.objectContaining({
-          field: 'domain',
-          code: 'INVALID_DOMAIN_FORMAT'
-        }));
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            field: 'domain',
+            code: 'INVALID_DOMAIN_FORMAT',
+          })
+        );
       });
 
       it('should reject domains with special characters', async () => {
@@ -331,34 +373,38 @@ describe('CookieValidator', () => {
           'example@.com',
           'example#.com',
           'example$.com',
-          'example%.com'
+          'example%.com',
         ];
 
         for (const domain of invalidDomains) {
           const cookie = { ...validCookie, domain };
           const result = await validator.validateCookie(cookie);
-          
+
           expect(result.isValid).toBe(false);
-          expect(result.errors).toContainEqual(expect.objectContaining({
-            field: 'domain',
-            code: 'INVALID_DOMAIN_FORMAT'
-          }));
+          expect(result.errors).toContainEqual(
+            expect.objectContaining({
+              field: 'domain',
+              code: 'INVALID_DOMAIN_FORMAT',
+            })
+          );
         }
       });
 
       it('should handle undefined domain', async () => {
-        const cookie = { 
+        const cookie = {
           ...validCookie,
-          domain: undefined as unknown as string 
+          domain: undefined as unknown as string,
         };
-        
+
         const result = await validator.validateCookie(cookie);
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContainEqual(expect.objectContaining({
-          field: 'domain',
-          code: 'MISSING_REQUIRED_FIELD'
-        }));
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            field: 'domain',
+            code: 'MISSING_REQUIRED_FIELD',
+          })
+        );
       });
     });
 
@@ -372,34 +418,38 @@ describe('CookieValidator', () => {
           'onclick=',
           'onerror=',
           'onload=',
-          '%3Cscript'
+          '%3Cscript',
         ];
 
         for (const pattern of patterns) {
           const cookie = { ...validCookie, value: `prefix${pattern}suffix` };
           const result = await validator.validateCookie(cookie);
-          
+
           expect(result.isValid).toBe(false);
-          expect(result.errors).toContainEqual(expect.objectContaining({
-            field: 'value',
-            code: 'SUSPICIOUS_CONTENT'
-          }));
+          expect(result.errors).toContainEqual(
+            expect.objectContaining({
+              field: 'value',
+              code: 'SUSPICIOUS_CONTENT',
+            })
+          );
         }
       });
 
       it('should detect multiple suspicious patterns in one value', async () => {
         const cookie = {
           ...validCookie,
-          value: '<script>javascript:alert(1)</script>'
+          value: '<script>javascript:alert(1)</script>',
         };
-        
+
         const result = await validator.validateCookie(cookie);
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContainEqual(expect.objectContaining({
-          field: 'value',
-          code: 'SUSPICIOUS_CONTENT'
-        }));
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            field: 'value',
+            code: 'SUSPICIOUS_CONTENT',
+          })
+        );
       });
 
       it('should detect suspicious patterns case-insensitively', async () => {
@@ -411,27 +461,29 @@ describe('CookieValidator', () => {
           'ONCLICK=',
           'OnError=',
           'OnLoad=',
-          '%3CsCrIpT'
+          '%3CsCrIpT',
         ];
 
         for (const pattern of variations) {
           const cookie = { ...validCookie, value: pattern };
           const result = await validator.validateCookie(cookie);
-          
+
           expect(result.isValid).toBe(false);
-          expect(result.errors).toContainEqual(expect.objectContaining({
-            field: 'value',
-            code: 'SUSPICIOUS_CONTENT'
-          }));
+          expect(result.errors).toContainEqual(
+            expect.objectContaining({
+              field: 'value',
+              code: 'SUSPICIOUS_CONTENT',
+            })
+          );
         }
       });
     });
 
     describe('error handling', () => {
       it('should handle undefined cookie object', async () => {
-        await expect(validator.validateCookie(undefined as any))
-          .rejects
-          .toThrow('Validation failed');
+        await expect(validator.validateCookie(undefined as any)).rejects.toThrow(
+          'Validation failed'
+        );
       });
 
       it('should handle malformed cookie properties', async () => {
@@ -439,31 +491,35 @@ describe('CookieValidator', () => {
           ...validCookie,
           secure: 'not-a-boolean',
           httpOnly: 123,
-          sameSite: true
+          sameSite: true,
         } as any;
 
         const result = await validator.validateCookie(malformedCookie);
-        
-        expect(result.warnings).toContainEqual(expect.objectContaining({
-          field: 'sameSite',
-          code: 'WEAK_SAME_SITE'
-        }));
+
+        expect(result.warnings).toContainEqual(
+          expect.objectContaining({
+            field: 'sameSite',
+            code: 'WEAK_SAME_SITE',
+          })
+        );
       });
 
       it('should handle empty string cookie values', async () => {
         const cookie = {
           ...validCookie,
-          value: ''
+          value: '',
         };
 
         const result = await validator.validateCookie(cookie);
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContainEqual(expect.objectContaining({
-          field: 'value',
-          code: 'MISSING_REQUIRED_FIELD'
-        }));
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            field: 'value',
+            code: 'MISSING_REQUIRED_FIELD',
+          })
+        );
       });
     });
   });
-}); 
+});

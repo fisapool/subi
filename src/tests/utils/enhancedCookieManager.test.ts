@@ -1,22 +1,26 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { saveEnhancedCookies, restoreEnhancedCookies, clearEnhancedCookies } from '../../utils/enhancedCookieManager';
+import {
+  saveEnhancedCookies,
+  restoreEnhancedCookies,
+  clearEnhancedCookies,
+} from '../../utils/enhancedCookieManager';
 
 // Mock the chrome API
 const mockChrome = {
   cookies: {
     getAll: vi.fn(),
     set: vi.fn(),
-    remove: vi.fn()
+    remove: vi.fn(),
   },
   storage: {
     local: {
       set: vi.fn(),
-      get: vi.fn()
-    }
+      get: vi.fn(),
+    },
   },
   runtime: {
-    lastError: null
-  }
+    lastError: null,
+  },
 };
 
 // Mock the global chrome object
@@ -33,8 +37,8 @@ describe('Enhanced Cookie Manager', () => {
       httpOnly: true,
       sameSite: 'strict',
       expirationDate: 1735689600,
-      storeId: 'store1'
-    }
+      storeId: 'store1',
+    },
   ];
 
   beforeEach(() => {
@@ -52,7 +56,7 @@ describe('Enhanced Cookie Manager', () => {
         name: details.name,
         value: details.value,
         domain: details.domain,
-        path: details.path
+        path: details.path,
       });
     });
     mockChrome.cookies.remove.mockImplementation((details, callback) => {
@@ -60,7 +64,7 @@ describe('Enhanced Cookie Manager', () => {
       return Promise.resolve({
         name: details.name,
         url: details.url,
-        storeId: details.storeId
+        storeId: details.storeId,
       });
     });
     mockChrome.storage.local.set.mockImplementation((data, callback) => {
@@ -77,7 +81,10 @@ describe('Enhanced Cookie Manager', () => {
       const result = await saveEnhancedCookies(url);
 
       expect(mockChrome.cookies.getAll).toHaveBeenCalledWith({ url }, expect.any(Function));
-      expect(mockChrome.storage.local.set).toHaveBeenCalledWith({ cookies: mockCookies }, expect.any(Function));
+      expect(mockChrome.storage.local.set).toHaveBeenCalledWith(
+        { cookies: mockCookies },
+        expect.any(Function)
+      );
       expect(result).toEqual(mockCookies);
     });
 
@@ -85,7 +92,9 @@ describe('Enhanced Cookie Manager', () => {
       (mockChrome.runtime.lastError as any) = { message: 'Failed to get cookies' };
       mockChrome.cookies.getAll.mockImplementation((_, callback) => callback([]));
 
-      await expect(saveEnhancedCookies('https://example.com')).rejects.toThrow('Failed to get cookies');
+      await expect(saveEnhancedCookies('https://example.com')).rejects.toThrow(
+        'Failed to get cookies'
+      );
     });
 
     it('should handle chrome.storage.local.set error', async () => {
@@ -95,7 +104,9 @@ describe('Enhanced Cookie Manager', () => {
         if (callback) callback();
       });
 
-      await expect(saveEnhancedCookies('https://example.com')).rejects.toThrow('Failed to save cookies');
+      await expect(saveEnhancedCookies('https://example.com')).rejects.toThrow(
+        'Failed to save cookies'
+      );
     });
   });
 
@@ -109,7 +120,7 @@ describe('Enhanced Cookie Manager', () => {
           url: 'https://example.com/',
           name: 'session',
           value: 'abc123',
-          domain: 'example.com'
+          domain: 'example.com',
         }),
         expect.any(Function)
       );
@@ -119,7 +130,9 @@ describe('Enhanced Cookie Manager', () => {
       (mockChrome.runtime.lastError as any) = { message: 'Failed to get stored cookies' };
       mockChrome.storage.local.get.mockImplementation((key, callback) => callback({}));
 
-      await expect(restoreEnhancedCookies('example.com')).rejects.toThrow('Failed to get stored cookies');
+      await expect(restoreEnhancedCookies('example.com')).rejects.toThrow(
+        'Failed to get stored cookies'
+      );
     });
 
     it('should handle empty stored cookies', async () => {
@@ -149,7 +162,7 @@ describe('Enhanced Cookie Manager', () => {
         expect.objectContaining({
           url,
           name: 'session',
-          storeId: 'store1'
+          storeId: 'store1',
         }),
         expect.any(Function)
       );
@@ -159,7 +172,9 @@ describe('Enhanced Cookie Manager', () => {
       (mockChrome.runtime.lastError as any) = { message: 'Failed to get cookies' };
       mockChrome.cookies.getAll.mockImplementation((_, callback) => callback([]));
 
-      await expect(clearEnhancedCookies('https://example.com')).rejects.toThrow('Failed to get cookies');
+      await expect(clearEnhancedCookies('https://example.com')).rejects.toThrow(
+        'Failed to get cookies'
+      );
     });
 
     it('should handle empty cookie list', async () => {
@@ -175,7 +190,9 @@ describe('Enhanced Cookie Manager', () => {
         if (callback) callback();
       });
 
-      await expect(clearEnhancedCookies('https://example.com')).rejects.toThrow('Failed to remove cookie');
+      await expect(clearEnhancedCookies('https://example.com')).rejects.toThrow(
+        'Failed to remove cookie'
+      );
     });
   });
-}); 
+});

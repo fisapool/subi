@@ -9,7 +9,7 @@ interface RemoveCookieDetails {
 export class CookieStore {
   async getAll(url: string): Promise<chrome.cookies.Cookie[]> {
     return new Promise((resolve, reject) => {
-      chrome.cookies.getAll({ url }, (cookies) => {
+      chrome.cookies.getAll({ url }, cookies => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
         } else {
@@ -21,7 +21,7 @@ export class CookieStore {
 
   async set(details: chrome.cookies.SetDetails): Promise<chrome.cookies.Cookie> {
     return new Promise((resolve, reject) => {
-      chrome.cookies.set(details, (cookie) => {
+      chrome.cookies.set(details, cookie => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
         } else if (!cookie) {
@@ -44,4 +44,4 @@ export class CookieStore {
       });
     });
   }
-} 
+}

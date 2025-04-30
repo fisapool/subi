@@ -12,4 +12,4 @@ export function getCookieSettings() {
 
 export function setCookieSettings(settings) {
   // ... existing code ...
-} 
+}

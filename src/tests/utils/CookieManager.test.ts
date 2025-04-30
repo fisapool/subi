@@ -11,11 +11,11 @@ import { Cookie, EncryptedData, ValidationResult } from '../../../types';
 const mockChrome = {
   cookies: {
     getAll: vi.fn(),
-    set: vi.fn()
+    set: vi.fn(),
   },
   runtime: {
-    lastError: null
-  }
+    lastError: null,
+  },
 };
 
 // Mock the global chrome object
@@ -24,56 +24,56 @@ const mockChrome = {
 // Create mock instances with proper typing for async functions
 const mockSecurity = {
   encryptCookies: vi.fn(),
-  decryptCookies: vi.fn()
+  decryptCookies: vi.fn(),
 };
 
 const mockValidator = {
-  validateCookie: vi.fn()
+  validateCookie: vi.fn(),
 };
 
 const mockErrorHandler = {
-  handleError: vi.fn()
+  handleError: vi.fn(),
 };
 
 const mockSecurityManager = {
   isOperationAllowed: vi.fn(),
-  validateCookieData: vi.fn()
+  validateCookieData: vi.fn(),
 };
 
 const mockStore = {
-  setState: vi.fn()
+  setState: vi.fn(),
 };
 
 // Mock the static getInstance methods
 vi.mock('../../core/error/ErrorHandler', () => ({
   ErrorHandler: {
-    getInstance: () => mockErrorHandler
-  }
+    getInstance: () => mockErrorHandler,
+  },
 }));
 
 vi.mock('../../core/security/SecurityManager', () => ({
   SecurityManager: {
-    getInstance: () => mockSecurityManager
-  }
+    getInstance: () => mockSecurityManager,
+  },
 }));
 
 vi.mock('../../core/state/Store', () => ({
   Store: {
-    getInstance: () => mockStore
-  }
+    getInstance: () => mockStore,
+  },
 }));
 
 // Mock the constructors
 vi.mock('../../../security/CookieEncryption', () => ({
-  CookieEncryption: function() {
+  CookieEncryption: function () {
     return mockSecurity;
-  }
+  },
 }));
 
 vi.mock('../../../validation/CookieValidator', () => ({
-  CookieValidator: function() {
+  CookieValidator: function () {
     return mockValidator;
-  }
+  },
 }));
 
 describe('CookieManager', () => {
@@ -88,8 +88,8 @@ describe('CookieManager', () => {
       secure: true,
       httpOnly: true,
       sameSite: 'strict',
-      expirationDate: 1735689600
-    }
+      expirationDate: 1735689600,
+    },
   ];
 
   const mockEncryptedData: EncryptedData = {
@@ -98,13 +98,13 @@ describe('CookieManager', () => {
     hash: 'mock-hash',
     salt: 'mock-salt',
     timestamp: Date.now(),
-    version: '1.0.0'
+    version: '1.0.0',
   };
 
   const mockValidationResult: ValidationResult = {
     isValid: true,
     errors: [],
-    warnings: []
+    warnings: [],
   };
 
   beforeEach(() => {
@@ -123,10 +123,10 @@ describe('CookieManager', () => {
         name: details.name,
         value: details.value,
         domain: details.domain,
-        path: details.path
+        path: details.path,
       });
     });
-    
+
     // Reset mock implementations to their default values
     mockSecurityManager.isOperationAllowed.mockImplementation(() => Promise.resolve(true));
     mockSecurityManager.validateCookieData.mockImplementation(() => true);
@@ -146,28 +146,34 @@ describe('CookieManager', () => {
       expect(result.data).toEqual(mockEncryptedData);
       expect(result.metadata.total).toBe(1);
       expect(result.metadata.valid).toBe(1);
-      expect(mockStore.setState).toHaveBeenCalledWith(expect.objectContaining({
-        loading: false,
-        cookies: mockCookies,
-        lastOperation: expect.objectContaining({
-          type: 'export',
-          success: true
+      expect(mockStore.setState).toHaveBeenCalledWith(
+        expect.objectContaining({
+          loading: false,
+          cookies: mockCookies,
+          lastOperation: expect.objectContaining({
+            type: 'export',
+            success: true,
+          }),
         })
-      }));
+      );
     });
 
     it('should handle rate limiting', async () => {
       mockSecurityManager.isOperationAllowed.mockImplementation(() => Promise.resolve(false));
 
-      await expect(cookieManager.exportCookies('example.com')).rejects.toThrow('Rate limit exceeded');
-      expect(mockStore.setState).toHaveBeenCalledWith(expect.objectContaining({
-        loading: false,
-        error: expect.any(Error),
-        lastOperation: expect.objectContaining({
-          type: 'export',
-          success: false
+      await expect(cookieManager.exportCookies('example.com')).rejects.toThrow(
+        'Rate limit exceeded'
+      );
+      expect(mockStore.setState).toHaveBeenCalledWith(
+        expect.objectContaining({
+          loading: false,
+          error: expect.any(Error),
+          lastOperation: expect.objectContaining({
+            type: 'export',
+            success: false,
+          }),
         })
-      }));
+      );
     });
 
     it('should handle chrome API errors', async () => {
@@ -179,17 +185,21 @@ describe('CookieManager', () => {
     });
 
     it('should filter out invalid cookies', async () => {
-      mockValidator.validateCookie.mockImplementationOnce(() => Promise.resolve({
-        ...mockValidationResult,
-        isValid: false,
-        errors: [{
-          field: 'value',
-          code: 'INVALID_VALUE',
-          message: 'Invalid cookie value',
-          severity: 'error',
-          name: 'ValidationError'
-        }]
-      }));
+      mockValidator.validateCookie.mockImplementationOnce(() =>
+        Promise.resolve({
+          ...mockValidationResult,
+          isValid: false,
+          errors: [
+            {
+              field: 'value',
+              code: 'INVALID_VALUE',
+              message: 'Invalid cookie value',
+              severity: 'error',
+              name: 'ValidationError',
+            },
+          ],
+        })
+      );
 
       const result = await cookieManager.exportCookies('example.com');
 
@@ -206,28 +216,34 @@ describe('CookieManager', () => {
       expect(result.metadata.total).toBe(1);
       expect(result.metadata.valid).toBe(1);
       expect(result.metadata.imported).toBe(1);
-      expect(mockStore.setState).toHaveBeenCalledWith(expect.objectContaining({
-        loading: false,
-        cookies: expect.any(Array),
-        lastOperation: expect.objectContaining({
-          type: 'import',
-          success: true
+      expect(mockStore.setState).toHaveBeenCalledWith(
+        expect.objectContaining({
+          loading: false,
+          cookies: expect.any(Array),
+          lastOperation: expect.objectContaining({
+            type: 'import',
+            success: true,
+          }),
         })
-      }));
+      );
     });
 
     it('should handle rate limiting', async () => {
       mockSecurityManager.isOperationAllowed.mockImplementation(() => Promise.resolve(false));
 
-      await expect(cookieManager.importCookies(mockEncryptedData)).rejects.toThrow('Rate limit exceeded');
-      expect(mockStore.setState).toHaveBeenCalledWith(expect.objectContaining({
-        loading: false,
-        error: expect.any(Error),
-        lastOperation: expect.objectContaining({
-          type: 'import',
-          success: false
+      await expect(cookieManager.importCookies(mockEncryptedData)).rejects.toThrow(
+        'Rate limit exceeded'
+      );
+      expect(mockStore.setState).toHaveBeenCalledWith(
+        expect.objectContaining({
+          loading: false,
+          error: expect.any(Error),
+          lastOperation: expect.objectContaining({
+            type: 'import',
+            success: false,
+          }),
         })
-      }));
+      );
     });
 
     it('should handle chrome API errors during cookie setting', async () => {
@@ -243,7 +259,9 @@ describe('CookieManager', () => {
     it('should handle invalid cookie data structure', async () => {
       mockSecurityManager.validateCookieData.mockImplementation(() => false);
 
-      await expect(cookieManager.importCookies(mockEncryptedData)).rejects.toThrow('Invalid cookie data structure');
+      await expect(cookieManager.importCookies(mockEncryptedData)).rejects.toThrow(
+        'Invalid cookie data structure'
+      );
     });
   });
-}); 
+});

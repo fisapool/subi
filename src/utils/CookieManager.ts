@@ -49,9 +49,7 @@ export class CookieManager {
       );
 
       // Filter out invalid cookies
-      const validCookies = cookies.filter((_, index) => 
-        validationResults[index].isValid
-      );
+      const validCookies = cookies.filter((_, index) => validationResults[index].isValid);
 
       // Validate cookie data structure
       if (!this.securityManager.validateCookieData(validCookies)) {
@@ -67,7 +65,7 @@ export class CookieManager {
         secure: cookie.secure,
         httpOnly: cookie.httpOnly,
         sameSite: cookie.sameSite,
-        expirationDate: cookie.expirationDate
+        expirationDate: cookie.expirationDate,
       }));
 
       // Encrypt valid cookies
@@ -79,8 +77,8 @@ export class CookieManager {
         metadata: {
           total: cookies.length,
           valid: validCookies.length,
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       };
 
       this.store.setState({
@@ -89,24 +87,24 @@ export class CookieManager {
         lastOperation: {
           type: 'export',
           timestamp: Date.now(),
-          success: true
-        }
+          success: true,
+        },
       });
 
       return result;
     } catch (error) {
       await this.errorHandler.handleError(error as Error, 'cookie-export');
-      
+
       this.store.setState({
         loading: false,
         error: error as Error,
         lastOperation: {
           type: 'export',
           timestamp: Date.now(),
-          success: false
-        }
+          success: false,
+        },
       });
-      
+
       throw error;
     }
   }
@@ -141,19 +139,13 @@ export class CookieManager {
           secure: cookie.secure,
           httpOnly: cookie.httpOnly,
           sameSite: cookie.sameSite as chrome.cookies.SameSiteStatus,
-          expirationDate: cookie.expirationDate
+          expirationDate: cookie.expirationDate,
         };
       });
 
       // Create a type-safe validator for Chrome cookies
       const validateChromeCookie = (cookie: chrome.cookies.SetDetails): boolean => {
-        return Boolean(
-          cookie.url &&
-          cookie.domain &&
-          cookie.name &&
-          cookie.value &&
-          cookie.path
-        );
+        return Boolean(cookie.url && cookie.domain && cookie.name && cookie.value && cookie.path);
       };
 
       // Validate each cookie
@@ -165,9 +157,7 @@ export class CookieManager {
       );
 
       // Filter valid cookies
-      const validCookies = chromeCookies.filter((_, index) => 
-        validationResults[index].isValid
-      );
+      const validCookies = chromeCookies.filter((_, index) => validationResults[index].isValid);
 
       // Set cookies
       const results = await Promise.all(
@@ -197,8 +187,8 @@ export class CookieManager {
           total: cookies.length,
           valid: validCookies.length,
           imported: successCount,
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       };
 
       this.store.setState({
@@ -207,25 +197,25 @@ export class CookieManager {
         lastOperation: {
           type: 'import',
           timestamp: Date.now(),
-          success: successCount > 0
-        }
+          success: successCount > 0,
+        },
       });
 
       return result;
     } catch (error) {
       await this.errorHandler.handleError(error as Error, 'cookie-import');
-      
+
       this.store.setState({
         loading: false,
         error: error as Error,
         lastOperation: {
           type: 'import',
           timestamp: Date.now(),
-          success: false
-        }
+          success: false,
+        },
       });
-      
+
       throw error;
     }
   }
-} 
+}

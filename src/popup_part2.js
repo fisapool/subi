@@ -4,13 +4,13 @@ function addTestProtectionButton() {
   button.textContent = 'Test Protection';
   button.className = 'test-protection-button';
   button.addEventListener('click', testCookieProtection);
-  
+
   // Add tooltip
   const tooltip = document.createElement('div');
   tooltip.className = 'tooltip';
   tooltip.textContent = 'Verify that your session cookies are being properly protected';
   button.appendChild(tooltip);
-  
+
   document.body.appendChild(button);
 }
 
@@ -39,7 +39,7 @@ function addTooltips() {
     tooltip.textContent = 'Save your current session cookies for later restoration';
     saveButton.appendChild(tooltip);
   }
-  
+
   // Add tooltip to Restore Session Cookies button
   const restoreButton = document.getElementById('restore-session-cookies');
   if (restoreButton) {
@@ -54,16 +54,16 @@ function addTooltips() {
 async function testCookieProtection() {
   const button = document.getElementById('test-protection-button');
   if (!button) return;
-  
+
   // Set button to loading state
   setButtonLoading(button, true);
-  
+
   try {
     // Use the withLock utility to prevent concurrent operations
     const results = await window.utils.withLock('test_cookie_protection', async () => {
       return await chrome.runtime.sendMessage({ type: 'testCookieProtection' });
     });
-    
+
     displayTestResults(results);
     showStatusMessage('Protection test completed successfully', 'success');
   } catch (error) {
@@ -82,21 +82,21 @@ function displayTestResults(results) {
   if (existingResults) {
     existingResults.remove();
   }
-  
+
   const resultsList = document.createElement('ul');
   resultsList.className = 'results-list';
-  
+
   // Add each result to the list
   results.forEach(result => {
     const listItem = document.createElement('li');
     listItem.textContent = result;
     resultsList.appendChild(listItem);
   });
-  
+
   // Add the results list after the button
   const buttonContainer = document.querySelector('.button-container');
   buttonContainer.after(resultsList);
-  
+
   // Remove results after 10 seconds
   setTimeout(() => {
     if (resultsList.parentNode) {
@@ -108,7 +108,7 @@ function displayTestResults(results) {
 // Set button loading state
 function setButtonLoading(button, isLoading) {
   if (!button) return;
-  
+
   if (isLoading) {
     button.disabled = true;
     button.dataset.originalText = button.textContent;
@@ -123,11 +123,11 @@ function setButtonLoading(button, isLoading) {
 function showStatusMessage(message, type = 'info') {
   const statusMessage = document.getElementById('statusMessage');
   if (!statusMessage) return;
-  
+
   statusMessage.textContent = message;
   statusMessage.className = `status-message ${type}`;
   statusMessage.style.display = 'block';
-  
+
   // Auto-hide after 5 seconds
   setTimeout(() => {
     statusMessage.style.display = 'none';
@@ -139,27 +139,27 @@ function showErrorMessage(message, details = null) {
   const errorDisplay = document.getElementById('errorDisplay');
   const errorList = document.getElementById('errorList');
   const dismissError = document.getElementById('dismissError');
-  
+
   if (!errorDisplay || !errorList || !dismissError) return;
-  
+
   // Clear previous errors
   errorList.innerHTML = '';
-  
+
   // Add main error message
   const mainError = document.createElement('div');
   mainError.className = 'error-message';
   mainError.textContent = message;
   errorList.appendChild(mainError);
-  
+
   // Add details if provided
   if (details) {
     const detailsContainer = document.createElement('div');
     detailsContainer.className = 'error-details';
     detailsContainer.style.display = 'none';
-    
+
     const detailsContent = document.createElement('div');
     detailsContent.className = 'details-content';
-    
+
     if (Array.isArray(details)) {
       const detailsList = document.createElement('ul');
       details.forEach(detail => {
@@ -171,7 +171,7 @@ function showErrorMessage(message, details = null) {
     } else {
       detailsContent.textContent = details;
     }
-    
+
     const toggleButton = document.createElement('button');
     toggleButton.className = 'toggle-details';
     toggleButton.textContent = 'Show Details';
@@ -180,15 +180,15 @@ function showErrorMessage(message, details = null) {
       detailsContainer.style.display = isHidden ? 'block' : 'none';
       toggleButton.textContent = isHidden ? 'Hide Details' : 'Show Details';
     });
-    
+
     detailsContainer.appendChild(toggleButton);
     detailsContainer.appendChild(detailsContent);
     errorList.appendChild(detailsContainer);
   }
-  
+
   // Show error display
   errorDisplay.style.display = 'block';
-  
+
   // Dismiss error
   dismissError.onclick = () => {
     errorDisplay.style.display = 'none';
@@ -200,9 +200,9 @@ function checkBrowserCompatibility() {
   const browserInfo = {
     name: 'Unknown',
     version: 'Unknown',
-    isSupported: true
+    isSupported: true,
   };
-  
+
   // Detect browser
   const userAgent = navigator.userAgent;
   if (userAgent.indexOf('Chrome') > -1) {
@@ -222,26 +222,26 @@ function checkBrowserCompatibility() {
     const match = userAgent.match(/Edge\/(\d+)/);
     if (match) browserInfo.version = match[1];
   }
-  
+
   // Check if browser is supported
   browserInfo.isSupported = ['Chrome', 'Firefox', 'Edge'].includes(browserInfo.name);
-  
+
   return browserInfo;
 }
 
 // Check storage usage
 async function checkStorageUsage() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(null, (items) => {
+  return new Promise(resolve => {
+    chrome.storage.local.get(null, items => {
       const totalBytes = new Blob([JSON.stringify(items)]).size;
       const maxBytes = 5 * 1024 * 1024; // 5MB limit for chrome.storage.local
       const usagePercent = (totalBytes / maxBytes) * 100;
-      
+
       resolve({
         used: totalBytes,
         total: maxBytes,
         percent: usagePercent,
-        isNearLimit: usagePercent > 80
+        isNearLimit: usagePercent > 80,
       });
     });
   });
@@ -258,85 +258,94 @@ document.addEventListener('DOMContentLoaded', async () => {
     compatibilityMessage.style.display = 'block';
     document.body.insertBefore(compatibilityMessage, document.body.firstChild);
   }
-  
+
   // Check storage usage
   const storageUsage = await checkStorageUsage();
   if (storageUsage.isNearLimit) {
     const storageWarning = document.createElement('div');
     storageWarning.className = 'status-message warning';
-    storageWarning.textContent = `Storage usage is at ${Math.round(storageUsage.percent)}%. Consider clearing logs in the options page.`;
+    storageWarning.textContent = `Storage usage is at ${Math.round(
+      storageUsage.percent
+    )}%. Consider clearing logs in the options page.`;
     storageWarning.style.display = 'block';
     document.body.insertBefore(storageWarning, document.body.firstChild);
   }
-  
+
   // Add Test Protection button
   addTestProtectionButton();
-  
+
   // Add Help button
   addHelpButton();
-  
+
   // Add tooltips to existing elements
   addTooltips();
-  
+
   // Add event listener for the test protection button
   const testProtectionButton = document.getElementById('test-protection-button');
   if (testProtectionButton) {
-    testProtectionButton.addEventListener('click', function() {
+    testProtectionButton.addEventListener('click', function () {
       // Get the current tab
-      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         if (!tabs || tabs.length === 0) {
           showErrorMessage('No active tab found. Please make sure you have a valid tab open.');
           return;
         }
-        
+
         const currentTab = tabs[0];
-        
+
         // Set button to loading state
         setButtonLoading(this, true);
-        
+
         // Use withLock to prevent concurrent operations
         window.utils.withLock('test_protection_content_script', async () => {
           try {
             // Send a message to the content script to test protection
             const response = await new Promise((resolve, reject) => {
-              chrome.tabs.sendMessage(currentTab.id, {action: "testProtection"}, function(response) {
-                if (chrome.runtime.lastError) {
-                  reject(chrome.runtime.lastError);
-                } else {
-                  resolve(response);
+              chrome.tabs.sendMessage(
+                currentTab.id,
+                { action: 'testProtection' },
+                function (response) {
+                  if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                  } else {
+                    resolve(response);
+                  }
                 }
-              });
+              );
             });
-            
+
             // Reset button state
             setButtonLoading(testProtectionButton, false);
-            
+
             if (response && response.success) {
               // Display the results
               const resultsList = document.createElement('ul');
               resultsList.className = 'results-list';
-              
+
               // Add each result to the list
               response.results.forEach(result => {
                 const listItem = document.createElement('li');
                 listItem.textContent = result;
                 resultsList.appendChild(listItem);
               });
-              
+
               // Clear any existing results and add the new ones
               const existingResults = document.querySelector('.results-list');
               if (existingResults) {
                 existingResults.remove();
               }
-              
+
               // Add the results list after the button
               const buttonContainer = document.querySelector('.button-container');
               buttonContainer.after(resultsList);
-              
+
               // Show success message
               showStatusMessage('Protection test completed successfully', 'success');
             } else {
-              showErrorMessage('Failed to test protection', response ? response.error : 'No response received');
+              showErrorMessage(
+                'Failed to test protection',
+                response ? response.error : 'No response received'
+              );
             }
           } catch (error) {
             // Reset button state
@@ -347,15 +356,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
   }
-  
+
   // Add event listeners for other buttons
   const saveSessionCookiesButton = document.getElementById('saveSessionCookiesButton');
   const restoreSessionCookiesButton = document.getElementById('restoreSessionCookiesButton');
-  
+
   if (saveSessionCookiesButton) {
-    saveSessionCookiesButton.addEventListener('click', function() {
+    saveSessionCookiesButton.addEventListener('click', function () {
       setButtonLoading(this, true);
-      
+
       // Use withLock to prevent concurrent operations
       window.utils.withLock('save_session_cookies', async () => {
         try {
@@ -370,11 +379,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
   }
-  
+
   if (restoreSessionCookiesButton) {
-    restoreSessionCookiesButton.addEventListener('click', function() {
+    restoreSessionCookiesButton.addEventListener('click', function () {
       setButtonLoading(this, true);
-      
+
       // Use withLock to prevent concurrent operations
       window.utils.withLock('restore_session_cookies', async () => {
         try {
@@ -402,5 +411,5 @@ module.exports = {
   displayTestResults,
   setButtonLoading,
   showStatusMessage,
-  showErrorMessage
-}; 
+  showErrorMessage,
+};

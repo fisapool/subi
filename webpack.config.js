@@ -5,9 +5,12 @@ module.exports = {
   mode: 'production',
   entry: {
     background: './src/background.js',
-    content: './src/content.js',
+    content: './src/content-script.js',
     popup: './src/popup.js',
-    options: './src/options.js'
+    settings: './src/settings.js',
+    'service-worker-loader': './src/service-worker-loader.js',
+    'set-background-color': './src/set-background-color.js',
+    redirect: './src/redirect.js'
   },
   output: {
     filename: '[name].js',
@@ -40,6 +43,14 @@ module.exports = {
         { from: 'manifest.json', to: '.' },
         { from: 'popup.html', to: '.' },
         { from: 'options.html', to: '.' },
+        { from: 'popup_part2.html', to: '.' },
+        { from: 'settings.html', to: '.' },
+        { from: 'tasks.html', to: '.' },
+        { from: 'session-buddy.html', to: '.' },
+        { from: 'main.html', to: '.' },
+        { from: 'popup.css', to: '.' },
+        { from: 'popup_part2.css', to: '.' },
+        { from: 'options.css', to: '.' },
         { 
           from: 'node_modules/webextension-polyfill/dist/browser-polyfill.min.js', 
           to: 'browser-polyfill.min.js' 

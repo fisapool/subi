@@ -68,9 +68,7 @@ export async function searchTasks(query) {
   const tasks = await getAllTasks();
   const searchTerm = query.toLowerCase();
   return Object.fromEntries(
-    Object.entries(tasks).filter(([_, task]) => 
-      task.title.toLowerCase().includes(searchTerm)
-    )
+    Object.entries(tasks).filter(([_, task]) => task.title.toLowerCase().includes(searchTerm))
   );
 }
 
@@ -89,7 +87,7 @@ class Task {
 // Get all tasks
 export function getTasks() {
   return new Promise(resolve => {
-    chrome.storage.local.get(['tasks'], (result) => {
+    chrome.storage.local.get(['tasks'], result => {
       resolve(result.tasks || []);
     });
   });
@@ -114,13 +112,12 @@ export async function addTask(taskData) {
 // Get tasks for a specific domain
 export async function getTasksForDomain(domain) {
   const tasks = await getTasks();
-  return tasks.filter(task => 
-    task.domain === domain && 
-    task.status === 'pending'
-  ).sort((a, b) => {
-    const priorityOrder = { high: 1, medium: 2, low: 3 };
-    return priorityOrder[a.priority] - priorityOrder[b.priority];
-  });
+  return tasks
+    .filter(task => task.domain === domain && task.status === 'pending')
+    .sort((a, b) => {
+      const priorityOrder = { high: 1, medium: 2, low: 3 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
 }
 
 // Mark a task as done
@@ -132,4 +129,4 @@ export async function markTaskAsDone(taskId) {
     await updateTask(task);
   }
   return task;
-} 
+}

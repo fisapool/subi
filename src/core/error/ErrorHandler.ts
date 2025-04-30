@@ -24,7 +24,11 @@ export class ErrorHandler {
     return ErrorHandler.instance;
   }
 
-  async handleError(error: Error, context: string, severity: ErrorSeverity = 'medium'): Promise<void> {
+  async handleError(
+    error: Error,
+    context: string,
+    severity: ErrorSeverity = 'medium'
+  ): Promise<void> {
     const errorLog: ErrorLog = {
       id: crypto.randomUUID(),
       timestamp: new Date(),
@@ -32,12 +36,12 @@ export class ErrorHandler {
       context,
       severity,
       stack: error.stack,
-      metadata: this.getErrorMetadata()
+      metadata: this.getErrorMetadata(),
     };
 
     await this.logError(errorLog);
     await this.notifyUser(errorLog);
-    
+
     if (severity === 'critical') {
       await this.handleCriticalError(errorLog);
     }
@@ -55,7 +59,7 @@ export class ErrorHandler {
   private async persistError(errorLog: ErrorLog): Promise<void> {
     try {
       await chrome.storage.local.set({
-        [`error_${errorLog.id}`]: errorLog
+        [`error_${errorLog.id}`]: errorLog,
       });
     } catch (e) {
       console.error('Failed to persist error:', e);
@@ -67,7 +71,7 @@ export class ErrorHandler {
       userAgent: navigator.userAgent,
       timestamp: Date.now(),
       url: window.location.href,
-      version: chrome.runtime.getManifest().version
+      version: chrome.runtime.getManifest().version,
     };
   }
 
@@ -87,13 +91,13 @@ export class ErrorHandler {
   private async handleCriticalError(errorLog: ErrorLog): Promise<void> {
     // Implement recovery mechanisms
     await this.attemptRecovery(errorLog);
-    
+
     // If recovery fails, notify user and provide guidance
     chrome.notifications.create({
       type: 'basic',
       iconUrl: 'img/logo-48.png',
       title: 'Critical Error',
-      message: 'An error occurred. Please try restarting the extension.'
+      message: 'An error occurred. Please try restarting the extension.',
     });
   }
 
@@ -126,4 +130,4 @@ export class ErrorHandler {
       return false;
     }
   }
-} 
+}
