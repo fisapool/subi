@@ -3,7 +3,7 @@ import { JSDOM } from 'jsdom';
 import fs from 'fs';
 import path from 'path';
 import type { Mock } from 'vitest';
-import type { Settings, MessageResponse, ChromeAPI } from '../types';
+import type { Settings, MessageResponse, ChromeAPI, Session } from '../types';
 import { loadSettings, saveSettings, validateSettings, exportData, importData, clearData } from '../settings';
 import type { Settings as TypeSettings } from '../types';
 
@@ -28,12 +28,15 @@ const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
 const mockChrome = {
   storage: {
     local: {
-      get: vi.fn(),
-      set: vi.fn(),
+      get: vi.fn() as Mock & ((key?: string | string[] | object) => Promise<any>) & { mockResolvedValue: (value: any) => void },
+      set: vi.fn() as Mock & ((items: object) => Promise<void>) & { mockResolvedValue: (value: any) => void },
     },
   },
   runtime: {
-    sendMessage: vi.fn(),
+    sendMessage: vi.fn() as Mock & ((message: any) => Promise<MessageResponse>) & { 
+      mockResolvedValue: (value: any) => void,
+      mockResolvedValueOnce: (value: any) => void 
+    },
   },
 } as unknown as ChromeAPI;
 
