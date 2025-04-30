@@ -8,11 +8,10 @@ build/
 # Test coverage
 coverage/
 
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
+# Environment variables
+.env
+.env.local
+.env.*.local
 
 # Logs
 *.log
@@ -20,14 +19,25 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment variables
-.env
-.env.local
-.env.*.local
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 Thumbs.db
+ehthumbs.db
 
 # Chrome extension specific
 *.crx

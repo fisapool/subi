@@ -21,6 +21,13 @@ FISABytes is a professional-grade browser extension that provides comprehensive 
   - Cross-browser cookie management
   - Secure cookie handling
   - User-friendly popup interface
+  - Session cookie monitoring and protection
+  - Cookie consent management
+
+- Productivity Features
+  - Focus mode for productivity
+  - Meeting mode for muting distracting tabs
+  - Session activity logging
 
 - General Features
   - Multi-language support (English, German, French, Russian, Vietnamese)
@@ -83,6 +90,8 @@ npm test -- --coverage
 
 ## Installation
 
+### Development Mode
+
 1. Clone the repository
 2. Install dependencies:
    ```bash
@@ -97,6 +106,10 @@ npm test -- --coverage
    - Enable "Developer mode"
    - Click "Load unpacked"
    - Select the `dist` directory
+
+### Production Mode
+
+The extension will be available on the Chrome Web Store (link coming soon).
 
 ## Development
 
@@ -154,8 +167,8 @@ FISABytes implements strict security measures:
 
 ## License
 
-[Add your license information here]
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Support
 
-For support, please [add your support contact information here]
+For support, please open an issue in the GitHub repository or contact the maintainers.

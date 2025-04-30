@@ -1,63 +1,36 @@
 {
-  "update_url": "https://clients2.google.com/service/update2/crx",
-
-  "name": "FISABytes Sessions",
-  "version": "4.0.5",
-  "description": "FISABytes Sessions - Keep Tabs and Manage Sessions",
-  "default_locale": "en",
-  "minimum_chrome_version": "109",
   "manifest_version": 3,
+  "name": "FISABytes Cookie Manager",
+  "version": "2.0",
+  "description": "A powerful Chrome extension for managing browser cookies and sessions with enhanced security features.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "activeTab",
+    "cookies",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content-script.js"],
-      "run_at": "document_start"
+      "js": ["browser-polyfill.min.js", "content.js"]
     }
   ],
-  "icons": {
-    "16": "assets/icons/logo-16.png",
-    "32": "assets/icons/logo-32.png",
-    "48": "assets/icons/logo-48.png",
-    "128": "assets/icons/logo-128.png"
-  },
-  "action": {
-    "default_icon": {
-      "19": "assets/icons/logo-19.png",
-      "38": "assets/icons/logo-38.png"
-    },
-    "default_popup": "popup.html"
-  },
-  "options_page": "settings.html",
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'self'; default-src 'self'; connect-src 'self' https://*; img-src 'self' data: https://*; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; form-action 'self'"
-  },
-  "permissions": ["tabs", "unlimitedStorage", "storage", "alarms", "cookies", "activeTab", "webNavigation"],
-  "host_permissions": ["http://*/*", "https://*/*"],
-  "optional_host_permissions": ["file:///*"],
-  "incognito": "spanning",
-  "commands": {
-    "save-session": {
-      "description": "Save tabs"
-    },
-    "clear-item-selections": {
-      "description": "Clear selection"
-    }
-  },
   "web_accessible_resources": [
     {
-      "resources": [
-        "session-buddy.html",
-        "main.html",
-        "redirect.js",
-        "main.bundle.js",
-        "assets/tailwind.css",
-        "set-background-color.js",
-        "background.js"
-      ],
+      "resources": ["browser-polyfill.min.js"],
       "matches": ["<all_urls>"]
     }
   ]

@@ -1,16 +1,21 @@
-module.exports = {
+/** @type {import('jest').Config} */
+const config = {
   testEnvironment: 'jsdom',
   transform: {
-    '^.+\\.(ts|tsx)$': 'babel-jest',
-    '^.+\\.(js|jsx)$': 'babel-jest',
+    '^.+\\.js$': ['babel-jest', { configFile: './babel.config.js' }]
   },
+  setupFiles: ['./tests/setup.js'],
   transformIgnorePatterns: [
-    '/node_modules/(?!(testing-library|@babel|@emotion|@jest)/)',
+    'node_modules/(?!(webextension-polyfill)/)'
   ],
+  moduleFileExtensions: ['js', 'json'],
+  testMatch: [
+    '**/tests/**/*.test.js'
+  ],
+  verbose: true,
   moduleNameMapper: {
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-  },
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-}; 
+    '^(\\.{1,2}/.*)\\.js$': '$1'
+  }
+};
+
+export default config; 
