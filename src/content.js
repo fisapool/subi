@@ -5,6 +5,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
     // Send the results back to the popup
     sendResponse({ success: true, results: results });
+  } else if (request.type === 'UPDATE_COOKIES') {
+    try {
+      updateCookieUI(request.cookies);
+      sendResponse({ success: true });
+    } catch (error) {
+      console.error('Error updating cookie UI:', error);
+      sendResponse({ success: false, error: error.message });
+    }
   }
   return true; // Keep the message channel open for the asynchronous response
 });
@@ -46,31 +54,89 @@ export function testProtection() {
 
 export function initializeContent() {
   return new Promise(resolve => {
+    injectUIElements();
+
     // Set up message listener for communication with background script
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.action === 'testProtection') {
         const results = testProtection();
         sendResponse({ success: true, results });
+      } else if (request.type === 'UPDATE_COOKIES') {
+        try {
+          updateCookieUI(request.cookies);
+          sendResponse({ success: true });
+        } catch (error) {
+          console.error('Error updating cookie UI:', error);
+          sendResponse({ success: false, error: error.message });
+        }
       }
       return true; // Keep the message channel open for async response
     });
 
-    // Initialize UI elements if they exist
-    const testProtectionBtn = document.getElementById('testProtectionBtn');
-    if (testProtectionBtn) {
-      testProtectionBtn.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: 'testProtection' }, response => {
-          if (response && response.success) {
-            displayResults(response.results);
-          } else {
-            displayError('Failed to test protection');
-          }
-        });
-      });
+    // Monitor cookie changes
+    if (chrome.cookies && chrome.cookies.onChanged) {
+      chrome.cookies.onChanged.addListener(handleCookieChange);
     }
 
     resolve();
   });
+}
+
+function injectUIElements() {
+  try {
+    const container = document.createElement('div');
+    container.id = 'cookie-manager-container';
+    document.body.appendChild(container);
+  } catch (error) {
+    displayError('Failed to inject UI elements: ' + error.message);
+  }
+}
+
+function createCookieList(cookies) {
+  try {
+    const container = document.createElement('div');
+    container.id = 'cookie-list';
+    cookies.forEach(cookie => {
+      const item = document.createElement('div');
+      item.className = 'cookie-item';
+      item.textContent = `${cookie.name}: ${cookie.value}`;
+      container.appendChild(item);
+    });
+    document.body.appendChild(container);
+  } catch (error) {
+    displayError('Failed to create cookie list: ' + error.message);
+  }
+}
+
+function updateCookieUI(cookies) {
+  try {
+    let container = document.getElementById('cookie-list');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'cookie-list';
+      document.body.appendChild(container);
+    }
+    container.innerHTML = '';
+    cookies.forEach(cookie => {
+      const item = document.createElement('div');
+      item.className = 'cookie-item';
+      item.textContent = `${cookie.name}: ${cookie.value}`;
+      container.appendChild(item);
+    });
+  } catch (error) {
+    displayError('Failed to update cookie UI: ' + error.message);
+  }
+}
+
+function handleCookieChange(changeInfo) {
+  try {
+    const container = document.createElement('div');
+    container.id = 'cookie-change-notification';
+    container.textContent = `Cookie ${changeInfo.cookie.name} was ${changeInfo.removed ? 'removed' : 'changed'}`;
+    document.body.appendChild(container);
+  } catch (error) {
+    displayError('Failed to handle cookie change: ' + error.message);
+  }
 }
 
 export function handleCookieConsent() {
@@ -151,8 +217,15 @@ function displayResults(results) {
 }
 
 function displayError(message) {
-  const errorElement = document.getElementById('errorMessage');
+  const errorElement = document.getElementById('errorMessage') || document.getElementById('error-message');
   if (errorElement) {
     errorElement.innerHTML = `<div class="error">${message}</div>`;
+  } else {
+    // If no error element exists, create one
+    const newErrorElement = document.createElement('div');
+    newErrorElement.id = 'error-message';
+    newErrorElement.className = 'error';
+    newErrorElement.textContent = message;
+    document.body.appendChild(newErrorElement);
   }
 }

@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { clearMocks } from './mocks/webextension-polyfill.js';
 
 describe('Background Script - Simple Test', () => {

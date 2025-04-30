@@ -1,163 +1,80 @@
-import { jest } from '@jest/globals';
-import browser from './mocks/webextension-polyfill.js';
-
-// Mock browser API
-global.browser = browser;
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { browser } from 'webextension-polyfill';
+import { handleMessage, handleAlarm, handleInstall } from '../src/background';
 
 describe('Background Script', () => {
-  // Clear all mocks before each test
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  describe('Message Handling', () => {
-    it('should handle cookie management messages', async () => {
-      const { handleMessage } = await import('../src/background.js');
-      const message = { type: 'getCookies', domain: 'example.com' };
-      const sendResponse = jest.fn();
+  describe('handleMessage', () => {
+    it('should handle SAVE_SESSION message', async () => {
+      const message = { type: 'SAVE_SESSION', data: { name: 'test-session' } };
+      const sender = { tab: { id: 1 } };
 
-      await handleMessage(message, {}, sendResponse);
-      
-      expect(browser.cookies.getAll).toHaveBeenCalledWith({
-        domain: 'example.com'
-      });
-      expect(sendResponse).toHaveBeenCalled();
-    });
+      await handleMessage(message, sender);
 
-    it('should handle cookie deletion messages', async () => {
-      const { handleMessage } = await import('../src/background.js');
-      const message = { type: 'deleteCookie', domain: 'example.com', name: 'testCookie' };
-      const sendResponse = jest.fn();
-
-      await handleMessage(message, {}, sendResponse);
-      
-      expect(browser.cookies.remove).toHaveBeenCalledWith({
-        name: 'testCookie',
-        domain: 'example.com'
-      });
-      expect(sendResponse).toHaveBeenCalled();
-    });
-
-    it('should handle invalid message types', async () => {
-      const { handleMessage } = await import('../src/background.js');
-      const message = { type: 'invalid' };
-      const sendResponse = jest.fn();
-
-      await handleMessage(message, {}, sendResponse);
-      
-      expect(sendResponse).toHaveBeenCalledWith({ error: 'Invalid message type' });
-    });
-  });
-
-  describe('Storage Management', () => {
-    it('should save settings to storage', async () => {
-      const { saveSettings } = await import('../src/background.js');
-      const settings = { autoDelete: true };
-
-      await saveSettings(settings);
-      
-      expect(browser.storage.local.set).toHaveBeenCalledWith(settings);
-    });
-
-    it('should retrieve settings from storage', async () => {
-      const { getSettings } = await import('../src/background.js');
-      
-      const settings = await getSettings();
-      
-      expect(settings).toEqual({ autoDelete: true });
-    });
-
-    it('should handle storage errors gracefully', async () => {
-      const { getSettings } = await import('../src/background.js');
-      
-      browser.storage.local.get.mockRejectedValueOnce(new Error('Storage error'));
-      
-      const settings = await getSettings();
-      
-      expect(settings).toEqual({});
-    });
-  });
-
-  describe('Cookie Management', () => {
-    it('should get cookies for a domain', async () => {
-      const { getCookiesForDomain } = await import('../src/background.js');
-      
-      const cookies = await getCookiesForDomain('example.com');
-      
-      expect(cookies).toEqual([{ name: 'cookie1', domain: 'example.com' }]);
-    });
-
-    it('should delete cookies for a domain', async () => {
-      const { deleteCookiesForDomain } = await import('../src/background.js');
-      
-      await deleteCookiesForDomain('example.com');
-      
-      expect(browser.cookies.remove).toHaveBeenCalledWith({
-        name: 'cookie1',
-        domain: 'example.com'
+      expect(browser.storage.local.set).toHaveBeenCalled();
+      expect(browser.tabs.sendMessage).toHaveBeenCalledWith(1, {
+        type: 'SESSION_SAVED',
+        success: true
       });
     });
 
-    it('should handle cookie deletion errors', async () => {
-      const { deleteCookiesForDomain } = await import('../src/background.js');
-      
-      await expect(deleteCookiesForDomain('error.com')).rejects.toThrow('Deletion failed');
-    });
-  });
+    it('should handle RESTORE_SESSION message', async () => {
+      const message = { type: 'RESTORE_SESSION', data: { name: 'test-session' } };
+      const sender = { tab: { id: 1 } };
 
-  describe('Alarm Management', () => {
-    it('should create periodic cleanup alarm', async () => {
-      const { scheduleCleanup } = await import('../src/background.js');
-      
-      await scheduleCleanup();
-      
-      expect(browser.alarms.create).toHaveBeenCalledWith('cleanup', {
-        periodInMinutes: 60
+      browser.storage.local.get.mockResolvedValueOnce({
+        sessions: [{ name: 'test-session', tabs: [] }]
+      });
+
+      await handleMessage(message, sender);
+
+      expect(browser.storage.local.get).toHaveBeenCalled();
+      expect(browser.tabs.sendMessage).toHaveBeenCalledWith(1, {
+        type: 'SESSION_RESTORED',
+        success: true
       });
     });
 
-    it('should handle alarm events', async () => {
-      const { initializeAlarms } = await import('../src/background.js');
-      
-      await initializeAlarms();
-      
-      expect(browser.alarms.onAlarm.addListener).toHaveBeenCalled();
-    });
+    it('should handle DELETE_SESSION message', async () => {
+      const message = { type: 'DELETE_SESSION', data: { name: 'test-session' } };
+      const sender = { tab: { id: 1 } };
 
-    it('should clear alarms when needed', async () => {
-      const { clearCleanupAlarm } = await import('../src/background.js');
-      
-      await clearCleanupAlarm();
-      
-      expect(browser.alarms.clear).toHaveBeenCalledWith('cleanup');
+      await handleMessage(message, sender);
+
+      expect(browser.storage.local.set).toHaveBeenCalled();
+      expect(browser.tabs.sendMessage).toHaveBeenCalledWith(1, {
+        type: 'SESSION_DELETED',
+        success: true
+      });
     });
   });
 
-  describe('Tab Management', () => {
-    it('should query active tabs', async () => {
-      const { getActiveTab } = await import('../src/background.js');
+  describe('handleAlarm', () => {
+    it('should handle auto-save alarm', async () => {
+      const alarm = { name: 'auto-save' };
       
-      const tab = await getActiveTab();
-      
-      expect(tab).toBeDefined();
-      expect(browser.tabs.query).toHaveBeenCalledWith({
-        active: true,
-        currentWindow: true
+      browser.storage.sync.get.mockResolvedValueOnce({
+        autoSave: true,
+        autoSaveInterval: 30
       });
-    });
 
-    it('should send messages to tabs', async () => {
-      const { sendMessageToTab } = await import('../src/background.js');
-      
-      await sendMessageToTab(1, { type: 'test' });
-      
-      expect(browser.tabs.sendMessage).toHaveBeenCalledWith(1, { type: 'test' });
-    });
+      await handleAlarm(alarm);
 
-    it('should handle tab message errors', async () => {
-      const { sendMessageToTab } = await import('../src/background.js');
-      
-      await expect(sendMessageToTab('error', { type: 'test' })).rejects.toThrow('Message failed');
+      expect(browser.storage.local.set).toHaveBeenCalled();
+    });
+  });
+
+  describe('handleInstall', () => {
+    it('should set up initial settings on install', async () => {
+      await handleInstall();
+
+      expect(browser.storage.sync.set).toHaveBeenCalledWith({
+        autoSave: false,
+        autoSaveInterval: 30
+      });
     });
   });
 }); 

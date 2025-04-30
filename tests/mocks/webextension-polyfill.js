@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Mock browser API
 const mockCookies = {
@@ -14,84 +14,86 @@ const mockSettings = {
 const browser = {
   storage: {
     local: {
-      get: jest.fn().mockImplementation((key) => {
+      get: vi.fn().mockImplementation((key) => {
         if (key === 'mockError') {
           return Promise.reject(new Error('Storage error'));
         }
         return Promise.resolve(mockSettings);
       }),
-      set: jest.fn().mockResolvedValue(undefined),
-      clear: jest.fn().mockResolvedValue(undefined)
+      set: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined)
     },
     sync: {
-      get: jest.fn().mockResolvedValue({}),
-      set: jest.fn().mockResolvedValue()
+      get: vi.fn().mockResolvedValue({}),
+      set: vi.fn().mockResolvedValue()
     },
     onChanged: {
-      addListener: jest.fn()
+      addListener: vi.fn()
     }
   },
   tabs: {
-    query: jest.fn().mockResolvedValue([{ id: 1 }]),
-    sendMessage: jest.fn().mockImplementation((tabId, message) => {
+    query: vi.fn().mockResolvedValue([{ id: 1 }]),
+    sendMessage: vi.fn().mockImplementation((tabId, message) => {
       if (tabId === 'error') {
         return Promise.reject(new Error('Message failed'));
       }
       return Promise.resolve();
     }),
     onUpdated: {
-      addListener: jest.fn()
+      addListener: vi.fn()
     },
     onRemoved: {
-      addListener: jest.fn()
+      addListener: vi.fn()
     }
   },
   scripting: {
-    executeScript: jest.fn().mockResolvedValue()
+    executeScript: vi.fn().mockResolvedValue()
   },
   runtime: {
     onMessage: {
-      addListener: jest.fn()
+      addListener: vi.fn()
     },
-    sendMessage: jest.fn().mockResolvedValue({})
+    sendMessage: vi.fn().mockResolvedValue({})
   },
   cookies: {
-    getAll: jest.fn().mockImplementation(({ domain }) => {
+    getAll: vi.fn().mockImplementation(({ domain }) => {
       return Promise.resolve(mockCookies[domain] || []);
     }),
-    remove: jest.fn().mockImplementation(({ domain, name }) => {
+    remove: vi.fn().mockImplementation(({ domain, name }) => {
       if (domain === 'error.com') {
         return Promise.reject(new Error('Deletion failed'));
       }
       return Promise.resolve();
     }),
-    set: jest.fn().mockResolvedValue(),
+    set: vi.fn().mockResolvedValue(),
     onChanged: {
-      addListener: jest.fn()
+      addListener: vi.fn()
     }
   },
   alarms: {
-    create: jest.fn().mockResolvedValue(undefined),
-    clear: jest.fn().mockResolvedValue(undefined),
+    create: vi.fn().mockResolvedValue(undefined),
+    clear: vi.fn().mockResolvedValue(undefined),
     onAlarm: {
-      addListener: jest.fn()
+      addListener: vi.fn()
     }
   },
   identity: {
-    getRedirectURL: jest.fn().mockReturnValue('https://example.com/redirect')
+    getRedirectURL: vi.fn().mockReturnValue('https://example.com/redirect')
   },
   notifications: {
-    create: jest.fn().mockResolvedValue('notification-id'),
-    clear: jest.fn().mockResolvedValue(undefined)
+    create: vi.fn().mockResolvedValue('notification-id'),
+    clear: vi.fn().mockResolvedValue(undefined)
   },
   permissions: {
-    request: jest.fn().mockResolvedValue(true)
+    request: vi.fn().mockResolvedValue(true)
   }
 };
 
 // Function to clear all mocks
 export function clearMocks() {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 }
 
+// Export both named and default exports
+export { browser };
 export default browser; 

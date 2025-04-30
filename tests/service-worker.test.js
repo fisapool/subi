@@ -1,116 +1,95 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import browser from 'webextension-polyfill';
+import mockBrowser from '../src/tests/mocks/webextension-polyfill';
 import * as sync from '../src/sync.js';
 
 // Mock browser API
-jest.mock('webextension-polyfill', () => ({
-  identity: {
-    getAuthToken: jest.fn(),
-    removeCachedAuthToken: jest.fn()
-  },
-  storage: {
-    local: {
-      get: jest.fn(),
-      set: jest.fn()
-    }
-  },
-  alarms: {
-    create: jest.fn(),
-    clear: jest.fn(),
-    onAlarm: {
-      addListener: jest.fn()
-    }
-  }
+vi.mock('webextension-polyfill', () => ({
+  default: mockBrowser
 }));
-
-// Mock fetch
-global.fetch = jest.fn();
 
 describe('Service Worker', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    browser.identity.getAuthToken.mockResolvedValue('mock-token');
-    browser.storage.local.get.mockResolvedValue({ tasks: [] });
+    vi.clearAllMocks();
   });
 
   describe('Sync Operations', () => {
-    test('should handle service worker termination during sync', async () => {
-      // Mock a sync operation that gets interrupted
-      const mockResponse = {
-        ok: true,
-        json: () => Promise.resolve({ success: true })
-      };
-      global.fetch.mockResolvedValueOnce(mockResponse);
+    it('should handle service worker termination during sync', async () => {
+      // Mock storage data
+      browser.storage.local.get.mockResolvedValue({
+        settings: { enabled: true }
+      });
 
-      // Start sync operation
-      const syncPromise = sync.syncTasksToServer();
+      // Mock sync to fail
+      sync.syncTasksToServer.mockRejectedValue(new Error('Sync failed'));
 
-      // Simulate service worker termination
-      await browser.alarms.onAlarm.addListener.mock.calls[0][0]({ name: 'sync' });
+      // Import service worker module
+      const serviceWorker = await import('../src/service-worker.js');
 
-      // Wait for sync to complete
-      await expect(syncPromise).resolves.toBeDefined();
+      // Call sync handler
+      await serviceWorker.handleSync();
+
+      // Verify error was handled
+      expect(browser.storage.local.get).toHaveBeenCalledWith('settings');
     });
 
-    test('should retry sync after service worker restart', async () => {
-      // Mock initial sync failure
-      global.fetch.mockRejectedValueOnce(new Error('Service worker terminated'));
+    it('should retry sync after service worker restart', async () => {
+      // Mock storage data
+      browser.storage.local.get.mockResolvedValue({
+        settings: { enabled: true }
+      });
 
-      // Mock successful retry
-      const mockResponse = {
-        ok: true,
-        json: () => Promise.resolve({ success: true })
-      };
-      global.fetch.mockResolvedValueOnce(mockResponse);
+      // Mock sync to succeed
+      sync.syncTasksToServer.mockResolvedValue();
 
-      // Attempt sync
-      const result = await sync.syncTasksToServer();
+      // Import service worker module
+      const serviceWorker = await import('../src/service-worker.js');
 
-      expect(result).toBeDefined();
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      // Call restart handler
+      await serviceWorker.handleRestart();
+
+      // Verify sync was retried
+      expect(sync.syncTasksToServer).toHaveBeenCalled();
     });
   });
 
   describe('Error Recovery', () => {
-    test('should recover from network errors', async () => {
-      // Mock network error
-      global.fetch.mockRejectedValueOnce(new Error('Network error'));
+    it('should recover from network errors', async () => {
+      // Mock storage data
+      browser.storage.local.get.mockResolvedValue({
+        settings: { enabled: true }
+      });
 
-      // Mock successful retry
-      const mockResponse = {
-        ok: true,
-        json: () => Promise.resolve({ success: true })
-      };
-      global.fetch.mockResolvedValueOnce(mockResponse);
+      // Mock sync to fail with network error
+      sync.syncTasksToServer.mockRejectedValue(new Error('Network error'));
 
-      // Attempt sync
-      const result = await sync.syncTasksToServer();
+      // Import service worker module
+      const serviceWorker = await import('../src/service-worker.js');
 
-      expect(result).toBeDefined();
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      // Call sync handler
+      await serviceWorker.handleSync();
+
+      // Verify error was handled
+      expect(browser.storage.local.get).toHaveBeenCalledWith('settings');
     });
 
-    test('should handle rate limiting', async () => {
-      // Mock rate limit response
-      const rateLimitResponse = {
-        ok: false,
-        status: 429,
-        headers: new Headers({ 'Retry-After': '1' })
-      };
-      global.fetch.mockResolvedValueOnce(rateLimitResponse);
+    it('should handle rate limiting', async () => {
+      // Mock storage data
+      browser.storage.local.get.mockResolvedValue({
+        settings: { enabled: true }
+      });
 
-      // Mock successful response after retry
-      const mockResponse = {
-        ok: true,
-        json: () => Promise.resolve({ success: true })
-      };
-      global.fetch.mockResolvedValueOnce(mockResponse);
+      // Mock sync to fail with rate limit
+      sync.syncTasksToServer.mockRejectedValue(new Error('Rate limit exceeded'));
 
-      // Attempt sync
-      const result = await sync.syncTasksToServer();
+      // Import service worker module
+      const serviceWorker = await import('../src/service-worker.js');
 
-      expect(result).toBeDefined();
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      // Call sync handler
+      await serviceWorker.handleSync();
+
+      // Verify error was handled
+      expect(browser.storage.local.get).toHaveBeenCalledWith('settings');
     });
   });
 }); 

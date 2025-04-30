@@ -1,16 +1,12 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import os from 'os';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const path = require('path');
+const os = require('os');
 
 const distPath = path.resolve(__dirname, 'dist');
 // Create a dedicated user data directory for E2E testing
 const userDataDir = path.join(os.tmpdir(), 'chrome-e2e-testing');
 
 /** @type {import('jest-environment-puppeteer').JestPuppeteerConfig} */
-export default {
+module.exports = {
   launch: {
     headless: false, // Run in non-headless mode to debug
     userDataDir, // Use dedicated user data directory

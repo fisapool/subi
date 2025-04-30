@@ -1,8 +1,11 @@
 import SessionManager from './session-manager';
+import firebaseAuthManager from './firebaseAuth';
 
 class AuthHandler {
   constructor() {
-    this.sessionManager = new SessionManager();
+    const currentUser = firebaseAuthManager.getCurrentUser();
+    const userId = currentUser ? currentUser.uid : null;
+    this.sessionManager = new SessionManager(userId);
   }
 
   async checkLoginStatus(domain) {

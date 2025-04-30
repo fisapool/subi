@@ -4,501 +4,125 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="img/logo-16.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cookie Manager</title>
-    <style>
-      body {
-        width: 400px;
-        padding: 16px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      }
-      /* Additional styles */
-      .container {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-      .input-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      input, button {
-        padding: 8px 12px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-        font-size: 14px;
-      }
-      button {
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.2s;
-      }
-      button:hover {
-        background-color: #45a049;
-      }
-      button:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-      }
-      .loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-      }
-      .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #4CAF50;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      /* Error display styles */
-      .error-section {
-        background-color: #fff8f8;
-        border: 1px solid #ffcccc;
-        border-radius: 4px;
-        padding: 12px;
-        margin-top: 16px;
-      }
-      .error-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-      }
-      .error-title {
-        font-weight: bold;
-        color: #d32f2f;
-      }
-      .error-details-toggle {
-        background: none;
-        border: none;
-        color: #4CAF50;
-        cursor: pointer;
-        font-size: 12px;
-        padding: 4px 8px;
-      }
-      .error-message {
-        color: #d32f2f;
-        margin-bottom: 8px;
-      }
-      .error-details {
-        background-color: #f9f9f9;
-        border: 1px solid #eee;
-        border-radius: 4px;
-        padding: 8px;
-        max-height: 200px;
-        overflow-y: auto;
-        font-size: 12px;
-      }
-      .error-dismiss {
-        background-color: #f44336;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 6px 12px;
-        margin-top: 8px;
-        cursor: pointer;
-      }
-      .failed-cookies-list {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-      }
-      .failed-cookies-list li {
-        padding: 4px 0;
-        border-bottom: 1px solid #eee;
-      }
-      .failed-cookies-list li:last-child {
-        border-bottom: none;
-      }
-      .status-message {
-        padding: 8px 12px;
-        border-radius: 4px;
-        margin-top: 8px;
-        font-size: 14px;
-      }
-      .status-message.success {
-        background-color: #e8f5e9;
-        color: #2e7d32;
-        border: 1px solid #c8e6c9;
-      }
-      .status-message.error {
-        background-color: #ffebee;
-        color: #c62828;
-        border: 1px solid #ffcdd2;
-      }
-      /* Session Snippets styles */
-      .session-snippets {
-        margin-top: 20px;
-        border-top: 1px solid #eee;
-        padding-top: 20px;
-      }
-      
-      .session-snippets h2 {
-        margin-bottom: 16px;
-        font-size: 18px;
-      }
-      
-      .saved-sessions {
-        max-height: 200px;
-        overflow-y: auto;
-        border: 1px solid #eee;
-        border-radius: 4px;
-        margin-top: 12px;
-      }
-      
-      .session-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 12px;
-        border-bottom: 1px solid #eee;
-      }
-      
-      .session-item:last-child {
-        border-bottom: none;
-      }
-      
-      .session-info {
-        flex: 1;
-      }
-      
-      .session-name {
-        font-weight: 500;
-      }
-      
-      .session-date {
-        font-size: 12px;
-        color: #666;
-      }
-      
-      .session-actions {
-        display: flex;
-        gap: 8px;
-      }
-      
-      .session-actions button {
-        padding: 4px 8px;
-        font-size: 12px;
-      }
-      
-      .new-session-form {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 12px;
-      }
-      
-      .new-session-form input {
-        flex: 1;
-      }
-      /* Focus/Meeting Mode styles */
-      .productivity-section {
-        margin-top: 20px;
-        border-top: 1px solid #eee;
-        padding-top: 20px;
-      }
-
-      .mode-control {
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 12px;
-      }
-
-      .mode-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-      }
-
-      .mode-header h3 {
-        margin: 0;
-        font-size: 16px;
-        color: #2c3e50;
-      }
-
-      .mode-toggle {
-        background: #e9ecef;
-        border: none;
-        border-radius: 16px;
-        padding: 6px 12px;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .mode-toggle.active {
-        background: #4CAF50;
-        color: white;
-      }
-
-      .mode-description {
-        font-size: 12px;
-        color: #6c757d;
-      }
-
-      .mode-status-indicator {
-        margin-top: 12px;
-        padding: 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        text-align: center;
-      }
-
-      .mode-status-indicator.focus-active {
-        background: #e8f5e9;
-        color: #2e7d32;
-      }
-
-      .mode-status-indicator.meeting-active {
-        background: #e3f2fd;
-        color: #1565c0;
-      }
-
-      .auth-container {
-        margin-bottom: 15px;
-      }
-
-      .auth-container h3 {
-        margin: 0 0 10px 0;
-        color: #333;
-      }
-
-      input {
-        width: 100%;
-        padding: 8px;
-        margin: 5px 0;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        box-sizing: border-box;
-      }
-
-      .error {
-        color: #dc3545;
-        font-size: 0.9em;
-        margin: 5px 0;
-      }
-
-      .sync-status {
-        margin-top: 10px;
-        padding: 8px;
-        border-radius: 4px;
-        display: none;
-      }
-
-      .sync-status.success {
-        background: #d4edda;
-        color: #155724;
-      }
-
-      .sync-status.error {
-        background: #f8d7da;
-        color: #721c24;
-      }
-
-      .sync-status.info {
-        background: #d1ecf1;
-        color: #0c5460;
-      }
-
-      .profile-section {
-        margin-bottom: 15px;
-      }
-
-      .profile-section h3 {
-        margin: 0 0 10px 0;
-        color: #333;
-      }
-
-      .profile-info {
-        margin-bottom: 10px;
-      }
-
-      .profile-info span {
-        font-weight: bold;
-      }
-
-      hr {
-        margin: 15px 0;
-        border: none;
-        border-top: 1px solid #ddd;
-      }
-    </style>
+    <title>Session & Cookie Manager</title>
+    <script src="chart.umd.js"></script>
+    <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <div id="app">
-      <header>
-        <h1>BytesCookies</h1>
-        <div id="popup-feedback" class="feedback-message"></div>
-      </header>
-      <!-- Loading overlay -->
-      <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-        <div class="loading-spinner"></div>
-      </div>
-      <div class="container">
-        <div class="header">
-          <div class="title-container">
-            <h1>FISABytes</h1>
-            <p class="slogan">Version 2.0</p>
-          </div>
+    <div class="popup-container">
+      <!-- Header Section -->
+      <header class="popup-header">
+        <div class="header-content">
+          <img src="img/logo-48.png" alt="Cookie Manager Logo" class="logo" />
+          <h1>Session & Cookie Manager</h1>
         </div>
-        <div class="content">
-          <div id="authSection" class="auth-container">
-            <h3>Sign In</h3>
-            <input id="loginEmail" type="email" placeholder="Email" />
-            <input id="loginPassword" type="password" placeholder="Password" />
-            <button id="loginButton">Login</button>
-            <div id="loginError" class="error"></div>
-            
-            <hr>
-            
-            <h3>Register</h3>
-            <input id="registerName" type="text" placeholder="Name" />
-            <input id="registerEmail" type="email" placeholder="Email" />
-            <input id="registerPassword" type="password" placeholder="Password" />
-            <button id="registerButton">Register</button>
-            <div id="registerError" class="error"></div>
-          </div>
+        <div class="user-profile">
+          <button class="profile-button" id="profileBtn">
+            <span class="icon">👤</span>
+          </button>
+        </div>
+      </header>
 
-          <div id="profileSection" class="profile-section" style="display:none;">
-            <h3>Profile</h3>
-            <div class="profile-info">
-              Welcome, <span id="userName"></span>
-              <br>
-              Email: <span id="userEmail"></span>
-            </div>
-            <button id="logoutButton">Logout</button>
-          </div>
+      <!-- Main Content -->
+      <main class="popup-content">
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+          <button class="tab-button active" data-tab="sessions">Sessions</button>
+          <button class="tab-button" data-tab="cookies">Cookies</button>
+        </div>
 
-          <div id="syncStatus" class="sync-status"></div>
-
-          <div class="input-group">
-            <label for="domain">Target Domain:</label>
-            <input type="text" id="domain" placeholder="Enter target domain (e.g., example.com)">
-            <small class="helper-text">Optional: Specify a different domain for imported cookies</small>
-          </div>
-          <div class="button-group">
-            <button id="testProtectionBtn" title="Test session cookie protection to ensure your cookies are safe.">Test Protection</button>
-            <button id="saveCookiesBtn" title="Save and encrypt your session cookies for later use.">Save Cookies</button>
-            <button id="restoreCookiesBtn" title="Restore your previously saved session cookies.">Restore Cookies</button>
-          </div>
-          <div class="input-group">
-            <label>
-              <input type="checkbox" id="protectSessionCheckbox" />
-              Protect Cookies for This Session
-            </label>
-          </div>
-          <div class="input-group">
-            <label for="cookieDuration">Session Cookie Duration (minutes):</label>
-            <input type="number" id="cookieDuration" min="1" max="1440" placeholder="Enter duration in minutes" />
-            <small class="helper-text">Maximum duration: 24 hours (1440 minutes)</small>
-          </div>
-          <!-- Productivity Section -->
-          <div class="productivity-section">
-            <h2>Productivity Controls</h2>
-            
-            <!-- Focus Mode Controls -->
-            <div class="mode-control">
-              <div class="mode-header">
-                <h3>Focus Mode</h3>
-                <button id="toggle-focus-mode" class="mode-toggle">
-                  <span class="mode-status">Off</span>
-                </button>
-              </div>
-              <div class="mode-description">
-                Automatically pin important tabs and mute distractions
-              </div>
-            </div>
-
-            <!-- Meeting Mode Controls -->
-            <div class="mode-control">
-              <div class="mode-header">
-                <h3>Meeting Mode</h3>
-                <button id="toggle-meeting-mode" class="mode-toggle">
-                  <span class="mode-status">Off</span>
-                </button>
-              </div>
-              <div class="mode-description">
-                Mute notifications and distractions during meetings
-              </div>
-            </div>
-
-            <!-- Mode Status Indicator -->
-            <div id="mode-status" class="mode-status-indicator"></div>
-          </div>
-          <div id="options-navigation" style="margin-top: 20px;">
-            <button id="openOptionsPage" style="width: 100%; padding: 10px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer;">
-              BytesCookies Options
+        <!-- Sessions Tab -->
+        <div class="tab-content active" id="sessions-tab">
+          <!-- Search and Save Section -->
+          <div class="search-save-section">
+            <input type="text" class="search-input" placeholder="Search sessions..." />
+            <button class="action-button primary" id="saveCurrentSessionBtn">
+              <span class="icon">💾</span>
+              Save Current Session
             </button>
           </div>
-          <!-- Status message -->
-          <div id="statusMessage" class="status-message" style="display: none;"></div>
-          <!-- Error display -->
-          <div id="errorDisplay" class="error-section" style="display: none;">
-            <div class="error-header">
-              <span class="error-title">Error Details</span>
-              <button id="showErrorDetails" class="error-details-toggle">Show Details</button>
-            </div>
-            <div id="errorMessage" class="error-message"></div>
-            <div id="errorDetails" class="error-details" style="display: none;">
-              <div id="errorStack"></div>
-            </div>
-            <button id="dismissError" class="error-dismiss">Dismiss</button>
+
+          <!-- Sessions List -->
+          <div class="sessions-list">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Session Name</th>
+                  <th>Date Created</th>
+                  <th>Tabs</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="sessionsTableBody">
+                <!-- Sessions will be dynamically added here -->
+              </tbody>
+            </table>
           </div>
-          <!-- Quick Start Tips -->
-          <div class="tips-section">
-            <h3>Quick Start:</h3>
-            <ul class="tips-list" style="counter-reset: step">
-              <li>Click "Import Cookies" and select your cookie file (.json, .txt, or .csv)</li>
-              <li>Optionally specify a target domain for the imported cookies</li>
-              <li>Wait for import confirmation and check details if any cookies fail to import</li>
-            </ul>
-            <div class="format-info">
-              <h4>Supported Formats:</h4>
-              <ul>
-                <li><strong>JSON:</strong> Standard format with url and cookies array</li>
-                <li><strong>Netscape:</strong> Traditional .txt format used by browsers</li>
-                <li><strong>CSV:</strong> Simple format with domain, name, value columns</li>
-              </ul>
-            </div>
+        </div>
+
+        <!-- Cookies Tab -->
+        <div class="tab-content" id="cookies-tab">
+          <!-- Search Section -->
+          <div class="search-section">
+            <input type="text" class="search-input" placeholder="Search cookies..." />
           </div>
-          <!-- Session Snippets Section -->
-          <div class="session-snippets">
-            <h2>Session Snippets</h2>
-            <div class="new-session-form">
-              <input type="text" id="newSessionName" placeholder="Enter session name">
-              <button id="saveCurrentSession">Save Current Session</button>
-            </div>
-            <div class="saved-sessions" id="savedSessionsList">
-              <!-- Saved sessions will be listed here -->
+
+          <!-- Cookies List -->
+          <div class="cookies-list">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Value</th>
+                  <th>Domain</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="cookiesTableBody">
+                <!-- Cookies will be dynamically added here -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Domain Management -->
+          <div class="domain-management">
+            <h3>Domain Management</h3>
+            <div class="domain-list" id="domainList">
+              <!-- Domains will be dynamically added here -->
             </div>
           </div>
         </div>
-        <div class="footer">
-          <a href="https://shopee.com.my/fisa_trading" target="_blank" rel="noopener noreferrer" class="fisa-link">
-            <span>Visit our Shopee store</span>
-          </a>
+      </main>
+
+      <!-- Footer -->
+      <footer class="popup-footer">
+        <div class="footer-content">
+          <button class="footer-button" id="helpBtn">Help</button>
+          <button class="footer-button" id="supportBtn">Support</button>
+          <span class="version-info">v2.0.0</span>
         </div>
+        <div class="theme-toggle">
+          <button class="theme-button" id="lightModeBtn">Light Mode</button>
+          <button class="theme-button" id="darkModeBtn">Dark Mode</button>
+        </div>
+      </footer>
+
+      <!-- Loading Overlay -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+      </div>
+
+      <!-- Error Display -->
+      <div class="error-section" id="errorSection" style="display: none;">
+        <div class="error-header">
+          <span class="error-title">Error</span>
+          <button class="error-details-toggle">Show Details</button>
+        </div>
+        <div class="error-message"></div>
+        <div class="error-details" style="display: none;"></div>
+        <button class="error-dismiss">Dismiss</button>
       </div>
     </div>
-    <!-- Scripts -->
-    <script type="module" src="utils.js"></script>
-    <script type="module" src="popup.js"></script>
+    <script src="popup.js"></script>
   </body>
 </html>

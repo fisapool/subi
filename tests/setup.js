@@ -1,17 +1,17 @@
+import { vi } from 'vitest';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { jest } from '@jest/globals';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// This setup file is used by Jest to configure the test environment
+// This setup file is used by Vitest to configure the test environment
 export default {
   // Set up the test environment
-  setupFilesAfterEnv: ['./jest.setup.js'],
+  setupFiles: ['./vitest.setup.js'],
   
-  // Configure Jest to use the Puppeteer environment
-  testEnvironment: 'jest-puppeteer',
+  // Configure Vitest to use the Puppeteer environment
+  testEnvironment: 'jsdom',
   
   // Specify the path to your extension
   extensionPath: path.join(__dirname, '..', 'dist'),
@@ -23,102 +23,122 @@ export default {
   testMatch: ['**/tests/**/*.test.js'],
   
   // Configure coverage settings
-  collectCoverage: true,
-  coverageDirectory: 'coverage',
-  collectCoverageFrom: [
-    'src/**/*.js',
-    '!src/**/*.test.js',
-  ],
+  coverage: {
+    enabled: true,
+    reporter: ['text', 'json', 'html'],
+    reportsDirectory: 'coverage',
+    include: [
+      'src/**/*.js',
+      '!src/**/*.test.js',
+    ],
+  },
 };
 
-// Set up global fetch
-globalThis.fetch = jest.fn();
+// Set up service worker context
+globalThis.self = {
+  dispatchEvent: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn()
+};
 
-// Set up Headers
-globalThis.Headers = class Headers {
-  constructor(init) {
-    this.headers = new Map();
-    if (init) {
-      Object.entries(init).forEach(([key, value]) => {
-        this.headers.set(key.toLowerCase(), value);
-      });
+// Mock chrome API
+global.chrome = {
+  runtime: {
+    sendMessage: vi.fn(),
+    onMessage: {
+      addListener: vi.fn()
     }
-  }
-
-  get(name) {
-    return this.headers.get(name.toLowerCase()) || null;
-  }
-
-  set(name, value) {
-    this.headers.set(name.toLowerCase(), value);
-  }
-};
-
-// Set up chrome API
-globalThis.chrome = {
+  },
   storage: {
     local: {
-      get: jest.fn(),
-      set: jest.fn(),
-      remove: jest.fn()
-    },
-    onChanged: {
-      addListener: jest.fn()
+      get: vi.fn(),
+      set: vi.fn(),
+      remove: vi.fn()
     }
   },
-  runtime: {
-    sendMessage: jest.fn(),
-    onMessage: {
-      addListener: jest.fn()
-    }
+  tabs: {
+    query: vi.fn(),
+    create: vi.fn()
   },
-  identity: {
-    getAuthToken: jest.fn(),
-    removeCachedAuthToken: jest.fn()
+  cookies: {
+    get: vi.fn(),
+    set: vi.fn(),
+    remove: vi.fn()
   },
   alarms: {
-    create: jest.fn(),
-    clear: jest.fn(),
+    create: vi.fn(),
+    clear: vi.fn(),
     onAlarm: {
-      addListener: jest.fn()
+      addListener: vi.fn()
     }
   }
 };
 
-// Set up browser API
-globalThis.browser = {
-  storage: {
-    local: {
-      get: jest.fn(),
-      set: jest.fn(),
-      remove: jest.fn()
-    },
-    onChanged: {
-      addListener: jest.fn()
+// Mock webextension-polyfill
+vi.mock('webextension-polyfill', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    browser: {
+      runtime: {
+        sendMessage: vi.fn(),
+        onMessage: {
+          addListener: vi.fn()
+        }
+      },
+      storage: {
+        local: {
+          get: vi.fn(),
+          set: vi.fn(),
+          remove: vi.fn()
+        },
+        sync: {
+          get: vi.fn(),
+          set: vi.fn()
+        }
+      },
+      cookies: {
+        getAll: vi.fn(),
+        remove: vi.fn()
+      },
+      tabs: {
+        query: vi.fn(),
+        sendMessage: vi.fn()
+      },
+      alarms: {
+        create: vi.fn(),
+        clear: vi.fn(),
+        onAlarm: {
+          addListener: vi.fn()
+        }
+      },
+      identity: {
+        getAuthToken: vi.fn(),
+        launchWebAuthFlow: vi.fn()
+      }
     }
-  },
-  runtime: {
-    sendMessage: jest.fn(),
-    onMessage: {
-      addListener: jest.fn()
-    }
-  },
-  identity: {
-    getAuthToken: jest.fn(),
-    removeCachedAuthToken: jest.fn()
-  },
-  alarms: {
-    create: jest.fn(),
-    clear: jest.fn(),
-    onAlarm: {
-      addListener: jest.fn()
-    }
+  };
+});
+
+// Mock window.confirm
+global.window = {
+  confirm: vi.fn()
+};
+
+// Mock document for DOM operations
+global.document = {
+  addEventListener: vi.fn(),
+  getElementById: vi.fn(),
+  querySelector: vi.fn(),
+  querySelectorAll: vi.fn(),
+  createElement: vi.fn(),
+  body: {
+    appendChild: vi.fn()
   }
 };
 
-// Set up crypto API
-globalThis.crypto = {
-  getRandomValues: function(buffer) {
-    return buffer.map(() => Math.floor(Math.random() * 256));
-  }
+// Mock window
+global.window = {
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn()
 }; 

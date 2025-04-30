@@ -1,16 +1,16 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the browser APIs
 const mockBrowser = {
   storage: {
     local: {
-      get: jest.fn().mockResolvedValue({}),
-      set: jest.fn().mockResolvedValue(),
-      clear: jest.fn().mockResolvedValue()
+      get: vi.fn().mockResolvedValue({}),
+      set: vi.fn().mockResolvedValue(),
+      clear: vi.fn().mockResolvedValue()
     },
     sync: {
-      get: jest.fn().mockResolvedValue({}),
-      set: jest.fn().mockResolvedValue()
+      get: vi.fn().mockResolvedValue({}),
+      set: vi.fn().mockResolvedValue()
     }
   }
 };
@@ -21,12 +21,12 @@ const mockModule = {
   __esModule: true,
 };
 
-jest.unstable_mockModule('webextension-polyfill', () => mockModule);
+vi.mock('webextension-polyfill', () => mockModule);
 
 describe('Task Storage', () => {
   beforeEach(() => {
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Task Operations', () => {

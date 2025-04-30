@@ -1,29 +1,35 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { JSDOM } from 'jsdom';
+
+// Set up DOM environment
+const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
+global.document = dom.window.document;
+global.window = dom.window;
 
 // Mock the browser APIs before importing
 const mockBrowser = {
   storage: {
     local: {
-      get: jest.fn().mockResolvedValue({}),
-      set: jest.fn().mockResolvedValue(),
-      clear: jest.fn().mockResolvedValue()
+      get: vi.fn().mockResolvedValue({}),
+      set: vi.fn().mockResolvedValue(),
+      clear: vi.fn().mockResolvedValue()
     },
     sync: {
-      get: jest.fn().mockResolvedValue({}),
-      set: jest.fn().mockResolvedValue()
+      get: vi.fn().mockResolvedValue({}),
+      set: vi.fn().mockResolvedValue()
     }
   },
   tabs: {
-    query: jest.fn().mockResolvedValue([]),
-    sendMessage: jest.fn().mockResolvedValue()
+    query: vi.fn().mockResolvedValue([]),
+    sendMessage: vi.fn().mockResolvedValue()
   },
   scripting: {
-    executeScript: jest.fn().mockResolvedValue()
+    executeScript: vi.fn().mockResolvedValue()
   },
   runtime: {
-    sendMessage: jest.fn().mockResolvedValue(),
+    sendMessage: vi.fn().mockResolvedValue(),
     onMessage: {
-      addListener: jest.fn().mockReturnValue({})
+      addListener: vi.fn().mockReturnValue({})
     }
   }
 };
@@ -34,17 +40,21 @@ const mockModule = {
   __esModule: true,
 };
 
-jest.unstable_mockModule('webextension-polyfill', () => mockModule);
+vi.mock('webextension-polyfill', () => mockModule);
 
 describe('Content Script', () => {
   beforeEach(() => {
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset DOM
     document.body.innerHTML = '';
-    // Reset window.location
-    delete window.location;
-    window.location = new URL('https://example.com');
+    // Safely redefine window.location
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: new URL('https://example.com')
+    });
   });
 
   describe('DOM Manipulation', () => {
@@ -86,8 +96,12 @@ describe('Content Script', () => {
 
     it('should handle UI updates when cookies change', () => {
       const updateCookieUI = (cookies) => {
-        const container = document.getElementById('cookie-list') || document.createElement('div');
-        container.id = 'cookie-list';
+        let container = document.getElementById('cookie-list');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'cookie-list';
+          document.body.appendChild(container);
+        }
         container.innerHTML = '';
         cookies.forEach(cookie => {
           const item = document.createElement('div');
@@ -95,9 +109,6 @@ describe('Content Script', () => {
           item.textContent = `${cookie.name}: ${cookie.value}`;
           container.appendChild(item);
         });
-        if (!document.getElementById('cookie-list')) {
-          document.body.appendChild(container);
-        }
       };
 
       const initialCookies = [{ name: 'session', value: 'abc123' }];
@@ -134,14 +145,14 @@ describe('Content Script', () => {
       };
 
       // Mock message listener
-      const mockListener = jest.fn().mockImplementation((message, sender, sendResponse) => {
+      const mockListener = vi.fn().mockImplementation((message, sender, sendResponse) => {
         sendResponse({ success: true });
       });
       
       mockBrowser.runtime.onMessage.addListener.mockImplementation(mockListener);
       
       // Call the listener directly
-      const sendResponse = jest.fn();
+      const sendResponse = vi.fn();
       mockListener(mockResponse, {}, sendResponse);
       
       expect(sendResponse).toHaveBeenCalledWith({ success: true });
@@ -152,7 +163,7 @@ describe('Content Script', () => {
         { name: 'updated', value: 'new-value' }
       ];
 
-      const mockListener = jest.fn().mockImplementation((message, sender, sendResponse) => {
+      const mockListener = vi.fn().mockImplementation((message, sender, sendResponse) => {
         if (message.type === 'UPDATE_COOKIES') {
           // Update UI with new cookies
           const container = document.createElement('div');
@@ -169,7 +180,7 @@ describe('Content Script', () => {
       });
 
       mockBrowser.runtime.onMessage.addListener.mockImplementation(mockListener);
-      const sendResponse = jest.fn();
+      const sendResponse = vi.fn();
       mockListener({ type: 'UPDATE_COOKIES', cookies: mockCookies }, {}, sendResponse);
 
       expect(document.getElementById('cookie-list').children.length).toBe(1);
@@ -248,7 +259,7 @@ describe('Content Script', () => {
           if (!data || !Array.isArray(data.cookies)) {
             throw new Error('Invalid data format');
           }
-          // Update UI logic here
+          // ... rest of the function
         } catch (error) {
           const errorContainer = document.createElement('div');
           errorContainer.id = 'error-message';
@@ -257,7 +268,7 @@ describe('Content Script', () => {
         }
       };
 
-      updateUI({ cookies: 'not-an-array' });
+      updateUI({ invalid: 'data' });
       expect(document.getElementById('error-message').textContent)
         .toContain('Invalid data format');
     });
