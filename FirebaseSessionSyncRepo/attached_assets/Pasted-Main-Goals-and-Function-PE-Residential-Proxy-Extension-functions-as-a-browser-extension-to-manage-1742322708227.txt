@@ -1,0 +1,173 @@
+Main Goals and Function
+
+PE - Residential Proxy Extension functions as a browser extension to manage and use residential proxies. It supports SSE (Server-Sent Events) proxy servers and secure configuration and connection. The expansion emphasises ethical data collecting, secure connection management, input validation, and TOS and local legislation compliance.
+
+Active Frontend Features (95% Complete)
+
+The README.md and other files indicate that the following frontend functionalities work:
+
+
+
+
+
+User-friendly proxy session dashboard design and implementation.
+
+
+
+Popup Interface: Quick proxy connection choices.
+
+
+
+Settings Panels and Forms: Manages servers and proxy settings.
+
+
+
+Server Management: Add, delete, and connect proxy servers.
+
+
+
+Proxy Connection Management: Start and terminate proxy services.
+
+
+
+Validates proxy endpoint input.
+
+
+
+Firebase-integrated login, registration, and profile management.
+
+
+
+Activity Log: Shows extension user activity.
+
+
+
+Periodic stats updates: Displays proxy use and bandwidth information.
+
+Created API Endpoints and Functions (35% Complete)
+
+From the files downloaded, these API endpoints and functions were implemented:
+
+
+
+
+
+User email/password authentication using Firebase.
+
+
+
+Server-side proxy request validation ensures users have enough credits.
+
+
+
+Proxy session management endpoints collect and close active proxy sessions.
+
+
+
+Server management: Add, delete, and connect proxy servers.
+
+
+
+Tracks bandwidth use per session.
+
+
+
+Firebase operations and other basic functions need proper error handling.
+
+
+
+Retry logic and error detection: Basic techniques for retrying unsuccessful connections and identifying errors.
+
+Next steps to finish work
+
+We propose these steps to finish the work:
+
+
+
+
+
+Firebase integration complete:
+
+
+
+
+
+Complete authentication (login, registration, password reset).
+
+
+
+Finalise Firestore collection and security rules.
+
+
+
+Improve offline support and error handling.
+
+
+
+Proxy Management Advanced:
+
+
+
+
+
+Use proxy server location targeting.
+
+
+
+Systematise session control.
+
+
+
+Include protocol and advanced provider fallbacks.
+
+
+
+Optimising Performance:
+
+
+
+
+
+Install connection pooling and caching.
+
+
+
+Use selective caching and connection reuse to maximise bandwidth.
+
+
+
+Monitor and Analyse:
+
+
+
+
+
+Create an extensive latency and performance analytics dashboard.
+
+
+
+Monitor and analyse proxy success and failure.
+
+
+
+Enterprise Features:
+
+
+
+
+
+Enable team management and enterprise billing.
+
+
+
+Increase multi-factor authentication and sophisticated security.
+
+
+
+Tests & QA:
+
+
+
+
+
+Implement a CI/CD testing pipeline and test thoroughly.

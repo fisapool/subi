@@ -1,0 +1,32 @@
+[vite] connecting...
+[vite] connected.
+Error signing in with Google: 
+_FirebaseError {code: "auth/unauthorized-domain", customData: {…}, name: "FirebaseError"}
+code: "auth/unauthorized-domain"
+customData: Object
+name: "FirebaseError"
+message: "Firebase: Error (auth/unauthorized-domain)."
+stack: "FirebaseError: Firebase: Error (auth/unauthorized-domain).↵ at createErrorInternal (https://48c5577c-b330-4223-88ef-3c51b7fdcbdf-00-22krgskl79jui.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/firebase_auth.js?v=4c230b9a:704:37)↵ at _fail (https://48c5577c-b330-4223-88ef-3c51b7fdcbdf-00-22krgskl79jui.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/firebase_auth.js?v=4c230b9a:669:9)↵ at _validateOrigin (https://48c5577c-b330-4223-88ef-3c51b7fdcbdf-00-22krgskl79jui.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/firebase_auth.js?v=4c230b9a:7194:3)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+Login failed: 
+_FirebaseError {code: "auth/unauthorized-domain", customData: {…}, name: "FirebaseError"}
+
+Error signing in with Google: 
+_FirebaseError {code: "auth/unauthorized-domain", customData: {…}, name: "FirebaseError"}
+
+Login failed: 
+_FirebaseError {code: "auth/unauthorized-domain", customData: {…}, name: "FirebaseError"}
+
+Error signing in with Google: 
+_FirebaseError {code: "auth/unauthorized-domain", customData: {…}, name: "FirebaseError"}
+
+Login failed: 
+_FirebaseError {code: "auth/unauthorized-domain", customData: {…}, name: "FirebaseError"}
+
+at t.value (https://48c5577c-b330-4223-88ef-3c51b7fdcbdf-00-22krgskl79jui.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://48c5577c-b330-4223-88ef-3c51b7fdcbdf-00-22krgskl79jui.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://48c5577c-b330-4223-88ef-3c51b7fdcbdf-00-22krgskl79jui.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://48c5577c-b330-4223-88ef-3c51b7fdcbdf-00-22krgskl79jui.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
