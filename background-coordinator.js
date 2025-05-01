@@ -4,6 +4,7 @@ export class ExtensionCoordinator {
         this.sessionData = new Map();
         this.cookieData = new Map();
         this.cookieBackups = new Map();
+        this.sessions = new Map();
         this.initializeListeners();
     }
 
@@ -98,15 +99,10 @@ export class ExtensionCoordinator {
     }
 
     // Session Management Handlers
-    async handleSaveSession(data) {
+    async handleSaveSession(sessionData) {
         try {
-            // Validate session data
-            if (!data || !Array.isArray(data.tabs)) {
-                throw new Error('Invalid session data: missing or invalid tabs array');
-            }
-
             const sessionId = Date.now().toString();
-            await chrome.storage.local.set({ [sessionId]: data });
+            await chrome.storage.local.set({ [sessionId]: sessionData });
             return { success: true, sessionId };
         } catch (error) {
             console.error('Error saving session:', error);
@@ -116,17 +112,19 @@ export class ExtensionCoordinator {
 
     async handleLoadSession(sessionId) {
         try {
-            if (!sessionId) {
-                throw new Error('Invalid session ID');
+            const result = await chrome.storage.local.get(sessionId);
+            const sessionData = result[sessionId];
+            
+            if (!sessionData) {
+                return { success: false, error: 'Session not found' };
             }
 
-            const data = await chrome.storage.local.get(sessionId);
-            if (!data[sessionId]) {
-                throw new Error('Session not found');
+            // Restore tabs
+            for (const tab of sessionData.tabs) {
+                await chrome.tabs.create({ url: tab.url, active: false });
             }
 
-            await this.restoreSession(data[sessionId]);
-            return { success: true, data: data[sessionId] };
+            return { success: true, data: sessionData };
         } catch (error) {
             console.error('Error loading session:', error);
             return { success: false, error: error.message };
@@ -136,7 +134,6 @@ export class ExtensionCoordinator {
     async handleDeleteSession(sessionId) {
         try {
             await chrome.storage.local.remove(sessionId);
-            this.sessionData.delete(sessionId);
             return { success: true };
         } catch (error) {
             console.error('Error deleting session:', error);

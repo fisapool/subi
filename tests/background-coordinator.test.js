@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ExtensionCoordinator } from '../background-coordinator.js';
 
 describe('ExtensionCoordinator', () => {
@@ -6,6 +6,7 @@ describe('ExtensionCoordinator', () => {
 
   beforeEach(() => {
     coordinator = new ExtensionCoordinator();
+    vi.clearAllMocks();
   });
 
   describe('Session Management', () => {
@@ -15,6 +16,8 @@ describe('ExtensionCoordinator', () => {
           { id: 1, url: 'https://example.com', title: 'Example' }
         ]
       };
+
+      chrome.storage.local.set.mockResolvedValueOnce();
 
       const result = await coordinator.handleSaveSession(sessionData);
       
@@ -41,11 +44,13 @@ describe('ExtensionCoordinator', () => {
       };
 
       chrome.storage.local.get.mockResolvedValueOnce({ [sessionId]: sessionData });
+      chrome.tabs.create.mockResolvedValueOnce({});
 
       const result = await coordinator.handleLoadSession(sessionId);
       
       expect(result.success).toBe(true);
       expect(result.data).toEqual(sessionData);
+      expect(chrome.tabs.create).toHaveBeenCalled();
     });
 
     it('should handle missing session', async () => {
@@ -86,6 +91,8 @@ describe('ExtensionCoordinator', () => {
       const cookies = [
         { name: 'test', value: 'value', domain: 'example.com' }
       ];
+
+      chrome.cookies.set.mockResolvedValueOnce({});
 
       const result = await coordinator.handleImportCookies(cookies);
       

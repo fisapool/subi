@@ -255,3 +255,117 @@ window.deleteDomainCookies = function(domain) {
         });
     }
 };
+
+async function createNewSession(sessionName) {
+    try {
+        const tabs = await chrome.tabs.query({ currentWindow: true });
+        const sessionData = {
+            name: sessionName,
+            tabs: tabs.map(tab => ({
+                id: tab.id,
+                url: tab.url,
+                title: tab.title
+            }))
+        };
+
+        const result = await chrome.runtime.sendMessage({
+            type: 'SAVE_SESSION',
+            sessionData
+        });
+
+        if (result.success) {
+            updateStatus('Session saved successfully');
+            await refreshSessionList();
+        } else {
+            updateStatus(`Error: ${result.error}`);
+        }
+    } catch (error) {
+        updateStatus(`Error: ${error.message}`);
+    }
+}
+
+async function restoreSession(sessionId) {
+    try {
+        const result = await chrome.runtime.sendMessage({
+            type: 'LOAD_SESSION',
+            sessionId
+        });
+
+        if (result.success) {
+            updateStatus(`Session restored successfully (${result.data.tabs.length} tabs)`);
+        } else {
+            updateStatus(`Error: ${result.error}`);
+        }
+    } catch (error) {
+        updateStatus(`Error: ${error.message}`);
+    }
+}
+
+async function deleteSession(sessionId) {
+    if (!confirm('Are you sure you want to delete this session?')) {
+        updateStatus('Session deletion cancelled');
+        return;
+    }
+
+    try {
+        const result = await chrome.runtime.sendMessage({
+            type: 'DELETE_SESSION',
+            sessionId
+        });
+
+        if (result.success) {
+            updateStatus('Session deleted successfully');
+            await refreshSessionList();
+        } else {
+            updateStatus(`Error: ${result.error}`);
+        }
+    } catch (error) {
+        updateStatus(`Error: ${error.message}`);
+    }
+}
+
+async function refreshSessionList() {
+    try {
+        const sessions = await chrome.storage.local.get(null);
+        const sessionList = document.getElementById('session-list');
+        sessionList.innerHTML = '';
+
+        for (const [sessionId, sessionData] of Object.entries(sessions)) {
+            const sessionElement = document.createElement('div');
+            sessionElement.className = 'session-item';
+            sessionElement.innerHTML = `
+                <span>${sessionData.name} (${sessionData.tabs.length} tabs)</span>
+                <div class="session-actions">
+                    <button onclick="restoreSession('${sessionId}')">Restore</button>
+                    <button onclick="deleteSession('${sessionId}')">Delete</button>
+                </div>
+            `;
+            sessionList.appendChild(sessionElement);
+        }
+    } catch (error) {
+        updateStatus(`Error refreshing session list: ${error.message}`);
+    }
+}
+
+function updateStatus(message) {
+    const statusElement = document.getElementById('status');
+    statusElement.textContent = message;
+    statusElement.className = 'status';
+    setTimeout(() => {
+        statusElement.textContent = '';
+    }, 3000);
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', async () => {
+    await refreshSessionList();
+    
+    document.getElementById('save-session').addEventListener('click', () => {
+        const sessionName = document.getElementById('session-name').value.trim();
+        if (sessionName) {
+            createNewSession(sessionName);
+        } else {
+            updateStatus('Please enter a session name');
+        }
+    });
+});

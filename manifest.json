@@ -36,11 +36,14 @@
     "tabs",
     "unlimitedStorage",
     "storage",
-    "alarms"
+    "alarms",
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "http://*/*",
-    "https://*/*"
+    "https://*/*",
+    "<all_urls>"
   ],
   "optional_host_permissions": [
     "file:///*"

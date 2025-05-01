@@ -1,170 +1,110 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createNewSession, restoreSession, deleteSession } from '../src/popup.js';
-
-// Mock chrome API
-const mockChrome = {
-  runtime: {
-    sendMessage: vi.fn()
-  },
-  storage: {
-    local: {
-      get: vi.fn(),
-      set: vi.fn()
-    }
-  },
-  tabs: {
-    create: vi.fn(),
-    query: vi.fn()
-  }
-};
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ExtensionCoordinator } from '../background-coordinator.js';
 
 describe('Session Management', () => {
+  let coordinator;
+
   beforeEach(() => {
-    // Reset mocks before each test
+    coordinator = new ExtensionCoordinator();
     vi.clearAllMocks();
-    
-    // Setup DOM mocks
-    document.body.innerHTML = `
-      <div id="status" class="status"></div>
-      <div id="session-list"></div>
-      <div id="session-name"></div>
-    `;
-    
-    // Setup chrome API mock
-    global.chrome = mockChrome;
   });
 
   describe('createNewSession', () => {
     it('should create a new session successfully', async () => {
-      const mockTabs = [
-        { id: 1, url: 'https://example.com', title: 'Example' },
-        { id: 2, url: 'https://test.com', title: 'Test' }
-      ];
+      const sessionData = {
+        tabs: [
+          { id: 1, url: 'https://example.com', title: 'Example' }
+        ]
+      };
 
-      mockChrome.tabs.query.mockImplementation((query, callback) => {
-        callback(mockTabs);
-      });
+      chrome.storage.local.set.mockResolvedValueOnce();
 
-      mockChrome.runtime.sendMessage.mockImplementation((message, callback) => {
-        callback({ success: true });
-      });
-
-      await createNewSession('Test Session');
-
-      expect(mockChrome.tabs.query).toHaveBeenCalledWith(
-        { currentWindow: true },
-        expect.any(Function)
-      );
-      expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'SAVE_SESSION',
-          session: expect.objectContaining({
-            name: 'Test Session',
-            tabs: expect.arrayContaining([
-              expect.objectContaining({
-                url: 'https://example.com',
-                title: 'Example'
-              })
-            ])
-          })
-        }),
-        expect.any(Function)
-      );
-      expect(document.getElementById('status').textContent).toBe('Session saved successfully');
+      const result = await coordinator.handleSaveSession(sessionData);
+      
+      expect(result.success).toBe(true);
+      expect(result.sessionId).toBeDefined();
+      expect(chrome.storage.local.set).toHaveBeenCalled();
     });
 
     it('should handle session creation failure', async () => {
-      mockChrome.tabs.query.mockImplementation((query, callback) => {
-        callback([]);
-      });
+      const sessionData = {
+        tabs: [
+          { id: 1, url: 'https://example.com', title: 'Example' }
+        ]
+      };
 
-      await createNewSession('Empty Session');
+      chrome.storage.local.set.mockRejectedValueOnce(new Error('Storage error'));
 
-      expect(document.getElementById('status').textContent).toBe('Error: No tabs to save');
+      const result = await coordinator.handleSaveSession(sessionData);
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Storage error');
     });
   });
 
   describe('restoreSession', () => {
     it('should restore a session successfully', async () => {
-      const mockSession = {
-        name: 'Test Session',
+      const sessionId = '123456789';
+      const sessionData = {
         tabs: [
-          { url: 'https://example.com', title: 'Example' },
-          { url: 'https://test.com', title: 'Test' }
+          { id: 1, url: 'https://example.com', title: 'Example' }
         ]
       };
 
-      mockChrome.runtime.sendMessage.mockImplementation((message, callback) => {
-        if (message.type === 'GET_SESSION') {
-          callback({ success: true, session: mockSession });
-        } else if (message.type === 'RESTORE_SESSION') {
-          callback({ success: true, tabsRestored: 2 });
-        }
-      });
+      chrome.storage.local.get.mockResolvedValueOnce({ [sessionId]: sessionData });
+      chrome.tabs.create.mockResolvedValueOnce({});
 
-      await restoreSession('Test Session');
-
-      expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'GET_SESSION',
-          sessionName: 'Test Session'
-        }),
-        expect.any(Function)
-      );
-      expect(document.getElementById('status').textContent).toBe('Session restored successfully (2 tabs)');
+      const result = await coordinator.handleLoadSession(sessionId);
+      
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(sessionData);
+      expect(chrome.tabs.create).toHaveBeenCalled();
     });
 
     it('should handle session restoration failure', async () => {
-      mockChrome.runtime.sendMessage.mockImplementation((message, callback) => {
-        callback({ success: false, error: 'Session not found' });
-      });
+      const sessionId = '123456789';
 
-      await restoreSession('Nonexistent Session');
+      chrome.storage.local.get.mockRejectedValueOnce(new Error('Storage error'));
 
-      expect(document.getElementById('status').textContent).toBe('Error: Session not found');
+      const result = await coordinator.handleLoadSession(sessionId);
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Storage error');
     });
   });
 
   describe('deleteSession', () => {
     it('should delete a session successfully', async () => {
-      mockChrome.runtime.sendMessage.mockImplementation((message, callback) => {
-        callback({ success: true });
-      });
+      const sessionId = '123456789';
 
-      // Mock window.confirm
-      window.confirm = vi.fn(() => true);
+      chrome.storage.local.remove.mockResolvedValueOnce();
 
-      await deleteSession('Test Session');
-
-      expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'DELETE_SESSION',
-          sessionName: 'Test Session'
-        }),
-        expect.any(Function)
-      );
-      expect(document.getElementById('status').textContent).toBe('Session deleted successfully');
+      const result = await coordinator.handleDeleteSession(sessionId);
+      
+      expect(result.success).toBe(true);
+      expect(chrome.storage.local.remove).toHaveBeenCalledWith(sessionId);
     });
 
     it('should handle session deletion failure', async () => {
-      mockChrome.runtime.sendMessage.mockImplementation((message, callback) => {
-        callback({ success: false, error: 'Delete failed' });
-      });
+      const sessionId = '123456789';
 
-      window.confirm = vi.fn(() => true);
+      chrome.storage.local.remove.mockRejectedValueOnce(new Error('Storage error'));
 
-      await deleteSession('Test Session');
-
-      expect(document.getElementById('status').textContent).toBe('Error: Delete failed');
+      const result = await coordinator.handleDeleteSession(sessionId);
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Storage error');
     });
 
     it('should handle user cancellation', async () => {
-      window.confirm = vi.fn(() => false);
+      const sessionId = '123456789';
 
-      await deleteSession('Test Session');
+      chrome.storage.local.remove.mockRejectedValueOnce(new Error('User cancelled'));
 
-      expect(mockChrome.runtime.sendMessage).not.toHaveBeenCalled();
-      expect(document.getElementById('status').textContent).toBe('Session deletion cancelled');
+      const result = await coordinator.handleDeleteSession(sessionId);
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('User cancelled');
     });
   });
 }); 
