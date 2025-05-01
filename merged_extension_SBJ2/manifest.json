@@ -25,18 +25,22 @@
     "default_title": "Session Buddy with J2Cookies"
   },
   "background": {
-    "service_worker": "background-coordinator.js",
+    "service_worker": "src/background-coordinator-enhanced.js",
     "type": "module"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self'"
   },
   "permissions": [
     "cookies",
     "tabs",
     "unlimitedStorage",
     "storage",
-    "alarms"
+    "alarms",
+    "notifications",
+    "downloads",
+    "clipboardWrite",
+    "windows"
   ],
   "host_permissions": [
     "http://*/*",

@@ -138,18 +138,42 @@ describe('Background Coordinator', () => {
 
         it('should handle import cookies message', async () => {
             const cookies = [
-                createMockCookie(),
-                createMockCookie()
+                createMockCookie({
+                    name: 'test1',
+                    value: 'value1',
+                    domain: 'example.com'
+                }),
+                createMockCookie({
+                    name: 'test2',
+                    value: 'value2',
+                    domain: 'example.com'
+                })
             ];
             const message = { action: 'IMPORT_COOKIES', cookies };
             const sendResponse = vi.fn();
 
-            chrome.cookies.set.mockResolvedValue();
+            // Reset any existing mocks
+            chrome.cookies.set.mockReset();
+            
+            // Initialize cookie management feature
+            coordinator.features.cookieManagement = true;
+            
+            // Mock chrome.cookies.set implementation
+            chrome.cookies.set.mockImplementation(cookie => {
+                return Promise.resolve(cookie);
+            });
 
             await coordinator.handleMessage(message, null, sendResponse);
 
-            expect(chrome.cookies.set).toHaveBeenCalledTimes(cookies.length);
-            expect(sendResponse).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+            // Verify the mock was called the correct number of times
+            expect(chrome.cookies.set.mock.calls.length).toBe(cookies.length);
+            
+            // Verify the response
+            expect(sendResponse).toHaveBeenCalledWith(expect.objectContaining({ 
+                success: true,
+                successCount: cookies.length,
+                totalCount: cookies.length
+            }));
         });
     });
 

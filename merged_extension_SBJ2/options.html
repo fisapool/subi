@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Session Buddy with J2Cookies - Settings</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap">
+    <style>
+        :root {
+            --primary-color: #4285F4;
+            --primary-dark: #3367D6;
+            --secondary-color: #34A853;
+            --secondary-dark: #2E7D32;
+            --danger-color: #EA4335;
+            --danger-dark: #C62828;
+            --background-color: #F5F5F5;
+            --card-color: #FFFFFF;
+            --text-primary: #202124;
+            --text-secondary: #5F6368;
+            --border-color: #DADCE0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --shadow-hover: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+            --transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--card-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 16px;
+            height: fit-content;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            transition: var(--transition);
+        }
+
+        .sidebar-item:hover {
+            background-color: rgba(66, 133, 244, 0.1);
+        }
+
+        .sidebar-item.active {
+            background-color: rgba(66, 133, 244, 0.2);
+            color: var(--primary-color);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: var(--card-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+        }
+
+        .tab:hover {
+            color: var(--primary-color);
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Content */
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        /* Status Messages */
+        .status {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        .status-success {
+            background: #E8F5E9;
+            color: var(--secondary-dark);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .status-error {
+            background: #FFEBEE;
+            color: var(--danger-dark);
+            border-left: 4px solid var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Navigation</h3>
+                <ul class="sidebar-list">
+                    <li class="sidebar-item active">Sessions</li>
+                    <li class="sidebar-item">Cookies</li>
+                    <li class="sidebar-item">Collections</li>
+                    <li class="sidebar-item">Settings</li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h1>Session Buddy with J2Cookies</h1>
+                <button class="btn btn-outline">Save Changes</button>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" data-tab="general">General</div>
+                <div class="tab" data-tab="sessions">Sessions</div>
+                <div class="tab" data-tab="cookies">Cookies</div>
+                <div class="tab" data-tab="backup">Backup</div>
+            </div>
+
+            <div id="general" class="content active">
+                <div class="card">
+                    <div class="card-header">
+                        General Settings
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Default Session Name Format</label>
+                            <input type="text" class="form-control" value="{date} - {window_count} windows">
+                        </div>
+                        <div class="form-group">
+                            <label>Auto-save Interval (minutes)</label>
+                            <input type="number" class="form-control" value="30">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sessions" class="content">
+                <div class="card">
+                    <div class="card-header">
+                        Session Management
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Default Category</label>
+                            <select class="form-control">
+                                <option>All Sessions</option>
+                                <option>Work</option>
+                                <option>Personal</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Cookie Profile Association</label>
+                            <select class="form-control">
+                                <option>Default</option>
+                                <option>Development</option>
+                                <option>Testing</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cookies" class="content">
+                <div class="card">
+                    <div class="card-header">
+                        Cookie Management
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Cookie Retention Period</label>
+                            <select class="form-control">
+                                <option>Session only</option>
+                                <option>1 day</option>
+                                <option>1 week</option>
+                                <option>1 month</option>
+                                <option>Until manually cleared</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Domain Whitelist</label>
+                            <textarea class="form-control" rows="4" placeholder="Enter domains, one per line"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="backup" class="content">
+                <div class="card">
+                    <div class="card-header">
+                        Backup Settings
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Auto-backup Frequency</label>
+                            <select class="form-control">
+                                <option>Daily</option>
+                                <option>Weekly</option>
+                                <option>Monthly</option>
+                                <option>Never</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Backup Location</label>
+                            <input type="text" class="form-control" placeholder="Select backup location">
+                        </div>
+                        <button class="btn">Backup Now</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Sidebar navigation
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        // Save changes
+        document.querySelector('.btn-outline').addEventListener('click', () => {
+            // TODO: Implement save functionality
+            const status = document.createElement('div');
+            status.className = 'status status-success';
+            status.textContent = 'Settings saved successfully';
+            document.querySelector('.main-content').insertBefore(status, document.querySelector('.tabs'));
+            
+            setTimeout(() => {
+                status.remove();
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

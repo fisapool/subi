@@ -3,210 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <title>Session Buddy with J2Cookies</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap">
     <style>
+        :root {
+            --primary-color: #4285F4;
+            --primary-dark: #3367D6;
+            --secondary-color: #34A853;
+            --secondary-dark: #2E7D32;
+            --danger-color: #EA4335;
+            --danger-dark: #C62828;
+            --background-color: #F5F5F5;
+            --card-color: #FFFFFF;
+            --text-primary: #202124;
+            --text-secondary: #5F6368;
+            --border-color: #DADCE0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        }
+        
         body {
-            width: 400px;
-            padding: 10px;
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            width: 350px;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
         }
-        .tabs {
+        
+        .container {
+            padding: 16px;
+        }
+        
+        .header {
             display: flex;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #4CAF50;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
         }
-        .tab {
-            padding: 12px 24px;
-            cursor: pointer;
-            background-color: #f0f0f0;
-            border: none;
-            margin-right: 2px;
-            border-radius: 5px 5px 0 0;
-            transition: all 0.3s ease;
+        
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .tab:hover {
-            background-color: #e0e0e0;
+        
+        .header-logo img {
+            width: 24px;
+            height: 24px;
         }
-        .tab.active {
-            background-color: #4CAF50;
-            color: white;
-            font-weight: bold;
+        
+        .header-logo h1 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 500;
         }
-        .content {
-            display: none;
-            padding: 15px;
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+        .summary {
+            background: var(--card-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
         }
-        .content.active {
-            display: block;
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
         }
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
+
+        .search-box {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            padding: 8px 12px;
             border: none;
             border-radius: 4px;
-            transition: background-color 0.3s ease;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--primary-color);
+            color: white;
         }
-        button:hover {
-            background-color: #45a049;
+
+        .btn:hover {
+            background: var(--primary-dark);
         }
-        button.secondary {
-            background-color: #2196F3;
+
+        .btn-secondary {
+            background: var(--secondary-color);
         }
-        button.secondary:hover {
-            background-color: #1976D2;
+
+        .btn-secondary:hover {
+            background: var(--secondary-dark);
         }
-        button.danger {
-            background-color: #f44336;
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
         }
-        button.danger:hover {
-            background-color: #d32f2f;
+
+        .btn-outline:hover {
+            background: rgba(66, 133, 244, 0.1);
         }
-        .list-container {
-            margin-top: 15px;
-            max-height: 300px;
-            overflow-y: auto;
+
+        .recent-list {
+            background: var(--card-color);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
         }
-        .list-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
+
+        .recent-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .list-item:last-child {
+
+        .recent-item:last-child {
             border-bottom: none;
         }
-        .search-box {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+
+        .recent-item:hover {
+            background: rgba(66, 133, 244, 0.05);
         }
-        .status-message {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            display: none;
-        }
-        .success {
-            background-color: #dff0d8;
-            color: #3c763d;
-        }
-        .error {
-            background-color: #f2dede;
-            color: #a94442;
-        }
-        .checkbox {
-            margin-right: 10px;
-        }
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 10px;
-        }
-        .domain-list {
-            margin-top: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .domain-item {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
+
+        .recent-item-title {
+            font-weight: 500;
             display: flex;
             align-items: center;
+            gap: 8px;
         }
-        .session-info {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 5px;
+
+        .recent-item-title .favorite {
+            color: #FFB800;
+            font-size: 16px;
+        }
+
+        .recent-item-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recent-item-meta .dot {
+            font-size: 8px;
+            line-height: 1;
+        }
+
+        .category-badge {
+            background: rgba(66, 133, 244, 0.1);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .recent-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1;
+            transition: var(--transition);
+        }
+
+        .btn-icon:hover {
+            color: #FFB800;
+        }
+
+        .btn-icon.favorite-btn {
+            color: #FFB800;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .success {
+            background: #E8F5E9;
+            color: var(--secondary-dark);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .error {
+            background: #FFEBEE;
+            color: var(--danger-dark);
+            border-left: 4px solid var(--danger-color);
         }
     </style>
 </head>
 <body>
-    <div class="tabs">
-        <div class="tab active" data-tab="session">Session Buddy</div>
-        <div class="tab" data-tab="cookies">J2Cookies</div>
-    </div>
+    <div class="container">
+        <div class="header">
+            <div class="header-logo">
+                <img src="assets/logo-32.png" alt="Logo">
+                <h1>Session Buddy</h1>
+            </div>
+            <button class="btn btn-outline" id="openSettings">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </div>
 
-    <div id="session" class="content active">
-        <h2>Session Management</h2>
-        <input type="text" class="search-box" placeholder="Search sessions..." id="sessionSearch">
-        <div class="button-group">
-            <button id="saveSession">Save Current Session</button>
-            <button id="loadSession" class="secondary">Load Saved Session</button>
-            <button id="deleteSession" class="danger">Delete Selected</button>
-            <button id="exportSessions" class="secondary">Export All Sessions</button>
-            <button id="importSessions" class="secondary">Import Sessions</button>
+        <div class="summary">
+            <div class="summary-item">
+                <span>Active Sessions</span>
+                <span id="sessionCount" class="badge">0</span>
+            </div>
+            <div class="summary-item">
+                <span>Total Tabs</span>
+                <span id="tabCount" class="badge">0</span>
+            </div>
+            <div class="summary-item">
+                <span>Cookie Profiles</span>
+                <span id="profileCount" class="badge">0</span>
+            </div>
         </div>
-        <div id="sessionStatus" class="status-message"></div>
-        <div class="list-container" id="sessionList">
-            <!-- Sessions will be populated here -->
-        </div>
-    </div>
 
-    <div id="cookies" class="content">
-        <h2>Cookie Management</h2>
-        <input type="text" class="search-box" placeholder="Search cookies..." id="cookieSearch">
-        <div class="button-group">
-            <button id="exportCookies">Export Cookies</button>
-            <button id="importCookies" class="secondary">Import Cookies</button>
-            <button id="clearCookies" class="danger">Clear Selected</button>
-            <button id="backupCookies" class="secondary">Backup All Cookies</button>
-            <button id="restoreCookies" class="secondary">Restore Backup</button>
+        <div id="statusMessage" class="status-message"></div>
+
+        <input type="text" class="search-box" placeholder="Quick search..." id="quickSearch">
+
+        <div class="save-session-form" style="display: none;">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="sessionName" style="display: block; margin-bottom: 8px;">Session Name</label>
+                <input type="text" id="sessionName" class="search-box" style="margin-bottom: 8px;">
+                <label for="sessionCategory" style="display: block; margin-bottom: 8px;">Category</label>
+                <select id="sessionCategory" class="search-box" style="margin-bottom: 16px;">
+                    <!-- Categories will be populated here -->
+                </select>
+                <div class="actions" style="justify-content: flex-end;">
+                    <button class="btn btn-outline" id="cancelSave">Cancel</button>
+                    <button class="btn" id="confirmSave">Save</button>
+                </div>
+            </div>
         </div>
-        <div id="cookieStatus" class="status-message"></div>
-        <div class="domain-list" id="domainList">
-            <!-- Domains will be populated here -->
+
+        <div class="actions" id="mainActions">
+            <button class="btn" id="saveSession">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                Save Session
+            </button>
+            <button class="btn btn-secondary" id="loadSession">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Load Session
+            </button>
+            <button class="btn btn-outline" id="shareSession">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                Share Session
+            </button>
         </div>
-        <div class="list-container" id="cookieList">
-            <!-- Cookies will be populated here -->
+
+        <div class="recent-list" id="recentList">
+            <!-- Recent sessions will be populated here -->
+        </div>
+
+        <div class="footer">
+            <a href="#" id="openOptionsPage">Open Full Manager</a>
         </div>
     </div>
 
     <script src="main.bundle.js"></script>
     <script src="service-worker-loader.js"></script>
     <script>
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-            });
-        });
-
-        // Search functionality
-        document.getElementById('sessionSearch').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            filterList('sessionList', searchTerm);
-        });
-
-        document.getElementById('cookieSearch').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            filterList('cookieList', searchTerm);
-        });
-
-        function filterList(listId, searchTerm) {
-            const list = document.getElementById(listId);
-            const items = list.getElementsByClassName('list-item');
-            Array.from(items).forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+        // Update counts
+        function updateCounts() {
+            chrome.storage.local.get(['sessions', 'tabs', 'profiles'], function(data) {
+                document.getElementById('sessionCount').textContent = data.sessions?.length || 0;
+                document.getElementById('tabCount').textContent = data.tabs || 0;
+                document.getElementById('profileCount').textContent = data.profiles?.length || 0;
             });
         }
 
-        // Status message handling
-        function showStatus(elementId, message, type) {
-            const status = document.getElementById(elementId);
+        // Show status message
+        function showStatus(message, type) {
+            const status = document.getElementById('statusMessage');
             status.textContent = message;
             status.className = `status-message ${type}`;
             status.style.display = 'block';
@@ -215,69 +376,177 @@
             }, 3000);
         }
 
-        // Button event listeners
+        // Load recent sessions
+        function loadRecentSessions() {
+            chrome.storage.local.get(['sessions'], function(data) {
+                const recentList = document.getElementById('recentList');
+                const sessions = data.sessions || [];
+                
+                if (sessions.length === 0) {
+                    recentList.innerHTML = `
+                        <div class="recent-item" style="justify-content: center; cursor: default;">
+                            <span style="color: var(--text-secondary);">No recent sessions</span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Show only the 5 most recent sessions
+                const recentSessions = sessions.slice(0, 5);
+                recentList.innerHTML = recentSessions.map(session => `
+                    <div class="recent-item" data-id="${session.id}">
+                        <div>
+                            <div class="recent-item-title">
+                                ${session.name}
+                                ${session.favorite ? '<span class="favorite">★</span>' : ''}
+                            </div>
+                            <div class="recent-item-meta">
+                                <span class="category-badge">${session.category || 'All Sessions'}</span>
+                                <span class="dot">•</span>
+                                ${session.tabs.length} tabs
+                                <span class="dot">•</span>
+                                ${new Date(session.createdAt).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div class="recent-item-actions">
+                            <button class="btn-icon favorite-btn" data-id="${session.id}" title="${session.favorite ? 'Remove from favorites' : 'Add to favorites'}">
+                                ${session.favorite ? '★' : '☆'}
+                            </button>
+                            <span class="badge">${session.tabs.length}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add click handlers
+                recentList.querySelectorAll('.recent-item').forEach(item => {
+                    // Load session on click (excluding favorite button)
+                    item.addEventListener('click', (e) => {
+                        if (!e.target.closest('.favorite-btn')) {
+                            const sessionId = item.dataset.id;
+                            chrome.runtime.sendMessage({ action: 'LOAD_SESSION', sessionId }, response => {
+                                if (response.success) {
+                                    showStatus('Session loaded successfully', 'success');
+                                    window.close();
+                                } else {
+                                    showStatus('Error loading session', 'error');
+                                }
+                            });
+                        }
+                    });
+
+                    // Handle favorite button clicks
+                    const favoriteBtn = item.querySelector('.favorite-btn');
+                    if (favoriteBtn) {
+                        favoriteBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const sessionId = favoriteBtn.dataset.id;
+                            chrome.runtime.sendMessage({ action: 'TOGGLE_FAVORITE', sessionId }, response => {
+                                if (response.success) {
+                                    loadRecentSessions(); // Refresh the list
+                                }
+                            });
+                        });
+                    }
+                });
+            });
+        }
+
+        // Load categories
+        function loadCategories() {
+            chrome.runtime.sendMessage({ action: 'GET_CATEGORIES' }, response => {
+                if (response.success) {
+                    const select = document.getElementById('sessionCategory');
+                    select.innerHTML = response.categories.map(category => 
+                        `<option value="${category}">${category}</option>`
+                    ).join('');
+                }
+            });
+        }
+
+        // Save session form handling
         document.getElementById('saveSession').addEventListener('click', () => {
-            chrome.runtime.sendMessage({ action: 'SAVE_SESSION' }, response => {
+            document.querySelector('.save-session-form').style.display = 'block';
+            document.getElementById('mainActions').style.display = 'none';
+            
+            // Set default session name
+            const date = new Date().toLocaleString();
+            document.getElementById('sessionName').value = `Session ${date}`;
+        });
+
+        document.getElementById('cancelSave').addEventListener('click', () => {
+            document.querySelector('.save-session-form').style.display = 'none';
+            document.getElementById('mainActions').style.display = 'grid';
+        });
+
+        document.getElementById('confirmSave').addEventListener('click', () => {
+            const name = document.getElementById('sessionName').value;
+            const category = document.getElementById('sessionCategory').value;
+
+            chrome.runtime.sendMessage({ 
+                action: 'SAVE_SESSION',
+                data: { name },
+                category
+            }, response => {
                 if (response.success) {
-                    showStatus('sessionStatus', 'Session saved successfully', 'success');
-                    loadSessions();
+                    showStatus('Session saved successfully', 'success');
+                    updateCounts();
+                    loadRecentSessions();
+                    document.querySelector('.save-session-form').style.display = 'none';
+                    document.getElementById('mainActions').style.display = 'grid';
                 } else {
-                    showStatus('sessionStatus', 'Error saving session: ' + response.error, 'error');
+                    showStatus('Error saving session', 'error');
                 }
             });
         });
 
-        document.getElementById('exportCookies').addEventListener('click', () => {
-            chrome.runtime.sendMessage({ action: 'EXPORT_COOKIES' }, response => {
-                if (response.success) {
-                    showStatus('cookieStatus', 'Cookies exported successfully', 'success');
-                } else {
-                    showStatus('cookieStatus', 'Error exporting cookies: ' + response.error, 'error');
-                }
+        // Load session (opens the full manager)
+        document.getElementById('loadSession').addEventListener('click', () => {
+            chrome.runtime.openOptionsPage();
+        });
+
+        // Quick search
+        document.getElementById('quickSearch').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            document.querySelectorAll('.recent-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
             });
         });
 
-        // Load initial data
-        function loadSessions() {
-            chrome.runtime.sendMessage({ action: 'GET_SESSIONS' }, response => {
-                if (response.success) {
-                    const sessionList = document.getElementById('sessionList');
-                    sessionList.innerHTML = '';
-                    response.sessions.forEach(session => {
-                        const item = document.createElement('div');
-                        item.className = 'list-item';
-                        item.innerHTML = `
-                            <input type="checkbox" class="checkbox" data-id="${session.id}">
-                            <span>${session.name}</span>
-                            <span class="session-info">${session.tabs.length} tabs</span>
-                        `;
-                        sessionList.appendChild(item);
-                    });
-                }
-            });
-        }
+        // Open options page
+        document.getElementById('openOptionsPage').addEventListener('click', () => {
+            chrome.runtime.openOptionsPage();
+        });
 
-        function loadDomains() {
-            chrome.runtime.sendMessage({ action: 'GET_DOMAINS' }, response => {
-                if (response.success) {
-                    const domainList = document.getElementById('domainList');
-                    domainList.innerHTML = '';
-                    response.domains.forEach(domain => {
-                        const item = document.createElement('div');
-                        item.className = 'domain-item';
-                        item.innerHTML = `
-                            <input type="checkbox" class="checkbox" data-domain="${domain}">
-                            <span>${domain}</span>
-                        `;
-                        domainList.appendChild(item);
-                    });
-                }
+        // Open settings
+        document.getElementById('openSettings').addEventListener('click', () => {
+            chrome.runtime.openOptionsPage();
+        });
+
+        // Share session
+        document.getElementById('shareSession').addEventListener('click', () => {
+            const width = 400;
+            const height = 600;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+
+            chrome.windows.create({
+                url: 'popup-share.html',
+                type: 'popup',
+                width: width,
+                height: height,
+                left: Math.round(left),
+                top: Math.round(top)
             });
-        }
+            window.close();
+        });
 
         // Initialize
-        loadSessions();
-        loadDomains();
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCounts();
+            loadRecentSessions();
+            loadCategories();
+        });
     </script>
 </body>
 </html>

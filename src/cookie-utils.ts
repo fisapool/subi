@@ -1,17 +1,15 @@
-/**
- * Cookie utility functions for BytesCookies extension
- */
+import { Cookie, CookieOperation, ExportResult, ImportResult } from '../types/cookie-types';
 
 const CookieUtils = {
-  async safeOperation(operation) {
+  async safeOperation(operation: CookieOperation) {
     try {
       return await operation();
-    } catch (error) {
-      if (error.message.includes('Expected at most 1 argument')) {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes('Expected at most 1 argument')) {
         // Handle the specific error by using chrome API as fallback
         return new Promise((resolve, reject) => {
           try {
-            chrome[operation.name](...operation.arguments, resolve);
+            (chrome as any)[operation.name](...operation.arguments, resolve);
           } catch (chromeError) {
             reject(chromeError);
           }
@@ -21,14 +19,14 @@ const CookieUtils = {
     }
   },
 
-  createCookieUrl(cookie) {
+  createCookieUrl(cookie: Cookie): string {
     if (!cookie.domain) {
       throw new Error('Cookie domain is required');
     }
     return `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path || '/'}`;
   },
 
-  validateCookie(cookie) {
+  validateCookie(cookie: Cookie): void {
     if (!cookie.name || !cookie.value || !cookie.domain) {
       throw new Error('Missing required cookie fields');
     }
@@ -52,19 +50,26 @@ const CookieUtils = {
     }
   },
 
-  async getAllCookies(domain) {
+  async getAllCookies(domain: string): Promise<Cookie[]> {
     if (!domain) {
       throw new Error('Domain is required');
     }
-    return this.safeOperation(async () => {
-      return await browser.cookies.getAll({ domain });
-    });
+    try {
+      return await chrome.cookies.getAll({ domain });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('Expected at most 1 argument')) {
+        return new Promise((resolve) => {
+          chrome.cookies.getAll({ domain }, resolve);
+        });
+      }
+      throw error;
+    }
   },
 
-  async setCookie(cookie) {
+  async setCookie(cookie: Cookie): Promise<void> {
     this.validateCookie(cookie);
-    return this.safeOperation(async () => {
-      return await browser.cookies.set({
+    try {
+      await chrome.cookies.set({
         url: this.createCookieUrl(cookie),
         name: cookie.name,
         value: cookie.value,
@@ -75,19 +80,46 @@ const CookieUtils = {
         sameSite: cookie.sameSite,
         expirationDate: cookie.expirationDate,
       });
-    });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('Expected at most 1 argument')) {
+        return new Promise((resolve) => {
+          chrome.cookies.set({
+            url: this.createCookieUrl(cookie),
+            name: cookie.name,
+            value: cookie.value,
+            domain: cookie.domain,
+            path: cookie.path || '/',
+            secure: cookie.secure,
+            httpOnly: cookie.httpOnly,
+            sameSite: cookie.sameSite,
+            expirationDate: cookie.expirationDate,
+          }, resolve);
+        });
+      }
+      throw error;
+    }
   },
 
-  async removeCookie(cookie) {
+  async removeCookie(cookie: Cookie): Promise<void> {
     if (!cookie.name || !cookie.domain) {
       throw new Error('Cookie name and domain are required');
     }
-    return this.safeOperation(async () => {
-      return await browser.cookies.remove({
+    try {
+      await chrome.cookies.remove({
         url: this.createCookieUrl(cookie),
         name: cookie.name,
       });
-    });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('Expected at most 1 argument')) {
+        return new Promise((resolve) => {
+          chrome.cookies.remove({
+            url: this.createCookieUrl(cookie),
+            name: cookie.name,
+          }, resolve);
+        });
+      }
+      throw error;
+    }
   },
 };
 
@@ -95,9 +127,9 @@ export default CookieUtils;
 
 /**
  * Export cookies to a JSON format
- * @returns {Promise<Object>} Object containing cookies and metadata
+ * @returns {Promise<ExportResult>} Object containing cookies and metadata
  */
-export const exportCookies = async () => {
+export const exportCookies = async (): Promise<ExportResult> => {
   try {
     const cookies = await chrome.cookies.getAll({});
     return {
@@ -114,9 +146,9 @@ export const exportCookies = async () => {
 /**
  * Import cookies from a JSON format
  * @param {Object} importData - Data containing cookies to import
- * @returns {Promise<Object>} Result of the import operation
+ * @returns {Promise<ImportResult>} Result of the import operation
  */
-export const importCookies = async importData => {
+export const importCookies = async (importData: { cookies: Cookie[]; version?: string }): Promise<ImportResult> => {
   if (!importData || !Array.isArray(importData.cookies)) {
     throw new Error('Invalid import data format');
   }
@@ -127,7 +159,7 @@ export const importCookies = async importData => {
 
   let imported = 0;
   let failed = 0;
-  const errors = [];
+  const errors: Array<{ cookie: string; error: string }> = [];
 
   for (const cookie of importData.cookies) {
     try {
@@ -147,7 +179,10 @@ export const importCookies = async importData => {
     } catch (error) {
       console.error(`Failed to import cookie ${cookie.name}:`, error);
       failed++;
-      errors.push({ cookie: cookie.name, error: error.message });
+      errors.push({ 
+        cookie: cookie.name, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   }
 
@@ -157,4 +192,4 @@ export const importCookies = async importData => {
     failed,
     errors,
   };
-};
+}; 

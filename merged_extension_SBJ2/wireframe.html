@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Share Session - Session Buddy</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap">
+    <style>
+        :root {
+            --primary-color: #4285F4;
+            --primary-dark: #3367D6;
+            --secondary-color: #34A853;
+            --secondary-dark: #2E7D32;
+            --danger-color: #EA4335;
+            --danger-dark: #C62828;
+            --background-color: #F5F5F5;
+            --card-color: #FFFFFF;
+            --text-primary: #202124;
+            --text-secondary: #5F6368;
+            --border-color: #DADCE0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        }
+        
+        body {
+            width: 400px;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .share-card {
+            background: var(--card-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .session-info {
+            margin-bottom: 16px;
+        }
+
+        .session-name {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .session-meta {
+            color: var(--text-secondary);
+            font-size: 13px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .share-options {
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+
+        .option-group {
+            margin-bottom: 16px;
+        }
+
+        .option-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .token-display {
+            background: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 12px;
+            font-family: monospace;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .token-text {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .copy-btn:hover {
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        .expiry-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+            margin-bottom: 8px;
+        }
+
+        .security-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .success {
+            background: #E8F5E9;
+            color: var(--secondary-dark);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .error {
+            background: #FFEBEE;
+            color: var(--danger-dark);
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .recipient-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .token-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+
+        .token-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="header-title">Share Session</h1>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <!-- Share Session Tab -->
+        <div id="shareTab">
+            <div class="share-card">
+                <div class="session-info">
+                    <div class="session-name">Development Workspace</div>
+                    <div class="session-meta">
+                        <span class="meta-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            Created Today
+                        </span>
+                        <span class="meta-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 10h-4V6"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            5 tabs
+                        </span>
+                    </div>
+                </div>
+
+                <div class="share-options">
+                    <div class="option-group">
+                        <label class="option-label">Share Token</label>
+                        <div class="token-display">
+                            <span class="token-text">share_1234567890abcdef</span>
+                            <button class="copy-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <label class="option-label">Expiration Time</label>
+                        <select class="expiry-select">
+                            <option value="1">1 hour</option>
+                            <option value="24" selected>24 hours</option>
+                            <option value="168">7 days</option>
+                            <option value="720">30 days</option>
+                        </select>
+                    </div>
+
+                    <div class="option-group">
+                        <label class="option-label">Security Options</label>
+                        <div class="security-options">
+                            <label class="checkbox-option">
+                                <input type="checkbox" checked>
+                                Encrypt session data
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" checked>
+                                One-time use only
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-outline" id="cancelShare">Cancel</button>
+                <button class="btn btn-primary" id="generateToken">Share Session</button>
+            </div>
+        </div>
+
+        <!-- Receive Session Tab -->
+        <div id="receiveTab" style="display: none;">
+            <div class="share-card">
+                <div class="session-info">
+                    <div class="session-name">Receive Shared Session</div>
+                    <div class="session-meta">
+                        <span>Enter the share token to access the shared session</span>
+                    </div>
+                </div>
+
+                <div class="share-options">
+                    <div class="option-group">
+                        <label class="option-label">Share Token</label>
+                        <input type="text" class="token-input" placeholder="Enter share token...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-outline" id="cancelReceive">Cancel</button>
+                <button class="btn btn-primary" id="accessSession">Access Session</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize UI state
+        let isSharing = false;
+        const shareStates = {
+            INITIAL: 'initial',
+            PROCESSING: 'processing',
+            SUCCESS: 'success',
+            ERROR: 'error'
+        };
+
+        // Show status message
+        function showStatus(message, type) {
+            const status = document.getElementById('statusMessage');
+            status.textContent = message;
+            status.className = `status-message ${type}`;
+            status.style.display = 'block';
+            if (type !== 'error') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Update UI based on sharing state
+        function updateShareUI(state, message = '') {
+            const shareBtn = document.getElementById('generateToken');
+            const cancelBtn = document.getElementById('cancelShare');
+            const securityOptions = document.querySelector('.security-options');
+            const expirySelect = document.querySelector('.expiry-select');
+
+            switch (state) {
+                case shareStates.PROCESSING:
+                    shareBtn.disabled = true;
+                    shareBtn.textContent = 'Sharing...';
+                    cancelBtn.style.display = 'none';
+                    securityOptions.style.opacity = '0.5';
+                    expirySelect.disabled = true;
+                    break;
+                case shareStates.SUCCESS:
+                    shareBtn.disabled = false;
+                    shareBtn.textContent = 'Share Again';
+                    cancelBtn.style.display = 'inline-block';
+                    securityOptions.style.opacity = '1';
+                    expirySelect.disabled = false;
+                    showStatus(message || 'Session shared successfully', 'success');
+                    break;
+                case shareStates.ERROR:
+                    shareBtn.disabled = false;
+                    shareBtn.textContent = 'Try Again';
+                    cancelBtn.style.display = 'inline-block';
+                    securityOptions.style.opacity = '1';
+                    expirySelect.disabled = false;
+                    showStatus(message || 'Failed to share session', 'error');
+                    break;
+                default:
+                    shareBtn.disabled = false;
+                    shareBtn.textContent = 'Share Session';
+                    cancelBtn.style.display = 'inline-block';
+                    securityOptions.style.opacity = '1';
+                    expirySelect.disabled = false;
+            }
+        }
+
+        // Copy token to clipboard
+        document.querySelector('.copy-btn').addEventListener('click', async () => {
+            try {
+                const token = document.querySelector('.token-text').textContent;
+                await navigator.clipboard.writeText(token);
+                showStatus('Token copied to clipboard', 'success');
+            } catch (error) {
+                showStatus('Failed to copy token', 'error');
+            }
+        });
+
+        // Handle share button click
+        document.getElementById('generateToken').addEventListener('click', async () => {
+            if (isSharing) return;
+            
+            const expiry = document.querySelector('.expiry-select').value;
+            const encrypt = document.querySelector('.security-options input[type="checkbox"]').checked;
+            isSharing = true;
+            
+            try {
+                updateShareUI(shareStates.PROCESSING);
+                
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Generate new token
+                const newToken = 'share_' + Math.random().toString(36).substr(2, 16);
+                document.querySelector('.token-text').textContent = newToken;
+                
+                updateShareUI(shareStates.SUCCESS);
+            } catch (error) {
+                updateShareUI(shareStates.ERROR, error.message);
+            } finally {
+                isSharing = false;
+            }
+        });
+
+        // Handle access button click
+        document.getElementById('accessSession').addEventListener('click', async () => {
+            const tokenInput = document.querySelector('.token-input');
+            const token = tokenInput.value.trim();
+            
+            if (!token) {
+                showStatus('Please enter a share token', 'error');
+                tokenInput.focus();
+                return;
+            }
+            
+            const accessBtn = document.getElementById('accessSession');
+            const originalText = accessBtn.textContent;
+            
+            try {
+                accessBtn.disabled = true;
+                accessBtn.textContent = 'Accessing...';
+                
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                showStatus('Session accessed successfully', 'success');
+                tokenInput.value = '';
+            } catch (error) {
+                showStatus(error.message || 'Failed to access session', 'error');
+            } finally {
+                accessBtn.disabled = false;
+                accessBtn.textContent = originalText;
+            }
+        });
+
+        // Toggle between share and receive tabs
+        function showShareTab() {
+            document.getElementById('shareTab').style.display = 'block';
+            document.getElementById('receiveTab').style.display = 'none';
+            document.querySelector('.header-title').textContent = 'Share Session';
+        }
+
+        function showReceiveTab() {
+            document.getElementById('shareTab').style.display = 'none';
+            document.getElementById('receiveTab').style.display = 'block';
+            document.querySelector('.header-title').textContent = 'Access Shared Session';
+        }
+
+        // Add tab navigation
+        const tabButtons = document.createElement('div');
+        tabButtons.className = 'tab-buttons';
+        tabButtons.style.cssText = `
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        `;
+        
+        const shareTabBtn = document.createElement('button');
+        shareTabBtn.className = 'btn btn-outline';
+        shareTabBtn.textContent = 'Share';
+        shareTabBtn.onclick = showShareTab;
+        
+        const receiveTabBtn = document.createElement('button');
+        receiveTabBtn.className = 'btn btn-outline';
+        receiveTabBtn.textContent = 'Access';
+        receiveTabBtn.onclick = showReceiveTab;
+        
+        tabButtons.appendChild(shareTabBtn);
+        tabButtons.appendChild(receiveTabBtn);
+        
+        document.querySelector('.header').appendChild(tabButtons);
+    </script>
+</body>
+</html>

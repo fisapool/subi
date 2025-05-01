@@ -195,24 +195,58 @@ export class ExtensionCoordinator {
             }
 
             const warnings = [];
+            let successCount = 0;
+            let failureCount = 0;
+
             for (const cookie of cookies) {
                 try {
                     if (!cookie.name || !cookie.domain) {
-                        throw new Error('Invalid cookie: missing required fields');
+                        throw new Error(`Invalid cookie: missing name or domain for cookie ${cookie.name || 'unknown'}`);
                     }
-                    await chrome.cookies.set(cookie);
+
+                    await chrome.cookies.set({
+                        url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path || '/'}`,
+                        name: cookie.name,
+                        value: cookie.value || '',
+                        domain: cookie.domain,
+                        path: cookie.path || '/',
+                        secure: cookie.secure || false,
+                        httpOnly: cookie.httpOnly || false,
+                        sameSite: cookie.sameSite || 'lax',
+                        expirationDate: cookie.expirationDate || (Math.floor(Date.now() / 1000) + 86400) // Default to 24 hours
+                    });
+                    successCount++;
                 } catch (error) {
-                    warnings.push({ cookie, error: error.message });
+                    failureCount++;
+                    warnings.push({
+                        cookie: cookie.name,
+                        domain: cookie.domain,
+                        error: error.message
+                    });
                 }
             }
 
+            // If all cookies failed to import, return error
+            if (failureCount === cookies.length) {
+                return {
+                    success: false,
+                    error: 'All cookies failed to import',
+                    warnings
+                };
+            }
+
             return {
-                success: warnings.length < cookies.length,
+                success: true,
+                imported: successCount,
+                failed: failureCount,
                 warnings: warnings.length > 0 ? warnings : undefined
             };
         } catch (error) {
             console.error('Error importing cookies:', error);
-            return { success: false, error: error.message };
+            return {
+                success: false,
+                error: error.message
+            };
         }
     }
 

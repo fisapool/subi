@@ -12,14 +12,72 @@ global.document = dom.window.document;
 global.window = dom.window;
 global.navigator = dom.window.navigator;
 
-// Mock chrome API
-global.chrome = {
+// Set up basic DOM elements that tests might need
+document.body.innerHTML = `
+  <div id="status"></div>
+  <div id="error-list"></div>
+  <div id="button-container"></div>
+  <div id="test-results"></div>
+  <div id="cookie-consent-banner"></div>
+  <input type="checkbox" id="auto-save-enabled" />
+  <input type="text" id="auto-save-interval" value="30" />
+  <input type="checkbox" id="encrypt-data" />
+`;
+
+// Mock window methods
+global.window.matchMedia = vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+}));
+
+global.window.confirm = vi.fn(() => true);
+
+// Mock Firebase
+vi.mock('firebase/app', () => ({
+    default: {
+        initializeApp: vi.fn(),
+        auth: vi.fn()
+    }
+}));
+
+vi.mock('firebase/firestore', () => ({
+    getFirestore: vi.fn(),
+    collection: vi.fn(),
+    doc: vi.fn(),
+    getDoc: vi.fn(),
+    setDoc: vi.fn(),
+    deleteDoc: vi.fn(),
+    query: vi.fn(),
+    where: vi.fn(),
+    getDocs: vi.fn().mockResolvedValue({ docs: [] })
+}));
+
+vi.mock('firebase/auth', () => ({
+    getAuth: vi.fn(),
+    signInWithPopup: vi.fn(),
+    GoogleAuthProvider: vi.fn()
+}));
+
+// Enhanced chrome API mock
+const chromeMock = {
     runtime: {
         onMessage: {
             addListener: vi.fn(),
             removeListener: vi.fn(),
+            hasListener: vi.fn()
         },
-        sendMessage: vi.fn(),
+        sendMessage: vi.fn().mockResolvedValue({}),
+        getManifest: vi.fn(() => ({
+            manifest_version: 3,
+            name: 'Mock Extension',
+            version: '1.0.0'
+        }))
     },
     tabs: {
         onUpdated: {
@@ -30,6 +88,7 @@ global.chrome = {
         create: vi.fn().mockResolvedValue({}),
         remove: vi.fn().mockResolvedValue(),
         update: vi.fn().mockResolvedValue({}),
+        getCurrent: vi.fn().mockResolvedValue({ id: 1 })
     },
     commands: {
         onCommand: {
@@ -41,57 +100,38 @@ global.chrome = {
         getAll: vi.fn().mockResolvedValue([]),
         set: vi.fn().mockResolvedValue({}),
         remove: vi.fn().mockResolvedValue({}),
+        getAllCookieStores: vi.fn().mockResolvedValue([])
     },
     storage: {
         local: {
             get: vi.fn().mockResolvedValue({}),
-            set: vi.fn().mockResolvedValue(),
-            remove: vi.fn().mockResolvedValue(),
+            set: vi.fn().mockResolvedValue({}),
+            remove: vi.fn().mockResolvedValue({}),
+            clear: vi.fn().mockResolvedValue({}),
+            onChanged: {
+                addListener: vi.fn(),
+                removeListener: vi.fn()
+            }
         },
-    },
+        sync: {
+            get: vi.fn().mockResolvedValue({}),
+            set: vi.fn().mockResolvedValue({}),
+            remove: vi.fn().mockResolvedValue({}),
+            clear: vi.fn().mockResolvedValue({})
+        }
+    }
 };
 
-// Mock webextension-polyfill
-global.browser = {
-    runtime: {
-        onMessage: {
-            addListener: vi.fn(),
-            removeListener: vi.fn(),
-        },
-        sendMessage: vi.fn(),
-    },
-    tabs: {
-        onUpdated: {
-            addListener: vi.fn(),
-            removeListener: vi.fn(),
-        },
-        query: vi.fn().mockResolvedValue([]),
-        create: vi.fn().mockResolvedValue({}),
-        remove: vi.fn().mockResolvedValue(),
-        update: vi.fn().mockResolvedValue({}),
-    },
-    commands: {
-        onCommand: {
-            addListener: vi.fn(),
-            removeListener: vi.fn(),
-        },
-    },
-    cookies: {
-        getAll: vi.fn().mockResolvedValue([]),
-        set: vi.fn().mockResolvedValue({}),
-        remove: vi.fn().mockResolvedValue({}),
-    },
-    storage: {
-        local: {
-            get: vi.fn().mockResolvedValue({}),
-            set: vi.fn().mockResolvedValue(),
-            remove: vi.fn().mockResolvedValue(),
-        },
-    },
-};
+// Set up chrome and browser globals
+global.chrome = chromeMock;
+global.browser = chromeMock;
 
 // Mock fetch
-global.fetch = vi.fn();
+global.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: vi.fn().mockResolvedValue({}),
+    text: vi.fn().mockResolvedValue('')
+});
 
 // Reset all mocks before each test
 beforeEach(() => {
@@ -121,4 +161,4 @@ global.console = {
     warn: vi.fn(),
     info: vi.fn(),
     debug: vi.fn()
-}; 
+};

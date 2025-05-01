@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Share Session - Session Buddy</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap">
+    <style>
+        :root {
+            --primary-color: #4285F4;
+            --primary-dark: #3367D6;
+            --secondary-color: #34A853;
+            --secondary-dark: #2E7D32;
+            --danger-color: #EA4335;
+            --danger-dark: #C62828;
+            --background-color: #F5F5F5;
+            --card-color: #FFFFFF;
+            --text-primary: #202124;
+            --text-secondary: #5F6368;
+            --border-color: #DADCE0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        }
+        
+        body {
+            width: 400px;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .share-card {
+            background: var(--card-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .session-info {
+            margin-bottom: 16px;
+        }
+
+        .session-name {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .session-meta {
+            color: var(--text-secondary);
+            font-size: 13px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .share-options {
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+
+        .option-group {
+            margin-bottom: 16px;
+        }
+
+        .option-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .token-display {
+            background: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 12px;
+            font-family: monospace;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .token-text {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .token-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+
+        .token-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .copy-btn:hover {
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        .expiry-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+            margin-bottom: 8px;
+        }
+
+        .security-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .success {
+            background: #E8F5E9;
+            color: var(--secondary-dark);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .error {
+            background: #FFEBEE;
+            color: var(--danger-dark);
+            border-left: 4px solid var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="header-title">Share Session</h1>
+            <div class="tab-buttons">
+                <button class="btn btn-outline" id="shareTabBtn">Share</button>
+                <button class="btn btn-outline" id="receiveTabBtn">Access</button>
+            </div>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <!-- Share Session Tab -->
+        <div id="shareTab">
+            <div class="share-card">
+                <div class="session-info">
+                    <div class="session-name" id="currentSessionName">Loading...</div>
+                    <div class="session-meta">
+                        <span class="meta-item" id="sessionDate">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            <span id="sessionDateText">Loading...</span>
+                        </span>
+                        <span class="meta-item" id="sessionTabs">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 10h-4V6"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            <span id="sessionTabCount">0 tabs</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="share-options">
+                    <div class="option-group">
+                        <label class="option-label">Share Token</label>
+                        <div class="token-display">
+                            <span class="token-text" id="shareToken">Generate a token to share</span>
+                            <button class="copy-btn" id="copyToken">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <label class="option-label">Expiration Time</label>
+                        <select class="expiry-select" id="expiryTime">
+                            <option value="1">1 hour</option>
+                            <option value="24" selected>24 hours</option>
+                            <option value="168">7 days</option>
+                            <option value="720">30 days</option>
+                        </select>
+                    </div>
+
+                    <div class="option-group">
+                        <label class="option-label">Security Options</label>
+                        <div class="security-options">
+                            <label class="checkbox-option">
+                                <input type="checkbox" id="encryptData" checked>
+                                Encrypt session data
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" id="oneTimeUse" checked>
+                                One-time use only
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-outline" id="cancelShare">Cancel</button>
+                <button class="btn btn-primary" id="generateToken">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                        <polyline points="16 6 12 2 8 6"></polyline>
+                        <line x1="12" y1="2" x2="12" y2="15"></line>
+                    </svg>
+                    Share Session
+                </button>
+            </div>
+        </div>
+
+        <!-- Receive Session Tab -->
+        <div id="receiveTab" style="display: none;">
+            <div class="share-card">
+                <div class="session-info">
+                    <div class="session-name">Access Shared Session</div>
+                    <div class="session-meta">
+                        <span>Enter the share token to access the shared session</span>
+                    </div>
+                </div>
+
+                <div class="share-options">
+                    <div class="option-group">
+                        <label class="option-label">Share Token</label>
+                        <input type="text" class="token-input" id="accessToken" placeholder="Enter share token...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-outline" id="cancelReceive">Cancel</button>
+                <button class="btn btn-primary" id="accessSession">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Access Session
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/popup-share.js" type="module"></script>
+</body>
+</html>
