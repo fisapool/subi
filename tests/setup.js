@@ -1,144 +1,124 @@
+import { JSDOM } from 'jsdom';
 import { vi } from 'vitest';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Set up DOM environment
+const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
+    url: 'http://localhost',
+    runScripts: 'dangerously',
+    resources: 'usable'
+});
 
-// This setup file is used by Vitest to configure the test environment
-export default {
-  // Set up the test environment
-  setupFiles: ['./vitest.setup.js'],
-  
-  // Configure Vitest to use the Puppeteer environment
-  testEnvironment: 'jsdom',
-  
-  // Specify the path to your extension
-  extensionPath: path.join(__dirname, '..', 'dist'),
-  
-  // Configure test timeouts
-  testTimeout: 30000,
-  
-  // Configure which files to test
-  testMatch: ['**/tests/**/*.test.js'],
-  
-  // Configure coverage settings
-  coverage: {
-    enabled: true,
-    reporter: ['text', 'json', 'html'],
-    reportsDirectory: 'coverage',
-    include: [
-      'src/**/*.js',
-      '!src/**/*.test.js',
-    ],
-  },
-};
-
-// Set up service worker context
-globalThis.self = {
-  dispatchEvent: vi.fn(),
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn()
-};
+global.document = dom.window.document;
+global.window = dom.window;
+global.navigator = dom.window.navigator;
 
 // Mock chrome API
 global.chrome = {
-  runtime: {
-    sendMessage: vi.fn(),
-    onMessage: {
-      addListener: vi.fn()
-    }
-  },
-  storage: {
-    local: {
-      get: vi.fn(),
-      set: vi.fn(),
-      remove: vi.fn()
-    }
-  },
-  tabs: {
-    query: vi.fn(),
-    create: vi.fn()
-  },
-  cookies: {
-    get: vi.fn(),
-    set: vi.fn(),
-    remove: vi.fn()
-  },
-  alarms: {
-    create: vi.fn(),
-    clear: vi.fn(),
-    onAlarm: {
-      addListener: vi.fn()
-    }
-  }
+    runtime: {
+        onMessage: {
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
+        },
+        sendMessage: vi.fn(),
+    },
+    tabs: {
+        onUpdated: {
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
+        },
+        query: vi.fn().mockResolvedValue([]),
+        create: vi.fn().mockResolvedValue({}),
+        remove: vi.fn().mockResolvedValue(),
+        update: vi.fn().mockResolvedValue({}),
+    },
+    commands: {
+        onCommand: {
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
+        },
+    },
+    cookies: {
+        getAll: vi.fn().mockResolvedValue([]),
+        set: vi.fn().mockResolvedValue({}),
+        remove: vi.fn().mockResolvedValue({}),
+    },
+    storage: {
+        local: {
+            get: vi.fn().mockResolvedValue({}),
+            set: vi.fn().mockResolvedValue(),
+            remove: vi.fn().mockResolvedValue(),
+        },
+    },
 };
 
 // Mock webextension-polyfill
-vi.mock('webextension-polyfill', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    browser: {
-      runtime: {
-        sendMessage: vi.fn(),
+global.browser = {
+    runtime: {
         onMessage: {
-          addListener: vi.fn()
-        }
-      },
-      storage: {
-        local: {
-          get: vi.fn(),
-          set: vi.fn(),
-          remove: vi.fn()
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
         },
-        sync: {
-          get: vi.fn(),
-          set: vi.fn()
-        }
-      },
-      cookies: {
-        getAll: vi.fn(),
-        remove: vi.fn()
-      },
-      tabs: {
-        query: vi.fn(),
-        sendMessage: vi.fn()
-      },
-      alarms: {
-        create: vi.fn(),
-        clear: vi.fn(),
-        onAlarm: {
-          addListener: vi.fn()
-        }
-      },
-      identity: {
-        getAuthToken: vi.fn(),
-        launchWebAuthFlow: vi.fn()
-      }
-    }
-  };
+        sendMessage: vi.fn(),
+    },
+    tabs: {
+        onUpdated: {
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
+        },
+        query: vi.fn().mockResolvedValue([]),
+        create: vi.fn().mockResolvedValue({}),
+        remove: vi.fn().mockResolvedValue(),
+        update: vi.fn().mockResolvedValue({}),
+    },
+    commands: {
+        onCommand: {
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
+        },
+    },
+    cookies: {
+        getAll: vi.fn().mockResolvedValue([]),
+        set: vi.fn().mockResolvedValue({}),
+        remove: vi.fn().mockResolvedValue({}),
+    },
+    storage: {
+        local: {
+            get: vi.fn().mockResolvedValue({}),
+            set: vi.fn().mockResolvedValue(),
+            remove: vi.fn().mockResolvedValue(),
+        },
+    },
+};
+
+// Mock fetch
+global.fetch = vi.fn();
+
+// Reset all mocks before each test
+beforeEach(() => {
+    vi.clearAllMocks();
+    
+    // Reset storage mock implementation
+    chrome.storage.local.get.mockImplementation((key) => Promise.resolve({}));
+    chrome.storage.local.set.mockImplementation(() => Promise.resolve());
+    chrome.storage.local.remove.mockImplementation(() => Promise.resolve());
+    
+    // Reset cookies mock implementation
+    chrome.cookies.getAll.mockImplementation(() => Promise.resolve([]));
+    chrome.cookies.set.mockImplementation(() => Promise.resolve({}));
+    chrome.cookies.remove.mockImplementation(() => Promise.resolve({}));
+    
+    // Reset tabs mock implementation
+    chrome.tabs.query.mockImplementation(() => Promise.resolve([]));
+    chrome.tabs.create.mockImplementation(() => Promise.resolve({}));
+    chrome.tabs.remove.mockImplementation(() => Promise.resolve());
+    chrome.tabs.update.mockImplementation(() => Promise.resolve({}));
 });
 
-// Mock window.confirm
-global.window = {
-  confirm: vi.fn()
-};
-
-// Mock document for DOM operations
-global.document = {
-  addEventListener: vi.fn(),
-  getElementById: vi.fn(),
-  querySelector: vi.fn(),
-  querySelectorAll: vi.fn(),
-  createElement: vi.fn(),
-  body: {
-    appendChild: vi.fn()
-  }
-};
-
-// Mock window
-global.window = {
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn()
+// Mock console methods
+global.console = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn()
 }; 

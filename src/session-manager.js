@@ -18,9 +18,6 @@ import FirebaseSessionManager from './firebaseSessionManager';
 class SessionManager {
   /**
    * @param {string|null} userId - The user ID for Firebase session sync.
-   */
-  /**
-   * @param {string|null} userId - The user ID for Firebase session sync.
    * @param {typeof browser | typeof chrome | null} browserInstance - Optional browser instance for dependency injection.
    */
   constructor(userId = null, browserInstance = null) {
@@ -31,6 +28,7 @@ class SessionManager {
     } else {
       this.firebaseSessionManager = null;
     }
+    this.operationLocks = new Map();
   }
 
   /**
@@ -39,11 +37,25 @@ class SessionManager {
    * @returns {Promise<Cookie[]>}
    */
   async getSessionCookies(domain) {
+    const lockKey = `get_cookies_${domain}`;
+    if (this.operationLocks.has(lockKey)) {
+      return this.operationLocks.get(lockKey);
+    }
+
+    const promise = (async () => {
+      try {
+        return await this.browser.cookies.getAll({ domain });
+      } catch (error) {
+        console.error('Error getting cookies:', error);
+        return [];
+      }
+    })();
+
+    this.operationLocks.set(lockKey, promise);
     try {
-      return await this.browser.cookies.getAll({ domain });
-    } catch (error) {
-      console.error('Error getting cookies:', error);
-      return [];
+      return await promise;
+    } finally {
+      this.operationLocks.delete(lockKey);
     }
   }
 
@@ -54,23 +66,40 @@ class SessionManager {
    * @returns {Promise<boolean>}
    */
   async saveSession(sessionName, domain) {
-    if (this.firebaseSessionManager) {
-      // Firebase session sync handles session saving
-      return true;
+    const lockKey = `save_session_${sessionName}`;
+    if (this.operationLocks.has(lockKey)) {
+      return this.operationLocks.get(lockKey);
     }
-    try {
-      const cookies = await this.getSessionCookies(domain);
-      await this.browser.storage.local.set({
-        [`session_${sessionName}`]: {
+
+    const promise = (async () => {
+      if (this.firebaseSessionManager) {
+        return true;
+      }
+
+      try {
+        const cookies = await this.getSessionCookies(domain);
+        const sessionData = {
           cookies,
           timestamp: Date.now(),
           domain,
-        },
-      });
-      return true;
-    } catch (error) {
-      console.error('Error saving session:', error);
-      return false;
+        };
+
+        await this.browser.storage.local.set({
+          [`session_${sessionName}`]: sessionData,
+        });
+
+        return true;
+      } catch (error) {
+        console.error('Error saving session:', error);
+        return false;
+      }
+    })();
+
+    this.operationLocks.set(lockKey, promise);
+    try {
+      return await promise;
+    } finally {
+      this.operationLocks.delete(lockKey);
     }
   }
 
@@ -80,45 +109,62 @@ class SessionManager {
    * @returns {Promise<boolean>}
    */
   async loadSession(sessionName) {
-    if (this.firebaseSessionManager) {
-      // Firebase session sync handles session loading
-      return true;
+    const lockKey = `load_session_${sessionName}`;
+    if (this.operationLocks.has(lockKey)) {
+      return this.operationLocks.get(lockKey);
     }
+
+    const promise = (async () => {
+      if (this.firebaseSessionManager) {
+        return true;
+      }
+
+      try {
+        const data = await this.browser.storage.local.get(`session_${sessionName}`);
+        const session = data[`session_${sessionName}`];
+
+        if (!session) {
+          throw new Error('Session not found');
+        }
+
+        // Clear existing cookies for the domain
+        const existingCookies = await this.getSessionCookies(session.domain);
+        const removePromises = existingCookies.map((/** @type {Cookie} */ cookie) =>
+          this.browser.cookies.remove({
+            url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`,
+            name: cookie.name,
+          })
+        );
+        await Promise.all(removePromises);
+
+        // Set new cookies
+        const setPromises = session.cookies.map(cookie =>
+          this.browser.cookies.set({
+            url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`,
+            name: cookie.name,
+            value: cookie.value,
+            domain: cookie.domain,
+            path: cookie.path,
+            secure: cookie.secure,
+            httpOnly: cookie.httpOnly,
+            sameSite: cookie.sameSite,
+            expirationDate: cookie.expirationDate,
+          })
+        );
+        await Promise.all(setPromises);
+
+        return true;
+      } catch (error) {
+        console.error('Error loading session:', error);
+        return false;
+      }
+    })();
+
+    this.operationLocks.set(lockKey, promise);
     try {
-      const data = await this.browser.storage.local.get(`session_${sessionName}`);
-      const session = data[`session_${sessionName}`];
-
-      if (!session) {
-        throw new Error('Session not found');
-      }
-
-      // Clear existing cookies for the domain
-      const existingCookies = await this.getSessionCookies(session.domain);
-      for (const cookie of existingCookies) {
-        await this.browser.cookies.remove({
-          url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`,
-          name: cookie.name,
-        });
-      }
-
-      // Set new cookies
-      for (const cookie of session.cookies) {
-        await this.browser.cookies.set({
-          url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`,
-          name: cookie.name,
-          value: cookie.value,
-          domain: cookie.domain,
-          path: cookie.path,
-          secure: cookie.secure,
-          httpOnly: cookie.httpOnly,
-          sameSite: cookie.sameSite,
-          expirationDate: cookie.expirationDate,
-        });
-      }
-      return true;
-    } catch (error) {
-      console.error('Error loading session:', error);
-      return false;
+      return await promise;
+    } finally {
+      this.operationLocks.delete(lockKey);
     }
   }
 
@@ -128,16 +174,30 @@ class SessionManager {
    * @returns {Promise<boolean>}
    */
   async deleteSession(sessionName) {
-    if (this.firebaseSessionManager) {
-      // Firebase session sync handles session deletion
-      return true;
+    const lockKey = `delete_session_${sessionName}`;
+    if (this.operationLocks.has(lockKey)) {
+      return this.operationLocks.get(lockKey);
     }
+
+    const promise = (async () => {
+      if (this.firebaseSessionManager) {
+        return true;
+      }
+
+      try {
+        await this.browser.storage.local.remove(`session_${sessionName}`);
+        return true;
+      } catch (error) {
+        console.error('Error deleting session:', error);
+        return false;
+      }
+    })();
+
+    this.operationLocks.set(lockKey, promise);
     try {
-      await this.browser.storage.local.remove(`session_${sessionName}`);
-      return true;
-    } catch (error) {
-      console.error('Error deleting session:', error);
-      return false;
+      return await promise;
+    } finally {
+      this.operationLocks.delete(lockKey);
     }
   }
 
@@ -146,22 +206,36 @@ class SessionManager {
    * @returns {Promise<Array<{name: string, domain: string, timestamp: number}>>}
    */
   async listSessions() {
-    if (this.firebaseSessionManager) {
-      // Firebase session sync handles session listing
-      return [];
+    const lockKey = 'list_sessions';
+    if (this.operationLocks.has(lockKey)) {
+      return this.operationLocks.get(lockKey);
     }
+
+    const promise = (async () => {
+      if (this.firebaseSessionManager) {
+        return [];
+      }
+
+      try {
+        const data = await this.browser.storage.local.get(null);
+        return Object.entries(data)
+          .filter(([key]) => key.startsWith('session_'))
+          .map(([key, value]) => ({
+            name: key.replace('session_', ''),
+            domain: value.domain,
+            timestamp: value.timestamp,
+          }));
+      } catch (error) {
+        console.error('Error listing sessions:', error);
+        return [];
+      }
+    })();
+
+    this.operationLocks.set(lockKey, promise);
     try {
-      const data = await this.browser.storage.local.get(null);
-      return Object.entries(data)
-        .filter(([key]) => key.startsWith('session_'))
-        .map(([key, value]) => ({
-          name: key.replace('session_', ''),
-          domain: value.domain,
-          timestamp: value.timestamp,
-        }));
-    } catch (error) {
-      console.error('Error listing sessions:', error);
-      return [];
+      return await promise;
+    } finally {
+      this.operationLocks.delete(lockKey);
     }
   }
 

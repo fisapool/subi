@@ -1,3 +1,11 @@
+import { ExtensionCoordinator } from './background-coordinator.js';
+
+// Initialize the extension coordinator
+const coordinator = new ExtensionCoordinator();
+
+// Export for testing
+export { coordinator };
+
 // Authentication state management
 let authState = {
     isAuthenticated: false,

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Extension Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .failure {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Extension Test Suite</h1>
+    <div class="test-section">
+        <h2>Session Management Tests</h2>
+        <div id="session-tests"></div>
+    </div>
+    <div class="test-section">
+        <h2>Cookie Management Tests</h2>
+        <div id="cookie-tests"></div>
+    </div>
+    <div class="test-section">
+        <h2>Combined Features Tests</h2>
+        <div id="combined-tests"></div>
+    </div>
+    <button id="run-tests">Run All Tests</button>
+    <div id="results"></div>
+
+    <script src="test-suite.js"></script>
+    <script>
+        document.getElementById('run-tests').addEventListener('click', () => {
+            const testSuite = new ExtensionTestSuite();
+            testSuite.runTests();
+        });
+    </script>
+</body>
+</html> 

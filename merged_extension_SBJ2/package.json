@@ -1,0 +1,19 @@
+{
+  "name": "session-buddy-j2cookies",
+  "version": "1.0.0",
+  "description": "Session Buddy with J2Cookies Extension",
+  "main": "background-coordinator.js",
+  "scripts": {
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch"
+  },
+  "dependencies": {
+    "webextension-polyfill": "^0.10.0"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "jsdom": "^22.0.0",
+    "@vitest/coverage-v8": "^1.0.0"
+  }
+} 

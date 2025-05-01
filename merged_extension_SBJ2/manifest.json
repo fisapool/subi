@@ -1,0 +1,58 @@
+{
+  "update_url": "https://clients2.google.com/service/update2/crx",
+  "name": "Session Buddy with J2Cookies",
+  "version": "4.0.5",
+  "description": "Session management and cookie control extension",
+  "default_locale": "en",
+  "minimum_chrome_version": "109",
+  "manifest_version": 3,
+  "author": "JUNO_OKYO",
+  "homepage_url": "https://www.junookyo.com/",
+  "icons": {
+    "16": "assets/logo-16.png",
+    "19": "assets/logo-19.png",
+    "32": "assets/logo-32.png",
+    "38": "assets/logo-38.png",
+    "48": "assets/logo-48.png",
+    "128": "assets/logo-128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "19": "assets/logo-19.png",
+      "38": "assets/logo-38.png"
+    },
+    "default_title": "Session Buddy with J2Cookies"
+  },
+  "background": {
+    "service_worker": "background-coordinator.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "permissions": [
+    "cookies",
+    "tabs",
+    "unlimitedStorage",
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "optional_host_permissions": [
+    "file:///*"
+  ],
+  "incognito": "spanning",
+  "commands": {
+    "save-session": {
+      "description": "Save tabs"
+    },
+    "clear-item-selections": {
+      "description": "Clear selection"
+    }
+  },
+  "offline_enabled": true
+} 

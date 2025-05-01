@@ -1,46 +1,58 @@
 {
+  "update_url": "https://clients2.google.com/service/update2/crx",
+  "name": "Session Buddy with J2Cookies",
+  "version": "4.0.5",
+  "description": "Session management and cookie control extension",
+  "default_locale": "en",
+  "minimum_chrome_version": "109",
   "manifest_version": 3,
-  "name": "FISABytes Cookie Manager",
-  "version": "2.0.0",
-  "description": "A powerful Chrome extension for managing browser cookies and sessions with enhanced security features.",
-  "permissions": [
-    "storage",
-    "tabs",
-    "scripting",
-    "activeTab",
-    "cookies",
-    "alarms",
-    "notifications",
-    "identity",
-    "identity.email"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
-  "background": {
-    "service_worker": "background.js"
+  "author": "JUNO_OKYO",
+  "homepage_url": "https://www.junookyo.com/",
+  "icons": {
+    "16": "assets/logo-16.png",
+    "19": "assets/logo-19.png",
+    "32": "assets/logo-32.png",
+    "38": "assets/logo-38.png",
+    "48": "assets/logo-48.png",
+    "128": "assets/logo-128.png"
   },
   "action": {
-    "default_popup": "auth.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "19": "assets/logo-19.png",
+      "38": "assets/logo-38.png"
+    },
+    "default_title": "Session Buddy with J2Cookies"
   },
-  "options_page": "options.html",
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["browser-polyfill.min.js", "content.js"]
-    }
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "permissions": [
+    "cookies",
+    "tabs",
+    "unlimitedStorage",
+    "storage",
+    "alarms"
   ],
-  "web_accessible_resources": [
-    {
-      "resources": ["browser-polyfill.min.js"],
-      "matches": ["<all_urls>"]
-    }
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
   ],
-  "oauth2": {
-    "client_id": "YOUR_CLIENT_ID",
-    "scopes": [
-      "https://www.googleapis.com/auth/userinfo.email",
-      "https://www.googleapis.com/auth/userinfo.profile"
-    ]
-  }
-}
+  "optional_host_permissions": [
+    "file:///*"
+  ],
+  "incognito": "spanning",
+  "commands": {
+    "save-session": {
+      "description": "Save tabs"
+    },
+    "clear-item-selections": {
+      "description": "Clear selection"
+    }
+  },
+  "offline_enabled": true
+} 

@@ -1,3 +1,74 @@
+import Browser from 'webextension-polyfill';
+
+/**
+ * Authenticate a user with email and password
+ * @param {string} email - User's email
+ * @param {string} password - User's password
+ * @param {boolean} rememberMe - Whether to remember the user
+ * @returns {Promise<Object>} Authentication result
+ */
+export async function authenticateUser(email, password, rememberMe) {
+  try {
+    const response = await Browser.runtime.sendMessage({
+      type: 'AUTHENTICATE',
+      email,
+      password,
+      rememberMe
+    });
+    return response;
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return {
+      success: false,
+      message: 'Authentication failed: ' + error.message
+    };
+  }
+}
+
+/**
+ * Register a new user
+ * @param {string} email - User's email
+ * @param {string} password - User's password
+ * @returns {Promise<Object>} Registration result
+ */
+export async function registerUser(email, password) {
+  try {
+    const response = await Browser.runtime.sendMessage({
+      type: 'REGISTER',
+      email,
+      password
+    });
+    return response;
+  } catch (error) {
+    console.error('Registration error:', error);
+    return {
+      success: false,
+      message: 'Registration failed: ' + error.message
+    };
+  }
+}
+
+/**
+ * Send password reset email
+ * @param {string} email - User's email
+ * @returns {Promise<Object>} Password reset result
+ */
+export async function resetPassword(email) {
+  try {
+    const response = await Browser.runtime.sendMessage({
+      type: 'RESET_PASSWORD',
+      email
+    });
+    return response;
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return {
+      success: false,
+      message: 'Password reset failed: ' + error.message
+    };
+  }
+}
+
 // Utility functions
 function validateEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
