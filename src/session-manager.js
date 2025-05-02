@@ -1,178 +1,94 @@
-import FirebaseSessionManager from './firebaseSessionManager';
+import { chrome } from 'webextension-polyfill';
+import * as DataManager from './data-manager';
 
-/**
- * @typedef {Object} Cookie
- * @property {string} name
- * @property {string} value
- * @property {string} domain
- * @property {string} path
- * @property {boolean} secure
- * @property {boolean} httpOnly
- * @property {string} sameSite
- * @property {number} [expirationDate]
- */
+async function saveSession(userId, url, name) {
+  try {
+    const cookies = await chrome.cookies.getAll({ url });
 
-/**
- * SessionManager class manages browser sessions and optionally syncs with Firebase.
- */
-class SessionManager {
-  /**
-   * @param {string|null} userId - The user ID for Firebase session sync.
-   */
-  /**
-   * @param {string|null} userId - The user ID for Firebase session sync.
-   * @param {typeof browser | typeof chrome | null} browserInstance - Optional browser instance for dependency injection.
-   */
-  constructor(userId = null, browserInstance = null) {
-    /** @type {typeof chrome | typeof browser | any} */
-    this.browser = browserInstance || (typeof browser !== 'undefined' ? browser : chrome);
-    if (userId) {
-      this.firebaseSessionManager = new FirebaseSessionManager(userId);
-    } else {
-      this.firebaseSessionManager = null;
-    }
-  }
-
-  /**
-   * Get cookies for a domain.
-   * @param {string} domain
-   * @returns {Promise<Cookie[]>}
-   */
-  async getSessionCookies(domain) {
-    try {
-      return await this.browser.cookies.getAll({ domain });
-    } catch (error) {
-      console.error('Error getting cookies:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Save a session.
-   * @param {string} sessionName
-   * @param {string} domain
-   * @returns {Promise<boolean>}
-   */
-  async saveSession(sessionName, domain) {
-    if (this.firebaseSessionManager) {
-      // Firebase session sync handles session saving
-      return true;
-    }
-    try {
-      const cookies = await this.getSessionCookies(domain);
-      await this.browser.storage.local.set({
-        [`session_${sessionName}`]: {
-          cookies,
-          timestamp: Date.now(),
-          domain,
-        },
-      });
-      return true;
-    } catch (error) {
-      console.error('Error saving session:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Load a session.
-   * @param {string} sessionName
-   * @returns {Promise<boolean>}
-   */
-  async loadSession(sessionName) {
-    if (this.firebaseSessionManager) {
-      // Firebase session sync handles session loading
-      return true;
-    }
-    try {
-      const data = await this.browser.storage.local.get(`session_${sessionName}`);
-      const session = data[`session_${sessionName}`];
-
-      if (!session) {
-        throw new Error('Session not found');
-      }
-
-      // Clear existing cookies for the domain
-      const existingCookies = await this.getSessionCookies(session.domain);
-      for (const cookie of existingCookies) {
-        await this.browser.cookies.remove({
-          url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`,
-          name: cookie.name,
-        });
-      }
-
-      // Set new cookies
-      for (const cookie of session.cookies) {
-        await this.browser.cookies.set({
-          url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`,
-          name: cookie.name,
-          value: cookie.value,
-          domain: cookie.domain,
-          path: cookie.path,
-          secure: cookie.secure,
-          httpOnly: cookie.httpOnly,
-          sameSite: cookie.sameSite,
-          expirationDate: cookie.expirationDate,
-        });
-      }
-      return true;
-    } catch (error) {
-      console.error('Error loading session:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Delete a session.
-   * @param {string} sessionName
-   * @returns {Promise<boolean>}
-   */
-  async deleteSession(sessionName) {
-    if (this.firebaseSessionManager) {
-      // Firebase session sync handles session deletion
-      return true;
-    }
-    try {
-      await this.browser.storage.local.remove(`session_${sessionName}`);
-      return true;
-    } catch (error) {
-      console.error('Error deleting session:', error);
-      return false;
-    }
-  }
-
-  /**
-   * List all sessions.
-   * @returns {Promise<Array<{name: string, domain: string, timestamp: number}>>}
-   */
-  async listSessions() {
-    if (this.firebaseSessionManager) {
-      // Firebase session sync handles session listing
-      return [];
-    }
-    try {
-      const data = await this.browser.storage.local.get(null);
-      return Object.entries(data)
-        .filter(([key]) => key.startsWith('session_'))
-        .map(([key, value]) => ({
-          name: key.replace('session_', ''),
-          domain: value.domain,
-          timestamp: value.timestamp,
-        }));
-    } catch (error) {
-      console.error('Error listing sessions:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Cleanup resources.
-   */
-  cleanup() {
-    if (this.firebaseSessionManager) {
-      this.firebaseSessionManager.cleanup();
-    }
+    const sessionData = {
+      url,
+      name,
+      cookies,
+    };
+    await DataManager.createSession(userId, sessionData.url, sessionData.name, sessionData.cookies);
+  } catch (error) {
+    console.error('Error saving session:', error);
   }
 }
 
-export default SessionManager;
+async function updateSession(userId, sessionId) {
+  try {
+    const session = await DataManager.getSession(userId,sessionId);
+    const cookies = await chrome.cookies.getAll({ url: session.url });
+
+    const sessionData = {
+      cookies,
+    };
+    await DataManager.updateSession(userId, sessionId, sessionData.cookies);
+  } catch (error) {
+    console.error('Error updating session:', error);
+  }
+}
+
+async function loadSessions(userId) {
+  try {
+    return await DataManager.getSessions(userId);
+  } catch (error) {
+    console.error('Error loading sessions:', error);
+    return [];
+  }
+}
+
+async function applySession(userId, sessionId) {
+  try {
+    const session = await DataManager.getSession(userId,sessionId);
+    const sessionUrl = session.url;
+
+    const cookies = session.cookies;
+
+    // Clear existing cookies for the domain
+    const existingCookies = await chrome.cookies.getAll({ url: sessionUrl });
+    for (const cookie of existingCookies) {
+      await chrome.cookies.remove({
+        url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`,
+        name: cookie.name,
+      });
+    }
+
+    // Set new cookies
+    for (const cookie of cookies) {
+      await chrome.cookies.set({
+        url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`,
+        name: cookie.name,
+        value: cookie.value,
+        domain: cookie.domain,
+        path: cookie.path,
+        secure: cookie.secure,
+        httpOnly: cookie.httpOnly,
+        sameSite: cookie.sameSite,
+        expirationDate: cookie.expirationDate,
+      });
+    }
+    // Refresh the url
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        chrome.tabs.reload(tabs[0].id);
+      });
+  } catch (error) {
+    console.error('Error applying session:', error);
+  }
+}
+
+async function getAllSessions() {
+  try {
+    return await DataManager.getAllSessions();
+  } catch (error) {
+    console.error('Error loading sessions:', error);
+    return [];
+  }
+}
+
+async function createSessionInSessionsCollection(session) {
+    return await DataManager.createSessionInSessionsCollection(session);
+}
+
+export { saveSession, updateSession, loadSessions, applySession, getAllSessions, createSessionInSessionsCollection};

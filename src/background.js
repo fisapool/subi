@@ -1,5 +1,9 @@
 // Import webextension-polyfill properly for browser extensions
 import browser from 'webextension-polyfill';
+import { auth } from './firebaseAuth.js';
+import dataManager from './data-manager.js';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { getFirestore } from "firebase/firestore";
 
 // Constants
 const SESSION_COOKIE_NAMES = ['sessionid', 'sid', 'PHPSESSID'];
@@ -144,6 +148,50 @@ async function initialize() {
     console.error('Failed to initialize extension:', error);
   }
 }
+
+// Listen for authentication state changes
+auth.onAuthStateChanged(async (user) => {
+    try {
+        if (user) {
+            // User is signed in, get the ID token
+            const idToken = await user.getIdToken();
+            // Store the token in Chrome storage
+            await browser.storage.local.set({ idToken: idToken });
+            console.log('User is signed in, token stored.');
+
+            // Check if user document exists
+            const db = getFirestore(auth.app);
+            const usersRef = collection(db, 'users');
+            const userQuery = query(usersRef, where('userId', '==', user.uid));
+            const querySnapshot = await getDocs(userQuery);
+            if (querySnapshot.empty) {
+                // No user document found, create it
+                await dataManager.createUser(user.uid);
+                console.log('User document created.');
+            } else {
+                console.log('User document already exists.');
+            }
+
+        } else {
+            // User is signed out, clear Chrome storage
+            await browser.storage.local.clear();
+            console.log('User is signed out, storage cleared.');
+        }
+    } catch (error) {
+        console.error('Error handling authentication state change:', error);
+    }
+});
+
+browser.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local') {
+        for (let key in changes) {
+            console.log(`Storage key "${key}" in namespace "${area}" changed.`, changes[key]);
+        }
+    }
+  } catch (error) {
+    console.error('Error handling authentication state change:', error);
+  }
+});
 
 // Initialize immediately
 initialize().catch(error => {

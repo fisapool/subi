@@ -1,11 +1,17 @@
 // Popup script for FISABytes Sessions
 
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut} from './auth.js';
+
+
 /**
  * @typedef {Object} Cookie
  * @property {string} name - The name of the cookie
  * @property {string} value - The value of the cookie
  * @property {string} domain - The domain of the cookie
  */
+import * as uiManager from './ui-manager.js';
+import * as sessionManager from './session-manager.js';
+import * as dataManager from './data-manager.js'
 
 /**
  * @typedef {Object} CookieIdentifier
@@ -65,6 +71,28 @@ const proceedImportButton = document.getElementById('proceedImport');
 const overlay = document.getElementById('overlay');
 
 // Initialize the popup
+
+const signInView = document.getElementById('signInView');
+const signUpView = document.getElementById('signUpView');
+const signInButton = document.getElementById('signInButton');
+const signUpButton = document.getElementById('signUpButton');
+const switchToSignIn = document.getElementById('switchToSignIn');
+const switchToSignUp = document.getElementById('switchToSignUp');
+const signInForm = document.getElementById('signInForm');
+const signUpForm = document.getElementById('signUpForm');
+const signInError = document.getElementById('signInError');
+const signUpError = document.getElementById('signUpError');
+const signOutButton = document.getElementById('signOutButton');
+const createNewSessionButton = document.getElementById('newSession')
+const allSessionsButton = document.getElementById("allSessionsButton");
+
+
+
+
+
+
+
+
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     // Set initial loading state
@@ -73,10 +101,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Get CSRF token
     await getCsrfToken();
 
-    // Load sessions with sync status update
-    updateStatus('Syncing sessions...', true);
+    await uiManager.updateStatus('Syncing sessions...', true);
     await loadSessions();
-    updateStatus('Sessions synced');
+    await uiManager.updateStatus('Sessions synced');
 
     // Add event listeners
     setupEventListeners();
@@ -84,15 +111,104 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Update status
     updateStatus('Ready');
   } catch (error) {
-    console.error('Initialization error:', error);
-    updateStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, false, true);
+    console.error('Initialization error:', error);    
+    uiManager.displayError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+
+  if (switchToSignUp && switchToSignIn && signUpView && signInView) {
+    switchToSignUp.addEventListener('click', () => {
+      signUpView.classList.remove('hidden');
+      signInView.classList.add('hidden');
+    });
+  
+    switchToSignIn.addEventListener('click', () => {
+      signInView.classList.remove('hidden');
+      signUpView.classList.add('hidden');
+    });
+  }
+
+  if (signInForm) {
+    signInForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      uiManager.clearError(signInError);
+      
+      try {
+        uiManager.showLoading(signInForm);
+        const email = signInForm.email.value;
+        const password = signInForm.password.value;
+        await uiManager.validateForm(signInForm);
+        uiManager.updateStatus('Signing in...', true);
+        await signInWithEmailAndPassword(email, password);
+        
+        // Reload sessions
+        await loadSessions();
+        // Add event listeners
+
+        setupEventListeners();
+        await uiManager.showSignOut();
+        await uiManager.updateStatus('Ready');
+        console.log('User signed in successfully!');
+      } catch (error) {
+        console.error('Sign in error:', error);
+        uiManager.displayError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, signInError);
+      } finally {
+        uiManager.hideLoading(signInForm);
+      }
+    });
+  }
+  
+  if (signUpForm) {
+    signUpForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      uiManager.clearError(signUpError);
+      
+      try {
+        uiManager.showLoading(signUpForm);
+        const email = signUpForm.email.value;
+        const password = signUpForm.password.value;
+        await uiManager.validateForm(signUpForm);
+        uiManager.updateStatus('Signing up...', true);
+        await createUserWithEmailAndPassword(email, password);
+          
+          // Load sessions
+          loadSessions();
+          // Add event listeners
+          setupEventListeners();
+        await uiManager.showSignOut();
+        await uiManager.updateStatus('Ready');
+        console.log('User signed up successfully!');
+      } catch (error) {
+        console.error('Sign up error:', error);
+        uiManager.displayError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, signUpError);
+      } finally{
+        uiManager.hideLoading(signUpForm);
+      }
+    });
+  }
+
+  if (signOutButton) {
+    signOutButton.addEventListener('click', async () => {
+      try {
+        await signOut();
+        await uiManager.updateStatus('User signed out');
+        await uiManager.showSignIn();
+      } catch (error) {
+        console.error('Sign out error:', error);
+        uiManager.displayError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    });
+  }
+
+  if (createNewSessionButton) {
+    createNewSessionButton.addEventListener('click', createNewSession);
+
   }
 });
 
 // Get CSRF token
 async function getCsrfToken() {
   try {
-    updateStatus('Getting CSRF token...', true);
+    await uiManager.updateStatus('Getting CSRF token...', true);
 
     const response = await chrome.runtime.sendMessage({ type: 'GET_CSRF_TOKEN' });
 
@@ -108,7 +224,7 @@ async function getCsrfToken() {
     return csrfToken;
   } catch (error) {
     console.error('Error getting CSRF token:', error);
-    updateStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, false, true);
+    await uiManager.displayError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     throw error;
   }
 }
@@ -116,7 +232,7 @@ async function getCsrfToken() {
 // Load sessions
 async function loadSessions() {
   try {
-    updateStatus('Loading sessions...', true);
+    await uiManager.updateStatus('Loading sessions...', true);
 
     const response = await chrome.runtime.sendMessage({ type: 'GET_SESSIONS' });
 
@@ -129,17 +245,17 @@ async function loadSessions() {
     }
 
     /** @type {Array<Session>} */
-    currentSessions = response.sessions || [];
-    renderSessionList();
+    
+    await renderSessionList();
 
     if (response.warning) {
       console.warn(response.warning);
-      updateStatus(response.warning, false, true);
+      await uiManager.updateStatus(response.warning, false, true);
     } else {
-      updateStatus(`Loaded ${currentSessions.length} sessions`);
+      await uiManager.updateStatus(`Loaded ${currentSessions.length} sessions`);
     }
 
-    return currentSessions;
+    return currentSessions
   } catch (error) {
     console.error('Error loading sessions:', error);
     updateStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, false, true);
@@ -147,6 +263,23 @@ async function loadSessions() {
   }
 }
 
+// Load all sessions
+async function loadAllSessions() {
+  try {
+    uiManager.updateStatus('Loading all sessions...', true);
+    const allSessions = await sessionManager.getAllSessions();
+    uiManager.displaySessions(allSessions, true);
+  } catch (error) {
+    console.error('Error loading all sessions:', error);
+    uiManager.displayError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function loadSessions(){
+  const user = firebaseAuthManager.getCurrentUser();
+  const sessions = await sessionManager.loadSessions(user.uid);
+  uiManager.displaySessions(sessions, false);
+}
 // Render the session list
 function renderSessionList() {
   if (!sessionListElement) {
@@ -258,9 +391,9 @@ function setupEventListeners() {
 // Create a new session
 async function createNewSession() {
   try {
-    updateStatus('Creating new session...', true);
-
+    await uiManager.updateStatus('Creating new session...', true);
     // Get all tabs in the current window
+    const user = firebaseAuthManager.getCurrentUser();
     const tabs = await chrome.tabs.query({ currentWindow: true });
 
     if (!tabs || !Array.isArray(tabs)) {
@@ -337,46 +470,23 @@ async function createNewSession() {
           }
         })
       );
-
       processedTabs.push(...batchResults);
-
       // Update status to show progress
-      updateStatus(`Processing tabs... ${processedTabs.length}/${tabs.length}`, true);
+      await uiManager.updateStatus(`Processing tabs... ${processedTabs.length}/${tabs.length}`, true);
     }
 
-    // Create session object
-    /** @type {Session} */
-    const session = {
-      name: `Session ${new Date().toLocaleString()}`,
-      tabs: processedTabs,
-      createdAt: Date.now(),
-    };
-
-    // Import the session
-    const response = await chrome.runtime.sendMessage({
-      type: 'IMPORT_SESSION',
-      sessionData: session,
-      csrfToken,
-    });
-
-    if (!response) {
-      throw new Error('No response received from background script');
-    }
-
-    if (!response.success) {
-      throw new Error(response.error || 'Failed to create session');
-    }
+    const name = `Session ${new Date().toLocaleString()}`;
+    await sessionManager.saveSession(user.uid, tabs[0].url, name)
 
     // Reload sessions
     await loadSessions();
-
-    updateStatus('Session created successfully');
+    await uiManager.updateStatus('Session created successfully');
   } catch (error) {
     console.error('Error creating session:', error);
-    updateStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, false, true);
+    await uiManager.displayError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
-
+let currentStatus= "";
 // Restore a session
 /**
  * @param {string} sessionName - The name of the session to restore
@@ -384,7 +494,7 @@ async function createNewSession() {
 async function restoreSession(sessionName) {
   try {
     updateStatus(`Restoring session...`, true);
-
+    await uiManager.updateStatus(`Restoring session...`, true);
     const response = await chrome.runtime.sendMessage({
       type: 'RESTORE_SESSION',
       sessionName,
@@ -402,17 +512,17 @@ async function restoreSession(sessionName) {
     // Check for warnings
     if (response.cookieResults?.warnings?.length > 0) {
       console.warn('Session restored with warnings:', response.cookieResults.warnings);
-      updateStatus(
+      await uiManager.updateStatus(
         `Session restored with ${response.cookieResults.warnings.length} warnings`,
         false,
         true
       );
     } else {
-      updateStatus(`Session restored successfully: ${response.tabsRestored || 0} tabs`);
+      await uiManager.updateStatus(`Session restored successfully: ${response.tabsRestored || 0} tabs`);
     }
   } catch (error) {
     console.error('Error restoring session:', error);
-    updateStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, false, true);
+    await uiManager.displayError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -432,7 +542,7 @@ async function deleteSession(sessionName) {
       return;
     }
 
-    updateStatus(`Deleting session...`, true);
+    await uiManager.updateStatus(`Deleting session...`, true);
 
     const response = await chrome.runtime.sendMessage({
       type: 'DELETE_SESSION',
@@ -451,11 +561,11 @@ async function deleteSession(sessionName) {
     // Reload sessions
     await loadSessions();
 
-    updateStatus('Session deleted successfully');
+    await uiManager.updateStatus('Session deleted successfully');
   } catch (error) {
     console.error('Error deleting session:', error);
-    updateStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, false, true);
-  }
+    await uiManager.displayError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }  
 }
 
 // Open settings
@@ -522,7 +632,7 @@ function showWarningDialog(warnings, onProceed) {
     warningDialog.classList.add('visible');
   } catch (error) {
     console.error('Error showing warning dialog:', error);
-    updateStatus('Error: Failed to show warning dialog', false, true);
+    await uiManager.displayError('Error: Failed to show warning dialog');
   }
 }
 
@@ -538,10 +648,11 @@ function closeWarningDialog() {
     warningDialog.classList.remove('visible');
   } catch (error) {
     console.error('Error closing warning dialog:', error);
-    updateStatus('Error: Failed to close warning dialog', false, true);
+    await uiManager.displayError('Error: Failed to close warning dialog');
   }
 }
 
+let lastStatus= "";
 // Update status message
 /**
  * @param {string} message - The status message to display
@@ -609,9 +720,10 @@ export {
   escapeHtml,
   initializePopup,
   loadCookies,
-  deleteCookie,
-  saveSettings,
+  deleteCookie,  
+  saveSettings,  
   updateUI,
+  updateStatus,
   toggleTheme,
   openCookieManagementPopup
 };
@@ -638,7 +750,7 @@ async function initializePopup() {
     updateStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, false, true);
     throw error;
   }
-}
+}let lasStatus ="";
 
 // Load cookies
 async function loadCookies() {
@@ -746,7 +858,7 @@ async function deleteCookie(/** @type {CookieIdentifier} */ cookieIdentifier) {
     }
 
     await loadCookies();
-    updateStatus('Cookie deleted successfully');
+    await uiManager.updateStatus('Cookie deleted successfully');
   } catch (error) {
     console.error('Error deleting cookie:', error);
     updateStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, false, true);
@@ -774,7 +886,7 @@ async function saveSettings(/** @type {Record<string, any>} */ settings) {
     await updateUI(settings);
     updateStatus('Settings saved successfully');
   } catch (error) {
-    console.error('Error saving settings:', error);
+    console.error('Error saving settings:', error);    
     updateStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, false, true);
     throw error;
   }
@@ -824,3 +936,15 @@ function openCookieManagementPopup(name, domain) {
   console.log('Opening cookie management popup for:', { name, domain });
   // TODO: Implement cookie management popup functionality
 }
+firebaseAuthManager.auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    const userDoc = await dataManager.getUser(user.uid);
+    if(!userDoc){
+      dataManager.createUser(user.uid);
+    }
+    loadSessions();
+    if(allSessionsButton){
+      allSessionsButton.addEventListener("click", loadAllSessions)
+    }
+  }
+});
