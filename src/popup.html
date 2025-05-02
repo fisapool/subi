@@ -2,6 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+    <style>
+        .loader {
+          display: none;
+          border: 4px solid #f3f3f3; /* Light grey */
+          border-top: 4px solid #3498db; /* Blue */
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          animation: spin 2s linear infinite;
+        }
+        .session-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #f8f8f8;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .button-container {
+            position: relative;
+        }
+    </style>
   <title>Firebase Auth Popup</title>
   <style>
     body {
@@ -13,88 +39,100 @@
       display: none;
     }
     .input-group {
-      margin-bottom: 15px;
+        margin-bottom: 15px;
     }
     .input-group label {
-      display: block;
-      margin-bottom: 5px;
+        display: block;
+        margin-bottom: 5px;
     }
     .input-group input {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 3px;
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
     }
     button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      font-size: 16px;
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 16px;
     }
-    #loginButton {
-      background-color: #4CAF50;
-      color: white;
-    }
-    #registerButton {
-      background-color: #2196F3;
-      color: white;
+    #signInButton, #signUpButton {
+        background-color: #4CAF50;
+        color: white;
     }
     #logoutButton {
-      background-color: #f44336;
-      color: white;
-    }
-    #loginError, #registerError {
-      color: red;
-      margin-bottom: 10px;
-      min-height: 18px;
+        background-color: #f44336;
+        color: white;
+    }    
+    .error-message {
+        color: red;
+        margin-bottom: 10px;
+        min-height: 18px;
     }
     #profileSection {
-      margin-top: 20px;
+        margin-top: 20px;
     }
-  </style>
+
+    .loading {
+        display: inline-block;
+    }
+</style>
 </head>
 <body>
-  <h2>Firebase Authentication</h2>
+    <h2>Firebase Authentication</h2>
 
-  <div id="authSection">
-    <div id="loginError"></div>
-    <div class="input-group">
-      <label for="loginEmail">Email:</label>
-      <input type="email" id="loginEmail" placeholder="Enter your email" />
+    <div id="signInView">
+        <div class="error-message" id="signInError"></div>
+        <div class="input-group">
+            <label for="signInEmail">Email:</label>
+            <input type="email" id="signInEmail" placeholder="Enter your email" />
+        </div>
+        <div class="input-group">
+            <label for="signInPassword">Password:</label>
+            <input type="password" id="signInPassword" placeholder="Enter your password" />
+        </div>
+        <div class="button-container">
+          <button id="signInButton">Sign In</button>
+          <div class="loader" id="signInLoader"></div>
+        </div>
+        <p>Don't have an account? <a href="#" id="showSignUp">Sign Up</a></p>
     </div>
-    <div class="input-group">
-      <label for="loginPassword">Password:</label>
-      <input type="password" id="loginPassword" placeholder="Enter your password" />
+    <div id="signUpView" class="hidden">
+        <div class="error-message" id="signUpError"></div>
+        <div class="input-group">
+            <label for="signUpEmail">Email:</label>
+            <input type="email" id="signUpEmail" placeholder="Enter your email" />
+        </div>
+        <div class="input-group">
+            <label for="signUpPassword">Password:</label>
+            <input type="password" id="signUpPassword" placeholder="Enter your password" />
+        </div>
+        <div class="button-container">
+          <button id="signUpButton">Sign Up</button>
+          <div class="loader" id="signUpLoader"></div>
+        </div>
+        <p>Already have an account? <a href="#" id="showSignIn">Sign In</a></p>
     </div>
-    <button id="loginButton">Login</button>
+    
+    <div id="profileSection" class="hidden">
+        <h3>Welcome, <span id="userName"></span>!</h3>
+        <p>Email: <span id="userEmail"></span></p>
+        <button id="logoutButton">Logout</button>
+    </div>
 
-    <hr />
-
-    <div id="registerError"></div>
-    <div class="input-group">
-      <label for="registerName">Name:</label>
-      <input type="text" id="registerName" placeholder="Enter your name" />
+    <div id="all-sessions-button" class="hidden">
+      <button id="allSessionsButton">All Sessions</button>
     </div>
-    <div class="input-group">
-      <label for="registerEmail">Email:</label>
-      <input type="email" id="registerEmail" placeholder="Enter your email" />
+    <div id="new-session" class="hidden">
+      <input type="text" id="newSessionUrl" placeholder="Enter url" />
+      <input type="text" id="newSessionName" placeholder="Enter name" />
+      <button id="newSessionButton">New Session</button>
     </div>
-    <div class="input-group">
-      <label for="registerPassword">Password:</label>
-      <input type="password" id="registerPassword" placeholder="Enter your password" />
-    </div>
-    <button id="registerButton">Register</button>
-  </div>
-
-  <div id="profileSection" class="hidden">
-    <h3>Welcome, <span id="userName"></span>!</h3>
-    <p>Email: <span id="userEmail"></span></p>
-    <button id="logoutButton">Logout</button>
-  </div>
-
-  <script src="popup.js" type="module"></script>
+    <div id="sessions-container" class="hidden"></div>
+    <script src="popup.js" type="module"></script>
 </body>
 </html>

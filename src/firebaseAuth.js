@@ -9,20 +9,18 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 
-// TODO: Replace with your Firebase project configuration
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_AUTH_DOMAIN',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  apiKey: "AIzaSyDgDMwjDAHzsffoWW_ZQ3CLbrJIRMr0HhI",
+  authDomain: "cloudsync-c2a38.firebaseapp.com",
+  projectId: "cloudsync-c2a38",
+  storageBucket: "cloudsync-c2a38.appspot.com",
+  messagingSenderId: "506409274388",
+  appId: '1:506409274388:web:711e88f1e83b3e9f691b89',
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
-
 class FirebaseAuthManager {
   constructor() {
     this.currentUser = null;
@@ -30,11 +28,9 @@ class FirebaseAuthManager {
 
     onAuthStateChanged(this.auth, (user) => {
       this.currentUser = user;
-      if (user) {
-        console.log('User signed in:', user.email);
-      } else {
-        console.log('User signed out');
-      }
+    });
+    onAuthStateChanged(this.auth, (user) => {
+        this.currentUser = user;
     });
   }
 
@@ -47,8 +43,7 @@ class FirebaseAuthManager {
       );
       this.currentUser = userCredential.user;
       return userCredential.user;
-    } catch (error) {
-      console.error('Registration error:', error);
+    } catch (error) {      
       throw error;
     }
   }
@@ -62,8 +57,7 @@ class FirebaseAuthManager {
       );
       this.currentUser = userCredential.user;
       return userCredential.user;
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (error) {      
       throw error;
     }
   }
@@ -73,8 +67,7 @@ class FirebaseAuthManager {
       const result = await signInWithPopup(this.auth, googleProvider);
       this.currentUser = result.user;
       return result.user;
-    } catch (error) {
-      console.error('Google sign-in error:', error);
+    } catch (error) {      
       throw error;
     }
   }
@@ -83,8 +76,7 @@ class FirebaseAuthManager {
     try {
       await signOut(this.auth);
       this.currentUser = null;
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch (error) {      
       throw error;
     }
   }
@@ -100,3 +92,4 @@ class FirebaseAuthManager {
 
 const firebaseAuthManager = new FirebaseAuthManager();
 export default firebaseAuthManager;
+
